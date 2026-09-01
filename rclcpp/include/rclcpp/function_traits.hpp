@@ -73,9 +73,17 @@ struct function_traits<ReturnTypeT(Args ...)>
   using return_type = ReturnTypeT;
 };
 
+template<typename ReturnTypeT, typename ... Args>
+struct function_traits<ReturnTypeT(Args ...) noexcept>: function_traits<ReturnTypeT(Args ...)>
+{};
+
 // Function pointers
 template<typename ReturnTypeT, typename ... Args>
 struct function_traits<ReturnTypeT (*)(Args ...)>: function_traits<ReturnTypeT(Args ...)>
+{};
+
+template<typename ReturnTypeT, typename ... Args>
+struct function_traits<ReturnTypeT (*)(Args ...) noexcept>: function_traits<ReturnTypeT(Args ...)>
 {};
 
 // std::bind for object methods
@@ -91,6 +99,24 @@ struct function_traits<std::_Bind<std::_Mem_fn<ReturnTypeT (ClassT::*)(Args ...)
 #elif defined _MSC_VER  // MS Visual Studio
 struct function_traits<
   std::_Binder<std::_Unforced, ReturnTypeT (ClassT::*)(Args ...), FArgs ...>>
+#else
+#error "Unsupported C++ compiler / standard library"
+#endif
+  : function_traits<ReturnTypeT(Args ...)>
+{};
+
+template<typename ClassT, typename ReturnTypeT, typename ... Args, typename ... FArgs>
+#if defined DOXYGEN_ONLY
+struct function_traits<std::bind<ReturnTypeT (ClassT::*)(Args ...) noexcept, FArgs ...>>
+#elif defined _LIBCPP_VERSION  // libc++ (Clang)
+struct function_traits<std::__bind<ReturnTypeT (ClassT::*)(Args ...) noexcept, FArgs ...>>
+#elif defined _GLIBCXX_RELEASE  // glibc++ (GNU C++ >= 7.1)
+struct function_traits<std::_Bind<ReturnTypeT(ClassT::* (FArgs ...))(Args ...) noexcept>>
+#elif defined __GLIBCXX__  // glibc++ (GNU C++)
+struct function_traits<std::_Bind<std::_Mem_fn<ReturnTypeT (ClassT::*)(Args ...) noexcept>(FArgs ...)>>
+#elif defined _MSC_VER  // MS Visual Studio
+struct function_traits<
+  std::_Binder<std::_Unforced, ReturnTypeT (ClassT::*)(Args ...) noexcept, FArgs ...>>
 #else
 #error "Unsupported C++ compiler / standard library"
 #endif
@@ -116,6 +142,25 @@ struct function_traits<
   : function_traits<ReturnTypeT(Args ...)>
 {};
 
+template<typename ClassT, typename ReturnTypeT, typename ... Args, typename ... FArgs>
+#if defined DOXYGEN_ONLY
+struct function_traits<std::bind<ReturnTypeT (ClassT::*)(Args ...) const noexcept, FArgs ...>>
+#elif defined _LIBCPP_VERSION  // libc++ (Clang)
+struct function_traits<std::__bind<ReturnTypeT (ClassT::*)(Args ...) const noexcept, FArgs ...>>
+#elif defined _GLIBCXX_RELEASE  // glibc++ (GNU C++ >= 7.1)
+struct function_traits<std::_Bind<ReturnTypeT(ClassT::* (FArgs ...))(Args ...) const noexcept>>
+#elif defined __GLIBCXX__  // glibc++ (GNU C++)
+struct function_traits<
+  std::_Bind<std::_Mem_fn<ReturnTypeT (ClassT::*)(Args ...) const noexcept>(FArgs ...)>>
+#elif defined _MSC_VER  // MS Visual Studio
+struct function_traits<
+  std::_Binder<std::_Unforced, ReturnTypeT (ClassT::*)(Args ...) const noexcept, FArgs ...>>
+#else
+#error "Unsupported C++ compiler / standard library"
+#endif
+  : function_traits<ReturnTypeT(Args ...)>
+{};
+
 // std::bind for free functions
 template<typename ReturnTypeT, typename ... Args, typename ... FArgs>
 #if defined DOXYGEN_ONLY
@@ -135,6 +180,16 @@ struct function_traits<std::_Binder<std::_Unforced, ReturnTypeT( &)(Args ...), F
 // Lambdas
 template<typename ClassT, typename ReturnTypeT, typename ... Args>
 struct function_traits<ReturnTypeT (ClassT::*)(Args ...) const>
+  : function_traits<ReturnTypeT(ClassT &, Args ...)>
+{};
+
+template<typename ClassT, typename ReturnTypeT, typename ... Args>
+struct function_traits<ReturnTypeT (ClassT::*)(Args ...) noexcept>
+  : function_traits<ReturnTypeT(ClassT &, Args ...)>
+{};
+
+template<typename ClassT, typename ReturnTypeT, typename ... Args>
+struct function_traits<ReturnTypeT (ClassT::*)(Args ...) const noexcept>
   : function_traits<ReturnTypeT(ClassT &, Args ...)>
 {};
 

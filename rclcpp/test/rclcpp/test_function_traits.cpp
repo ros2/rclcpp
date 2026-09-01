@@ -40,6 +40,11 @@ int func_one_int_one_char(int, char)
   return 3;
 }
 
+int func_no_args_noexcept() noexcept
+{
+  return 4;
+}
+
 struct FunctionObjectNoArgs
 {
   int operator()() const
@@ -72,6 +77,14 @@ struct FunctionObjectOneIntOneChar
   }
 };
 
+struct FunctionObjectOneIntNoexcept
+{
+  int operator()(int) const noexcept
+  {
+    return 5;
+  }
+};
+
 struct ObjectMember
 {
   int callback_one_bool([[maybe_unused]] bool a)
@@ -92,6 +105,24 @@ struct ObjectMember
   int callback_one_bool_one_float([[maybe_unused]] bool a, [[maybe_unused]] float b)
   {
     return 9;
+  }
+};
+
+struct ObjectMemberNoexcept
+{
+  int callback_no_args() noexcept
+  {
+    return 10;
+  }
+
+  int callback_one_bool([[maybe_unused]] bool a) noexcept
+  {
+    return 11;
+  }
+
+  int callback_one_bool_const([[maybe_unused]] bool a) const noexcept
+  {
+    return 12;
   }
 };
 
@@ -201,6 +232,10 @@ TEST(TestFunctionTraits, arity) {
     rclcpp::function_traits::function_traits<decltype(func_one_int_one_char)>::arity == 2,
     "Functor only accepts two arguments");
 
+  static_assert(
+    rclcpp::function_traits::function_traits<decltype(func_no_args_noexcept)>::arity == 0,
+    "Noexcept function does not accept arguments");
+
   // Test lambdas
   auto lambda_no_args = []() {
       return 0;
@@ -250,6 +285,10 @@ TEST(TestFunctionTraits, arity) {
   static_assert(
     rclcpp::function_traits::function_traits<FunctionObjectOneIntOneChar>::arity == 2,
     "Functor only accepts two arguments");
+
+  static_assert(
+    rclcpp::function_traits::function_traits<FunctionObjectOneIntNoexcept>::arity == 1,
+    "Noexcept functor only accepts one argument");
 }
 
 /*
@@ -477,6 +516,40 @@ TEST(TestFunctionTraits, argument_types) {
         decltype(bind_one_int_one_char)
       >::template argument_type<1>
     >::value, "Functor accepts a char as second argument");
+
+  ObjectMemberNoexcept object_member_noexcept;
+
+  auto bind_no_args_noexcept = std::bind(
+    &ObjectMemberNoexcept::callback_no_args, &object_member_noexcept);
+  (void)bind_no_args_noexcept;  // to quiet clang
+
+  static_assert(
+    rclcpp::function_traits::function_traits<decltype(bind_no_args_noexcept)>::arity == 0,
+    "Noexcept bound member function does not accept arguments");
+
+  auto bind_one_bool_noexcept = std::bind(
+    &ObjectMemberNoexcept::callback_one_bool, &object_member_noexcept, std::placeholders::_1);
+  (void)bind_one_bool_noexcept;  // to quiet clang
+
+  static_assert(
+    std::is_same<
+      bool,
+      rclcpp::function_traits::function_traits<
+        decltype(bind_one_bool_noexcept)
+      >::template argument_type<0>
+    >::value, "Noexcept bound member function accepts a bool as first argument");
+
+  auto bind_one_bool_const_noexcept = std::bind(
+    &ObjectMemberNoexcept::callback_one_bool_const, &object_member_noexcept, std::placeholders::_1);
+  (void)bind_one_bool_const_noexcept;  // to quiet clang
+
+  static_assert(
+    std::is_same<
+      bool,
+      rclcpp::function_traits::function_traits<
+        decltype(bind_one_bool_const_noexcept)
+      >::template argument_type<0>
+    >::value, "Noexcept bound const member function accepts a bool as first argument");
 }
 
 /*
@@ -576,6 +649,32 @@ TEST(TestFunctionTraits, check_arguments) {
   static_assert(
     rclcpp::function_traits::check_arguments<decltype(bind_one_bool_const), bool>::value,
     "Functor accepts a single bool as arguments");
+
+  auto bind_no_args_noexcept = std::bind(
+    &ObjectMemberNoexcept::callback_no_args, static_cast<ObjectMemberNoexcept *>(nullptr));
+  (void)bind_no_args_noexcept;  // to quiet clang
+
+  static_assert(
+    rclcpp::function_traits::check_arguments<decltype(bind_no_args_noexcept)>::value,
+    "Noexcept bound member function accepts no arguments");
+
+  auto bind_one_bool_noexcept = std::bind(
+    &ObjectMemberNoexcept::callback_one_bool, static_cast<ObjectMemberNoexcept *>(nullptr),
+    std::placeholders::_1);
+  (void)bind_one_bool_noexcept;  // to quiet clang
+
+  static_assert(
+    rclcpp::function_traits::check_arguments<decltype(bind_one_bool_noexcept), bool>::value,
+    "Noexcept bound member function accepts a single bool as arguments");
+
+  auto bind_one_bool_const_noexcept = std::bind(
+    &ObjectMemberNoexcept::callback_one_bool_const, static_cast<ObjectMemberNoexcept *>(nullptr),
+    std::placeholders::_1);
+  (void)bind_one_bool_const_noexcept;  // to quiet clang
+
+  static_assert(
+    rclcpp::function_traits::check_arguments<decltype(bind_one_bool_const_noexcept), bool>::value,
+    "Noexcept bound const member function accepts a single bool as arguments");
 }
 
 /*
@@ -708,9 +807,22 @@ TEST(TestFunctionTraits, sfinae_match) {
       return std::string("foo");
     };
 
+  auto lambda_no_args_noexcept = []() noexcept {
+      return 4;
+    };
+
   EXPECT_EQ(123.45, func_accept_callback_return_type(lambda_no_args_double));
 
   EXPECT_EQ("foo", func_accept_callback_return_type(lambda_no_args_string));
+
+  EXPECT_EQ(4, func_accept_callback(lambda_no_args_noexcept));
+
+  ObjectMemberNoexcept object_member_noexcept;
+  auto bind_no_args_noexcept = std::bind(
+    &ObjectMemberNoexcept::callback_no_args, &object_member_noexcept);
+  EXPECT_EQ(10, func_accept_callback(bind_no_args_noexcept));
+
+  EXPECT_EQ(4, func_accept_callback(func_no_args_noexcept));
 }
 
 class TestMember : public ::testing::Test
