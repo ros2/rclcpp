@@ -233,6 +233,56 @@ TEST_P(TestTimer, test_bad_arguments) {
   EXPECT_THROW(
     rclcpp::GenericTimer<void (*)()>(unitialized_clock, 1us, []() {}, context),
     rclcpp::exceptions::RCLError);
+
+  // Same set of checks, but using the constructor that takes an explicit initial call time.
+  auto now = steady_clock->now();
+
+  // Negative period
+  EXPECT_THROW(
+    rclcpp::GenericTimer<void (*)()>(steady_clock, now, -1ms, []() {}, context),
+    rclcpp::exceptions::RCLInvalidArgument);
+
+  // 0 duration period, should be ok
+  EXPECT_NO_THROW(
+    rclcpp::GenericTimer<void (*)()>(steady_clock, now, 0ms, []() {}, context));
+
+  // Clock is unitialized
+  EXPECT_THROW(
+    rclcpp::GenericTimer<void (*)()>(unitialized_clock, now, 1us, []() {}, context),
+    rclcpp::exceptions::RCLError);
+}
+
+TEST_P(TestTimer, test_initial_call_time)
+{
+  const auto period = 50ms;
+  const auto initial_delay = std::chrono::seconds(10);
+
+  std::shared_ptr<rclcpp::TimerBase> initial_time_timer;
+  switch (timer_type) {
+    case TimerType::WALL_TIMER:
+      {
+        rclcpp::Clock steady_clock(RCL_STEADY_TIME);
+        initial_time_timer = test_node->create_wall_timer(
+          steady_clock.now() + rclcpp::Duration(initial_delay), period, []() {});
+        break;
+      }
+    case TimerType::GENERIC_TIMER:
+      {
+        initial_time_timer = test_node->create_timer(
+          test_node->get_clock()->now() + rclcpp::Duration(initial_delay), period, []() {});
+        break;
+      }
+  }
+
+  // The next call should be driven by initial_call_time, not by now + period.
+  EXPECT_GT(
+    initial_time_timer->time_until_trigger().count(),
+    std::chrono::nanoseconds(period).count());
+  EXPECT_LE(
+    initial_time_timer->time_until_trigger().count(),
+    std::chrono::nanoseconds(initial_delay).count());
+
+  initial_time_timer->cancel();
 }
 
 TEST_P(TestTimer, callback_with_timer) {
