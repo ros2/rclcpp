@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <functional>
 #include <memory>
 #include <vector>
 
@@ -19,7 +20,6 @@
 
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp/node.hpp"
-#include "rclcpp/rclcpp.hpp"
 #include "test_msgs/action/fibonacci.hpp"
 
 #include "action_msgs/msg/goal_info.h"

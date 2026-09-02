@@ -12,14 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <algorithm>
 #include <array>
+#include <atomic>
 #include <chrono>
 #include <future>
 #include <map>
 #include <memory>
+#include <stdexcept>
 #include <string>
-#include <utility>
 #include <thread>
+#include <utility>
 
 #include "gtest/gtest.h"
 
@@ -32,14 +35,17 @@
 #include "rcl_action/action_client.h"
 #include "rcl_action/wait.h"
 
+#include "rclcpp/callback_group.hpp"
 #include "rclcpp/clock.hpp"
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp/executors.hpp"
+#include "rclcpp/executors/single_threaded_executor.hpp"
 #include "rclcpp/node.hpp"
 #include "rclcpp/publisher.hpp"
-#include "rclcpp/rclcpp.hpp"
+#include "rclcpp/qos.hpp"
 #include "rclcpp/service.hpp"
 #include "rclcpp/time.hpp"
+#include "rclcpp/utilities.hpp"
 
 #include "test_msgs/action/fibonacci.hpp"
 #include "test_msgs/msg/empty.hpp"
