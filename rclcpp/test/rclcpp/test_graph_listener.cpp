@@ -15,10 +15,16 @@
 #include <gtest/gtest.h>
 #include <memory>
 
+#include <stdexcept>
+
+#include "rclcpp/context.hpp"
 #include "rclcpp/contexts/default_context.hpp"
+#include "rclcpp/exceptions.hpp"
 #include "rclcpp/graph_listener.hpp"
+#include "rclcpp/node.hpp"
 #include "rclcpp/node_interfaces/node_graph.hpp"
-#include "rclcpp/rclcpp.hpp"
+#include "rclcpp/node_interfaces/node_graph_interface.hpp"
+#include "rclcpp/utilities.hpp"
 
 #include "../mocking_utils/patch.hpp"
 #include "../utils/rclcpp_gtest_macros.hpp"

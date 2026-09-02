@@ -28,7 +28,14 @@
 
 #include "rcpputils/compile_warnings.hpp"
 
-#include "rclcpp/rclcpp.hpp"
+#include "rclcpp/callback_group.hpp"
+#include "rclcpp/executors.hpp"
+#include "rclcpp/experimental/executors/events_executor/events_executor.hpp"
+#include "rclcpp/node.hpp"
+#include "rclcpp/node_options.hpp"
+#include "rclcpp/qos.hpp"
+#include "rclcpp/subscription_options.hpp"
+#include "rclcpp/utilities.hpp"
 
 #include "test_msgs/msg/empty.hpp"
 

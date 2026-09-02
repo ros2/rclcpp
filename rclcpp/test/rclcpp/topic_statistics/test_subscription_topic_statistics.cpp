@@ -15,6 +15,8 @@
 #include <gtest/gtest.h>
 
 #include <chrono>
+#include <cmath>
+#include <functional>
 #include <iostream>
 #include <memory>
 #include <random>
@@ -27,10 +29,17 @@
 #include "libstatistics_collector/moving_average_statistics/types.hpp"
 
 #include "rclcpp/create_publisher.hpp"
+#include "rclcpp/executors/single_threaded_executor.hpp"
+#include "rclcpp/message_info.hpp"
 #include "rclcpp/node.hpp"
+#include "rclcpp/node_options.hpp"
+#include "rclcpp/publisher.hpp"
 #include "rclcpp/qos.hpp"
-#include "rclcpp/rclcpp.hpp"
+#include "rclcpp/subscription.hpp"
 #include "rclcpp/subscription_options.hpp"
+#include "rclcpp/time.hpp"
+#include "rclcpp/timer.hpp"
+#include "rclcpp/utilities.hpp"
 
 #include "rclcpp/topic_statistics/subscription_topic_statistics.hpp"
 

@@ -23,7 +23,7 @@ RCPPUTILS_DEPRECATION_WARNING_OFF_START
 RCPPUTILS_DEPRECATION_WARNING_OFF_STOP
 #include "rclcpp/memory_strategy.hpp"
 #include "rclcpp/node.hpp"
-#include "rclcpp/rclcpp.hpp"
+#include "rclcpp/utilities.hpp"
 
 RCPPUTILS_DEPRECATION_WARNING_OFF_START
 class TestFindWeakNodes : public ::testing::Test

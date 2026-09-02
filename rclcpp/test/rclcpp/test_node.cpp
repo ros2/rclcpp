@@ -14,19 +14,33 @@
 
 #include <gtest/gtest.h>
 
+#include <algorithm>
 #include <chrono>
 #include <filesystem>
 #include <functional>
 #include <limits>
 #include <map>
 #include <memory>
+#include <stdexcept>
 #include <string>
+#include <thread>
 #include <unordered_set>
 #include <vector>
 
+#include "rclcpp/callback_group.hpp"
+#include "rclcpp/context.hpp"
+#include "rclcpp/event.hpp"
 #include "rclcpp/exceptions.hpp"
+#include "rclcpp/expand_topic_or_service_name.hpp"
 #include "rclcpp/node.hpp"
-#include "rclcpp/rclcpp.hpp"
+#include "rclcpp/node_interfaces/node_graph_interface.hpp"
+#include "rclcpp/node_options.hpp"
+#include "rclcpp/parameter.hpp"
+#include "rclcpp/parameter_value.hpp"
+#include "rclcpp/publisher.hpp"
+#include "rclcpp/qos.hpp"
+#include "rclcpp/subscription.hpp"
+#include "rclcpp/utilities.hpp"
 
 #include "rcpputils/filesystem_helper.hpp"
 #include "rcpputils/scope_exit.hpp"

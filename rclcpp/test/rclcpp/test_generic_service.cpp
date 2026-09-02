@@ -14,16 +14,27 @@
 
 #include <gtest/gtest.h>
 
+#include <atomic>
 #include <chrono>
 #include <cstddef>
 #include <functional>
+#include <future>
 #include <memory>
 #include <stdexcept>
 #include <string>
+#include <thread>
 #include <utility>
 
+#include "rclcpp/client.hpp"
+#include "rclcpp/duration.hpp"
 #include "rclcpp/exceptions.hpp"
-#include "rclcpp/rclcpp.hpp"
+#include "rclcpp/executors.hpp"
+#include "rclcpp/executors/single_threaded_executor.hpp"
+#include "rclcpp/generic_service.hpp"
+#include "rclcpp/node.hpp"
+#include "rclcpp/qos.hpp"
+#include "rclcpp/service.hpp"
+#include "rclcpp/utilities.hpp"
 
 #include "../mocking_utils/patch.hpp"
 #include "../utils/rclcpp_gtest_macros.hpp"

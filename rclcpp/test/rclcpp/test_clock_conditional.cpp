@@ -14,13 +14,18 @@
 
 #include <gtest/gtest.h>
 
+#include <atomic>
 #include <chrono>
+#include <memory>
+#include <mutex>
+#include <thread>
 
 #include "rcl/error_handling.h"
 #include "rcl/time.h"
 #include "rclcpp/clock.hpp"
-#include "rclcpp/rclcpp.hpp"
+#include "rclcpp/node.hpp"
 #include "rclcpp/time_source.hpp"
+#include "rclcpp/utilities.hpp"
 
 #include "../utils/rclcpp_gtest_macros.hpp"
 

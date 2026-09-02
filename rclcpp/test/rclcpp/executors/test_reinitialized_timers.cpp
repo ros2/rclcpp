@@ -19,8 +19,10 @@
 #include <memory>
 #include <thread>
 
-#include "rclcpp/rclcpp.hpp"
 #include "rclcpp/create_timer.hpp"
+#include "rclcpp/duration.hpp"
+#include "rclcpp/node.hpp"
+#include "rclcpp/utilities.hpp"
 
 #include "./executor_types.hpp"
 

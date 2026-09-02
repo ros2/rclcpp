@@ -23,7 +23,12 @@
 #include <utility>
 
 #include "rclcpp/exceptions.hpp"
-#include "rclcpp/rclcpp.hpp"
+#include "rclcpp/executors/single_threaded_executor.hpp"
+#include "rclcpp/message_info.hpp"
+#include "rclcpp/node.hpp"
+#include "rclcpp/node_options.hpp"
+#include "rclcpp/type_adapter.hpp"
+#include "rclcpp/utilities.hpp"
 
 #include "rclcpp/msg/string.hpp"
 #include "statistics_msgs/msg/statistic_data_point.hpp"

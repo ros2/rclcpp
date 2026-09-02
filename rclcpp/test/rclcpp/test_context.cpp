@@ -14,11 +14,13 @@
 #include <gtest/gtest.h>
 
 #include <atomic>
+#include <memory>
 #include <thread>
 #include <vector>
 
+#include "rclcpp/callback_group.hpp"
 #include "rclcpp/context.hpp"
-#include "rclcpp/rclcpp.hpp"
+#include "rclcpp/guard_condition.hpp"
 
 TEST(TestContext, check_pre_shutdown_callback_order) {
   auto context = std::make_shared<rclcpp::Context>();

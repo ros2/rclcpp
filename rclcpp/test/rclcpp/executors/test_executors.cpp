@@ -26,6 +26,7 @@
 #include <limits>
 #include <memory>
 #include <sstream>
+#include <stdexcept>
 #include <string>
 #include <thread>
 #include <utility>
@@ -33,12 +34,24 @@
 
 #include "rcl/error_handling.h"
 #include "rcl/time.h"
+#include "rclcpp/callback_group.hpp"
 #include "rclcpp/clock.hpp"
+#include "rclcpp/context.hpp"
 #include "rclcpp/detail/add_guard_condition_to_rcl_wait_set.hpp"
 #include "rclcpp/duration.hpp"
+#include "rclcpp/executor_options.hpp"
+#include "rclcpp/executors.hpp"
+#include "rclcpp/future_return_code.hpp"
 #include "rclcpp/guard_condition.hpp"
-#include "rclcpp/rclcpp.hpp"
+#include "rclcpp/node.hpp"
+#include "rclcpp/node_options.hpp"
+#include "rclcpp/publisher.hpp"
+#include "rclcpp/qos.hpp"
+#include "rclcpp/subscription.hpp"
+#include "rclcpp/subscription_base.hpp"
+#include "rclcpp/subscription_options.hpp"
 #include "rclcpp/time_source.hpp"
+#include "rclcpp/utilities.hpp"
 
 #include "test_msgs/msg/empty.hpp"
 #include "test_msgs/srv/empty.hpp"

@@ -16,8 +16,12 @@
 
 #include <memory>
 
-#include "rclcpp/rclcpp.hpp"
+#include "rclcpp/node.hpp"
+#include "rclcpp/publisher_base.hpp"
+#include "rclcpp/publisher_options.hpp"
+#include "rclcpp/qos.hpp"
 #include "rclcpp/type_support_decl.hpp"
+#include "rclcpp/utilities.hpp"
 #include "test_msgs/msg/empty.hpp"
 
 class TestTypeSupport : public ::testing::Test
