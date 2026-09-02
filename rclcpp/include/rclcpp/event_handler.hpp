@@ -17,6 +17,7 @@
 
 #include <atomic>
 #include <functional>
+#include <limits>
 #include <memory>
 #include <mutex>
 #include <stdexcept>
@@ -247,7 +248,9 @@ protected:
   std::function<void(size_t)> on_new_event_callback_{nullptr};
 
   rcl_event_t event_handle_;
-  size_t wait_set_event_index_;
+  // Sentinel that is always out of range, so is_ready() reports "not in any wait set"
+  // until add_to_wait_set() assigns the real index. See ros2/rclcpp#2376.
+  size_t wait_set_event_index_ = std::numeric_limits<size_t>::max();
 };
 
 template<typename EventCallbackT, typename ParentHandleT>

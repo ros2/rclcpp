@@ -23,6 +23,7 @@
 
 #include "rclcpp/rclcpp.hpp"
 #include "rcl/event.h"
+#include "rcl/wait.h"
 #include "rcutils/logging.h"
 #include "rmw/rmw.h"
 #include "test_msgs/msg/empty.hpp"
@@ -336,6 +337,58 @@ TEST_F(TestQosEvent, add_to_wait_set) {
       "lib:rclcpp", rcl_wait_set_add_event, RCL_RET_ERROR);
     EXPECT_THROW(handler.add_to_wait_set(wait_set), rclcpp::exceptions::RCLError);
   }
+}
+
+// Regression for ros2/rclcpp#2376: with no index ever assigned, is_ready() must report
+// not-ready rather than indexing wait_set.events.
+TEST_F(TestQosEvent, is_ready_when_not_in_wait_set) {
+  auto publisher = node->create_publisher<test_msgs::msg::Empty>(topic_name, 10);
+  auto rcl_handle = publisher->get_publisher_handle();
+
+  auto callback = [](int) {};
+
+  const rcl_publisher_event_type_t event_type =
+    !rclcpp::PublisherBase::event_type_is_supported(RCL_PUBLISHER_OFFERED_DEADLINE_MISSED) ?
+    RCL_PUBLISHER_MATCHED : RCL_PUBLISHER_OFFERED_DEADLINE_MISSED;
+
+  rclcpp::EventHandler<decltype(callback), decltype(rcl_handle)> handler(
+    callback, rcl_publisher_event_init, rcl_handle, event_type);
+
+  // The handler has not been added to any wait set, so its event index is not valid for
+  // this (empty) wait set; is_ready() must report not-ready instead of dereferencing it.
+  rcl_wait_set_t wait_set = rcl_get_zero_initialized_wait_set();
+  EXPECT_FALSE(handler.is_ready(wait_set));
+}
+
+// Regression for ros2/rclcpp#2376: an index assigned by another wait set must not be
+// dereferenced. index == size_of_events is the off-by-one the bounds check has to reject.
+TEST_F(TestQosEvent, is_ready_with_index_from_another_wait_set) {
+  auto publisher = node->create_publisher<test_msgs::msg::Empty>(topic_name, 10);
+  auto rcl_handle = publisher->get_publisher_handle();
+
+  auto callback = [](int) {};
+
+  const rcl_publisher_event_type_t event_type =
+    !rclcpp::PublisherBase::event_type_is_supported(RCL_PUBLISHER_OFFERED_DEADLINE_MISSED) ?
+    RCL_PUBLISHER_MATCHED : RCL_PUBLISHER_OFFERED_DEADLINE_MISSED;
+
+  rclcpp::EventHandler<decltype(callback), decltype(rcl_handle)> handler(
+    callback, rcl_publisher_event_init, rcl_handle, event_type);
+
+  rcl_context_t * context =
+    node->get_node_base_interface()->get_context()->get_rcl_context().get();
+  rcl_wait_set_t sized = rcl_get_zero_initialized_wait_set();
+  ASSERT_EQ(
+    RCL_RET_OK,
+    rcl_wait_set_init(&sized, 0, 0, 0, 0, 0, 1, context, rcl_get_default_allocator()));
+  handler.add_to_wait_set(sized);
+
+  // The assigned index 0 is valid only for `sized`. Against a wait set with no event
+  // slots it equals size_of_events, which must be rejected rather than indexed.
+  rcl_wait_set_t empty = rcl_get_zero_initialized_wait_set();
+  EXPECT_FALSE(handler.is_ready(empty));
+
+  EXPECT_EQ(RCL_RET_OK, rcl_wait_set_fini(&sized));
 }
 
 TEST_F(TestQosEvent, test_on_new_event_callback)

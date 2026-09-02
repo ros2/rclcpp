@@ -69,6 +69,11 @@ EventHandlerBase::add_to_wait_set(rcl_wait_set_t & wait_set)
 bool
 EventHandlerBase::is_ready(const rcl_wait_set_t & wait_set)
 {
+  // Only assigned by add_to_wait_set(); unassigned, or assigned by a different wait set,
+  // means the index does not address this one. See ros2/rclcpp#2376.
+  if (wait_set_event_index_ >= wait_set.size_of_events) {
+    return false;
+  }
   return wait_set.events[wait_set_event_index_] == &event_handle_;
 }
 
