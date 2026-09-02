@@ -60,7 +60,7 @@ public:
   /** \return The name of the service. */
   RCLCPP_PUBLIC
   const char *
-  get_service_name();
+  get_service_name() const;
 
   /// Return the rcl_service_t service handle in a std::shared_ptr.
   /**
