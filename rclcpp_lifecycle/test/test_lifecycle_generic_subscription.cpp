@@ -16,7 +16,10 @@
 
 #include <memory>
 
-#include "rclcpp/rclcpp.hpp"
+#include "rclcpp/message_info.hpp"
+#include "rclcpp/qos.hpp"
+#include "rclcpp/serialized_message.hpp"
+#include "rclcpp/utilities.hpp"
 #include "rclcpp_lifecycle/lifecycle_node.hpp"
 
 class TestLifecycleGenericSubscription : public ::testing::Test
