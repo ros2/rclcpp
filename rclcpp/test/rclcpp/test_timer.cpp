@@ -18,12 +18,19 @@
 #include <chrono>
 #include <exception>
 #include <memory>
+#include <stdexcept>
+#include <string>
 #include <utility>
 
 #include "rcl/timer.h"
 
+#include "rclcpp/clock.hpp"
+#include "rclcpp/exceptions.hpp"
 #include "rclcpp/executors/single_threaded_executor.hpp"
-#include "rclcpp/rclcpp.hpp"
+#include "rclcpp/node.hpp"
+#include "rclcpp/node_interfaces/get_node_base_interface.hpp"
+#include "rclcpp/timer.hpp"
+#include "rclcpp/utilities.hpp"
 
 #include "../mocking_utils/patch.hpp"
 #include "../utils/rclcpp_gtest_macros.hpp"

@@ -24,9 +24,20 @@
 #include <thread>
 #include <vector>
 
+#include "rclcpp/create_subscription.hpp"
+#include "rclcpp/event_handler.hpp"
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp/executors/single_threaded_executor.hpp"
-#include "rclcpp/rclcpp.hpp"
+#include "rclcpp/intra_process_setting.hpp"
+#include "rclcpp/message_info.hpp"
+#include "rclcpp/node.hpp"
+#include "rclcpp/node_options.hpp"
+#include "rclcpp/publisher_options.hpp"
+#include "rclcpp/qos.hpp"
+#include "rclcpp/serialized_message.hpp"
+#include "rclcpp/subscription_base.hpp"
+#include "rclcpp/subscription_options.hpp"
+#include "rclcpp/utilities.hpp"
 
 #include "../mocking_utils/patch.hpp"
 #include "../utils/rclcpp_gtest_macros.hpp"

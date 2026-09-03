@@ -15,14 +15,28 @@
 #include <gtest/gtest.h>
 
 #include <memory>
+#include <stdexcept>
 #include <string>
 #include <type_traits>
 #include <vector>
 
 #include "rcl/node_options.h"
+#include "rclcpp/callback_group.hpp"
+#include "rclcpp/dynamic_typesupport/dynamic_message.hpp"
+#include "rclcpp/dynamic_typesupport/dynamic_message_type.hpp"
+#include "rclcpp/dynamic_typesupport/dynamic_serialization_support.hpp"
+#include "rclcpp/exceptions.hpp"
+#include "rclcpp/message_info.hpp"
 #include "rclcpp/node.hpp"
 #include "rclcpp/node_interfaces/node_topics.hpp"
-#include "rclcpp/rclcpp.hpp"
+#include "rclcpp/node_options.hpp"
+#include "rclcpp/publisher_base.hpp"
+#include "rclcpp/publisher_options.hpp"
+#include "rclcpp/qos.hpp"
+#include "rclcpp/serialized_message.hpp"
+#include "rclcpp/subscription_base.hpp"
+#include "rclcpp/subscription_options.hpp"
+#include "rclcpp/utilities.hpp"
 #include "test_msgs/msg/empty.hpp"
 
 #include "../../mocking_utils/patch.hpp"

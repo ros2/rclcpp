@@ -18,7 +18,8 @@
 
 #include "gtest/gtest.h"
 
-#include "rclcpp/rclcpp.hpp"
+#include "rclcpp/experimental/buffers/intra_process_buffer.hpp"
+#include "rclcpp/experimental/buffers/ring_buffer_implementation.hpp"
 
 /*
    Constructor

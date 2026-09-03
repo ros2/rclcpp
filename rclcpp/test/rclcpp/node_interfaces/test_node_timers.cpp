@@ -14,13 +14,18 @@
 
 #include <gtest/gtest.h>
 
+#include <chrono>
 #include <memory>
+#include <stdexcept>
 #include <string>
 
 #include "rcl/node_options.h"
+#include "rclcpp/callback_group.hpp"
+#include "rclcpp/exceptions.hpp"
 #include "rclcpp/node.hpp"
 #include "rclcpp/node_interfaces/node_timers.hpp"
-#include "rclcpp/rclcpp.hpp"
+#include "rclcpp/timer.hpp"
+#include "rclcpp/utilities.hpp"
 
 #include "../../mocking_utils/patch.hpp"
 #include "../../utils/rclcpp_gtest_macros.hpp"

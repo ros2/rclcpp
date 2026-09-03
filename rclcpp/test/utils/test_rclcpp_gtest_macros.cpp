@@ -14,15 +14,17 @@
 
 #include <gtest/gtest.h>
 
+#include <cstdio>
 #include <cstring>
 #include <exception>
+#include <stdexcept>
 
 #include <string>
 
 #include "./rclcpp_gtest_macros.hpp"
 
 #include "rcl/rcl.h"
-#include "rclcpp/rclcpp.hpp"
+#include "rclcpp/exceptions.hpp"
 
 struct NonStandardThrowable
 {

@@ -15,19 +15,29 @@
 #include <gtest/gtest.h>
 
 #include <chrono>
+#include <exception>
+#include <future>
 #include <map>
 #include <memory>
 #include <string>
+#include <thread>
 #include <utility>
 #include <vector>
 
 #include "rclcpp/node.hpp"
 #include "test_msgs/msg/empty.hpp"
 
+#include "rclcpp/callback_group.hpp"
 #include "rclcpp/exceptions.hpp"
-#include "rclcpp/executors.hpp"
 #include "rclcpp/executor.hpp"
-#include "rclcpp/rclcpp.hpp"
+#include "rclcpp/executors.hpp"
+#include "rclcpp/future_return_code.hpp"
+#include "rclcpp/publisher.hpp"
+#include "rclcpp/qos.hpp"
+#include "rclcpp/subscription.hpp"
+#include "rclcpp/subscription_options.hpp"
+#include "rclcpp/timer.hpp"
+#include "rclcpp/utilities.hpp"
 
 #include "./executors/executor_types.hpp"
 
