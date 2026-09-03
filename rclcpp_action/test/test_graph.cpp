@@ -19,8 +19,11 @@
 #include <memory>
 #include <string>
 
+#include "rclcpp/event.hpp"
 #include "rclcpp/exceptions.hpp"
-#include "rclcpp/rclcpp.hpp"
+#include "rclcpp/node.hpp"
+#include "rclcpp/node_interfaces/node_graph_interface.hpp"
+#include "rclcpp/utilities.hpp"
 
 #include "rclcpp_action/create_client.hpp"
 #include "rclcpp_action/create_server.hpp"
