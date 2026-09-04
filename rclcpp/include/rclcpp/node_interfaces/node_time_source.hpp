@@ -53,6 +53,9 @@ public:
   );
 
   RCLCPP_PUBLIC
+  void attachClock(rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock);
+
+  RCLCPP_PUBLIC
   virtual
   ~NodeTimeSource();
 
