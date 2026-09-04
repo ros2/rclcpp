@@ -29,7 +29,10 @@
 #include <vector>
 
 #include "rclcpp/executor.hpp"
+#include "rclcpp/executor_options.hpp"
 #include "rclcpp/executors/single_threaded_executor.hpp"
+#include "rclcpp/logger.hpp"
+#include "rclcpp/node_options.hpp"
 #include "rclcpp/utilities.hpp"
 #include "rclcpp_components/component_manager.hpp"
 #include "rcpputils/thread_name.hpp"
