@@ -1536,6 +1536,224 @@ TEST_F(TestNode, set_parameter_undeclared_parameters_not_allowed) {
     EXPECT_EQ(node->get_parameter(name).get_value<double>(), 11.0);
   }
   {
+<<<<<<< HEAD
+=======
+    // setting a parameter to non-finite values with floating point range descriptor
+    auto name = "parameter"_unq;
+    rcl_interfaces::msg::ParameterDescriptor descriptor;
+    descriptor.floating_point_range.resize(1);
+    auto & floating_point_range = descriptor.floating_point_range.at(0);
+    floating_point_range.from_value = 0.0;
+    floating_point_range.to_value = 100.0;
+    floating_point_range.step = 0.0;
+    node->declare_parameter(name, 50.0, descriptor);
+
+    constexpr double inf = std::numeric_limits<double>::infinity();
+    constexpr double nan = std::numeric_limits<double>::quiet_NaN();
+    EXPECT_FALSE(node->set_parameter(rclcpp::Parameter(name, inf)).successful);
+    EXPECT_EQ(node->get_parameter(name).get_value<double>(), 50.0);
+    EXPECT_FALSE(node->set_parameter(rclcpp::Parameter(name, -inf)).successful);
+    EXPECT_EQ(node->get_parameter(name).get_value<double>(), 50.0);
+    EXPECT_FALSE(node->set_parameter(rclcpp::Parameter(name, nan)).successful);
+    EXPECT_EQ(node->get_parameter(name).get_value<double>(), 50.0);
+  }
+  {
+    // setting an array parameter with floating point range descriptor
+    auto name = "parameter"_unq;
+    rcl_interfaces::msg::ParameterDescriptor descriptor;
+    descriptor.floating_point_range.resize(1);
+    auto & floating_point_range = descriptor.floating_point_range.at(0);
+    floating_point_range.from_value = 10.0;
+    floating_point_range.to_value = 11.0;
+    floating_point_range.step = 0.2;
+    node->declare_parameter(name, std::vector<double>({10.0, 10.4, 11.0, 10.8, 10.2, 10.6}),
+      descriptor);
+    EXPECT_TRUE(node->has_parameter(name));
+    auto value = node->get_parameter(name);
+    EXPECT_EQ(value.get_type(), rclcpp::PARAMETER_DOUBLE_ARRAY);
+    EXPECT_EQ(value.get_value<std::vector<double>>(),
+      std::vector<double>({10.0, 10.4, 11.0, 10.8, 10.2, 10.6}));
+
+    EXPECT_FALSE(node->set_parameter(rclcpp::Parameter(name,
+      std::vector<double>({10.3}))).successful);
+    EXPECT_EQ(node->get_parameter(name).get_value<std::vector<double>>(),
+      std::vector<double>({10.0, 10.4, 11.0, 10.8, 10.2, 10.6}));
+    EXPECT_FALSE(node->set_parameter(rclcpp::Parameter(name,
+      std::vector<double>({12.0}))).successful);
+    EXPECT_EQ(node->get_parameter(name).get_value<std::vector<double>>(),
+      std::vector<double>({10.0, 10.4, 11.0, 10.8, 10.2, 10.6}));
+    EXPECT_FALSE(node->set_parameter(rclcpp::Parameter(name,
+      std::vector<double>({9.4}))).successful);
+    EXPECT_EQ(node->get_parameter(name).get_value<std::vector<double>>(),
+      std::vector<double>({10.0, 10.4, 11.0, 10.8, 10.2, 10.6}));
+  }
+  {
+    // setting an array parameter with floating point range descriptor, negative step
+    auto name = "parameter"_unq;
+    rcl_interfaces::msg::ParameterDescriptor descriptor;
+    descriptor.floating_point_range.resize(1);
+    auto & floating_point_range = descriptor.floating_point_range.at(0);
+    floating_point_range.from_value = 10.0;
+    floating_point_range.to_value = 11.0;
+    floating_point_range.step = -0.2;
+    node->declare_parameter(name, std::vector<double>({10.0, 10.2, 10.4, 10.6, 10.8, 11.0}),
+      descriptor);
+    EXPECT_TRUE(node->has_parameter(name));
+    auto value = node->get_parameter(name);
+    EXPECT_EQ(value.get_type(), rclcpp::PARAMETER_DOUBLE_ARRAY);
+    EXPECT_EQ(value.get_value<std::vector<double>>(),
+      std::vector<double>({10.0, 10.2, 10.4, 10.6, 10.8, 11.0}));
+
+    EXPECT_FALSE(node->set_parameter(rclcpp::Parameter(name,
+      std::vector<double>({10.3}))).successful);
+    EXPECT_EQ(node->get_parameter(name).get_value<std::vector<double>>(),
+      std::vector<double>({10.0, 10.2, 10.4, 10.6, 10.8, 11.0}));
+    EXPECT_FALSE(node->set_parameter(rclcpp::Parameter(name,
+      std::vector<double>({12.0}))).successful);
+    EXPECT_EQ(node->get_parameter(name).get_value<std::vector<double>>(),
+      std::vector<double>({10.0, 10.2, 10.4, 10.6, 10.8, 11.0}));
+    EXPECT_FALSE(node->set_parameter(rclcpp::Parameter(name,
+      std::vector<double>({9.4}))).successful);
+    EXPECT_EQ(node->get_parameter(name).get_value<std::vector<double>>(),
+      std::vector<double>({10.0, 10.2, 10.4, 10.6, 10.8, 11.0}));
+  }
+  {
+    // setting an array parameter with floating point range descriptor, from_value > to_value
+    auto name = "parameter"_unq;
+    rcl_interfaces::msg::ParameterDescriptor descriptor;
+    descriptor.floating_point_range.resize(1);
+    auto & floating_point_range = descriptor.floating_point_range.at(0);
+    floating_point_range.from_value = 11.0;
+    floating_point_range.to_value = 10.0;
+    floating_point_range.step = 0.2;
+    node->declare_parameter(name, std::vector<double>({10.0, 11.0}), descriptor);
+    EXPECT_TRUE(node->has_parameter(name));
+    auto value = node->get_parameter(name);
+    EXPECT_EQ(value.get_type(), rclcpp::PARAMETER_DOUBLE_ARRAY);
+    EXPECT_EQ(value.get_value<std::vector<double>>(), std::vector<double>({10.0, 11.0}));
+
+    EXPECT_FALSE(node->set_parameter(rclcpp::Parameter(name,
+      std::vector<double>({10.2}))).successful);
+    EXPECT_EQ(node->get_parameter(name).get_value<std::vector<double>>(),
+      std::vector<double>({10.0, 11.0}));
+    EXPECT_FALSE(node->set_parameter(rclcpp::Parameter(name,
+      std::vector<double>({12.0}))).successful);
+    EXPECT_EQ(node->get_parameter(name).get_value<std::vector<double>>(),
+      std::vector<double>({10.0, 11.0}));
+    EXPECT_FALSE(node->set_parameter(rclcpp::Parameter(name,
+      std::vector<double>({9.4}))).successful);
+    EXPECT_EQ(node->get_parameter(name).get_value<std::vector<double>>(),
+      std::vector<double>({10.0, 11.0}));
+  }
+  {
+    // setting an array parameter with floating point range descriptor, from_value = to_value
+    auto name = "parameter"_unq;
+    rcl_interfaces::msg::ParameterDescriptor descriptor;
+    descriptor.floating_point_range.resize(1);
+    auto & floating_point_range = descriptor.floating_point_range.at(0);
+    floating_point_range.from_value = 10.0;
+    floating_point_range.to_value = 10.0;
+    floating_point_range.step = 0.2;
+    node->declare_parameter(name, std::vector<double>({10.0}), descriptor);
+    EXPECT_TRUE(node->has_parameter(name));
+    auto value = node->get_parameter(name);
+    EXPECT_EQ(value.get_type(), rclcpp::PARAMETER_DOUBLE_ARRAY);
+    EXPECT_EQ(value.get_value<std::vector<double>>(), std::vector<double>({10.0}));
+
+    EXPECT_FALSE(node->set_parameter(rclcpp::Parameter(name,
+      std::vector<double>({11.2}))).successful);
+    EXPECT_EQ(node->get_parameter(name).get_value<std::vector<double>>(),
+      std::vector<double>({10.0}));
+    EXPECT_FALSE(node->set_parameter(rclcpp::Parameter(name,
+      std::vector<double>({12.0}))).successful);
+    EXPECT_EQ(node->get_parameter(name).get_value<std::vector<double>>(),
+      std::vector<double>({10.0}));
+    EXPECT_FALSE(node->set_parameter(rclcpp::Parameter(name,
+      std::vector<double>({9.4}))).successful);
+    EXPECT_EQ(node->get_parameter(name).get_value<std::vector<double>>(),
+      std::vector<double>({10.0}));
+  }
+  {
+    // setting an array parameter with floating point range descriptor, step > distance
+    auto name = "parameter"_unq;
+    rcl_interfaces::msg::ParameterDescriptor descriptor;
+    descriptor.floating_point_range.resize(1);
+    auto & floating_point_range = descriptor.floating_point_range.at(0);
+    floating_point_range.from_value = 10.0;
+    floating_point_range.to_value = 11.0;
+    floating_point_range.step = 2.2;
+    node->declare_parameter(name, std::vector<double>({10.0, 11.0}), descriptor);
+    EXPECT_TRUE(node->has_parameter(name));
+    auto value = node->get_parameter(name);
+    EXPECT_EQ(value.get_type(), rclcpp::PARAMETER_DOUBLE_ARRAY);
+    EXPECT_EQ(value.get_value<std::vector<double>>(), std::vector<double>({10.0, 11.0}));
+
+    EXPECT_FALSE(node->set_parameter(rclcpp::Parameter(name,
+      std::vector<double>({12.2}))).successful);
+    EXPECT_EQ(node->get_parameter(name).get_value<std::vector<double>>(),
+      std::vector<double>({10.0, 11.0}));
+    EXPECT_FALSE(node->set_parameter(rclcpp::Parameter(name,
+      std::vector<double>({7.8}))).successful);
+    EXPECT_EQ(node->get_parameter(name).get_value<std::vector<double>>(),
+      std::vector<double>({10.0, 11.0}));
+  }
+  {
+    // setting an array parameter with floating point range descriptor,
+    // distance not multiple of the step.
+    auto name = "parameter"_unq;
+    rcl_interfaces::msg::ParameterDescriptor descriptor;
+    descriptor.floating_point_range.resize(1);
+    auto & floating_point_range = descriptor.floating_point_range.at(0);
+    floating_point_range.from_value = 10.0;
+    floating_point_range.to_value = 11.0;
+    floating_point_range.step = 0.7;
+    node->declare_parameter(name, std::vector<double>({10.0, 10.7, 11.0}), descriptor);
+    EXPECT_TRUE(node->has_parameter(name));
+    auto value = node->get_parameter(name);
+    EXPECT_EQ(value.get_type(), rclcpp::PARAMETER_DOUBLE_ARRAY);
+    EXPECT_EQ(value.get_value<std::vector<double>>(), std::vector<double>({10.0, 10.7, 11.0}));
+
+    EXPECT_FALSE(node->set_parameter(rclcpp::Parameter(name,
+      std::vector<double>({12.2}))).successful);
+    EXPECT_EQ(node->get_parameter(name).get_value<std::vector<double>>(),
+      std::vector<double>({10.0, 10.7, 11.0}));
+    EXPECT_FALSE(node->set_parameter(rclcpp::Parameter(name,
+      std::vector<double>({11.4}))).successful);
+    EXPECT_EQ(node->get_parameter(name).get_value<std::vector<double>>(),
+      std::vector<double>({10.0, 10.7, 11.0}));
+    EXPECT_FALSE(node->set_parameter(rclcpp::Parameter(name,
+      std::vector<double>({9.3}))).successful);
+    EXPECT_EQ(node->get_parameter(name).get_value<std::vector<double>>(),
+      std::vector<double>({10.0, 10.7, 11.0}));
+  }
+  {
+    // setting an array parameter with floating point range descriptor, step=0
+    auto name = "parameter"_unq;
+    rcl_interfaces::msg::ParameterDescriptor descriptor;
+    descriptor.floating_point_range.resize(1);
+    auto & floating_point_range = descriptor.floating_point_range.at(0);
+    floating_point_range.from_value = 10.0;
+    floating_point_range.to_value = 11.0;
+    floating_point_range.step = 0.0;
+    node->declare_parameter(name, std::vector<double>({10.0, 10.0001, 10.5479051, 11.0}),
+      descriptor);
+    EXPECT_TRUE(node->has_parameter(name));
+    auto value = node->get_parameter(name);
+    EXPECT_EQ(value.get_type(), rclcpp::PARAMETER_DOUBLE_ARRAY);
+    EXPECT_EQ(value.get_value<std::vector<double>>(),
+      std::vector<double>({10.0, 10.0001, 10.5479051, 11.0}));
+
+    EXPECT_FALSE(node->set_parameter(rclcpp::Parameter(name,
+      std::vector<double>({11.001}))).successful);
+    EXPECT_EQ(node->get_parameter(name).get_value<std::vector<double>>(),
+      std::vector<double>({10.0, 10.0001, 10.5479051, 11.0}));
+    EXPECT_FALSE(node->set_parameter(rclcpp::Parameter(name,
+      std::vector<double>({9.999}))).successful);
+    EXPECT_EQ(node->get_parameter(name).get_value<std::vector<double>>(),
+      std::vector<double>({10.0, 10.0001, 10.5479051, 11.0}));
+  }
+  {
+>>>>>>> fa8478f (node_parameters: reject non-finite values in floating-point range check (#3143))
     // setting a parameter with a different type is still possible
     // when having a descriptor specifying a type (type is a status, not a constraint).
     auto name = "parameter"_unq;
@@ -1577,7 +1795,7 @@ TEST_F(TestNode, set_parameter_undeclared_parameters_not_allowed) {
     RCPPUTILS_SCOPE_EXIT(
       {node->remove_pre_set_parameters_callback(handler.get());});  // always reset
   }
-}
+}  // NOLINT(readability/fn_size)
 
 TEST_F(TestNode, set_parameter_undeclared_parameters_allowed) {
   rclcpp::NodeOptions no;
