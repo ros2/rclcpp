@@ -46,10 +46,11 @@ protected:
     rclcpp::shutdown();
   }
 
+  template<typename ExecutorType>
   std::shared_ptr<Fibonacci::Impl::SendGoalService::Request>
   send_goal_request(
     rclcpp::Node::SharedPtr node, GoalUUID uuid,
-    rclcpp::Executor & executor,
+    ExecutorType & executor,
     std::chrono::milliseconds timeout = std::chrono::milliseconds(-1),
     bool executor_owns_node = false)
   {
@@ -1067,7 +1068,7 @@ TEST_F(TestServer, goals_expired_with_events_executor)
   rclcpp::ExecutorOptions opts;
   opts.context = node->get_node_base_interface()->get_context();
 
-  rclcpp::experimental::executors::EventsExecutor executor(opts);
+  rclcpp::executors::EventsCBGExecutor executor(opts, 1);
   executor.add_node(node);
   const std::vector<GoalUUID> uuids{
     {{1, 2, 3, 40, 5, 6, 70, 8, 9, 1, 11, 120, 13, 140, 15, 160}},
@@ -1132,7 +1133,7 @@ TEST_F(TestServer, goals_expired_with_events_executor)
     // Wait for the result request to be received
     ASSERT_EQ(
       rclcpp::FutureReturnCode::SUCCESS,
-      executor.spin_until_future_complete(future));
+      executor.spin_until_future_complete(future, std::chrono::seconds(20)));
 
     auto response = future.get();
     EXPECT_EQ(action_msgs::msg::GoalStatus::STATUS_SUCCEEDED, response->status);
