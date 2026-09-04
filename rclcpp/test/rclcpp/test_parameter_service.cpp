@@ -20,6 +20,10 @@
 #include <utility>
 #include <vector>
 
+#include "rcl_interfaces/msg/parameter.hpp"
+#include "rcl_interfaces/srv/set_parameters.hpp"
+#include "rcl_interfaces/srv/set_parameters_atomically.hpp"
+
 #include "../../src/rclcpp/parameter_service_names.hpp"
 #include "rclcpp/node.hpp"
 #include "rclcpp/parameter.hpp"
@@ -96,6 +100,64 @@ TEST_F(TestParameterService, set_parameters_atomically) {
   };
   client->set_parameters_atomically(parameters, 10s);
   EXPECT_EQ(0, client->get_parameter("parameter1", 100));
+}
+
+// Regression: an empty name must fail the request, not crash the node.
+TEST_F(TestParameterService, set_parameters_empty_name_returns_failure) {
+  const std::vector<rclcpp::Parameter> parameters = {
+    rclcpp::Parameter("", 0),
+  };
+  const auto results = client->set_parameters(parameters, 10s);
+  ASSERT_EQ(1u, results.size());
+  EXPECT_FALSE(results[0].successful);
+}
+
+TEST_F(TestParameterService, set_parameters_atomically_empty_name_returns_failure) {
+  const std::vector<rclcpp::Parameter> parameters = {
+    rclcpp::Parameter("", 0),
+  };
+  const auto result = client->set_parameters_atomically(parameters, 10s);
+  EXPECT_FALSE(result.successful);
+}
+
+// Unknown value type; the typed clients can't build one, so use a raw client.
+TEST_F(TestParameterService, set_parameters_unknown_type_returns_failure) {
+  auto raw_client = node->create_client<rcl_interfaces::srv::SetParameters>(
+    std::string(node->get_name()) + "/" + rclcpp::parameter_service_names::set_parameters);
+  ASSERT_TRUE(raw_client->wait_for_service(10s));
+
+  auto request = std::make_shared<rcl_interfaces::srv::SetParameters::Request>();
+  rcl_interfaces::msg::Parameter parameter;
+  parameter.name = "parameter1";
+  parameter.value.type = 42;  // not a valid rclcpp::ParameterType
+  request->parameters.push_back(parameter);
+
+  auto future = raw_client->async_send_request(request);
+  ASSERT_EQ(
+    rclcpp::spin_until_future_complete(node, future, 10s),
+    rclcpp::FutureReturnCode::SUCCESS);
+  const auto response = future.get();
+  ASSERT_EQ(1u, response->results.size());
+  EXPECT_FALSE(response->results[0].successful);
+}
+
+TEST_F(TestParameterService, set_parameters_atomically_unknown_type_returns_failure) {
+  auto raw_client = node->create_client<rcl_interfaces::srv::SetParametersAtomically>(
+    std::string(node->get_name()) + "/" + rclcpp::parameter_service_names::set_parameters_atomically);
+  ASSERT_TRUE(raw_client->wait_for_service(10s));
+
+  auto request = std::make_shared<rcl_interfaces::srv::SetParametersAtomically::Request>();
+  rcl_interfaces::msg::Parameter parameter;
+  parameter.name = "parameter1";
+  parameter.value.type = 42;  // not a valid rclcpp::ParameterType
+  request->parameters.push_back(parameter);
+
+  auto future = raw_client->async_send_request(request);
+  ASSERT_EQ(
+    rclcpp::spin_until_future_complete(node, future, 10s),
+    rclcpp::FutureReturnCode::SUCCESS);
+  const auto response = future.get();
+  EXPECT_FALSE(response->result.successful);
 }
 
 TEST_F(TestParameterService, list_parameters) {
