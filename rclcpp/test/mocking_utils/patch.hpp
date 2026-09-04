@@ -31,6 +31,7 @@
 #endif
 
 #include <functional>
+#include <stdexcept>
 #include <string>
 #include <type_traits>
 #include <utility>
@@ -386,8 +387,6 @@ template<size_t ID, typename ReturnT, typename ... ArgTs>
 class Patch<ID, ReturnT(ArgTs...)>
 {
 public:
-  using mock_type = typename PatchTraits<ID, ReturnT(ArgTs...)>::mock_type;
-
   /// Construct a patch.
   /**
    * \param[in] target Symbol target string, using Mimick syntax
@@ -395,40 +394,42 @@ public:
    *   binary, "lib:library_name" to target a given library, "file:path/to/library"
    *   to target a given file, or "sym:other_symbol" to target the first library
    *   that defines said symbol.
-   * \param[in] proxy An indirection to call the target function.
-   *   This indirection must ensure this call goes through the function's
-   *   trampoline, as setup by the dynamic linker.
+   * \param[in] proxy An indirection that keeps a reference to the target symbol
+   *   in the main executable.
    * \return a mocking_utils::Patch instance.
    */
   explicit Patch(const std::string & target, std::function<ReturnT(ArgTs...)> proxy)
-  : target_(target), proxy_(proxy)
-  {
-  }
+  : target_(target), proxy_(std::move(proxy))
+  {}
 
   // Copy construction and assignment are disabled.
   Patch(const Patch &) = delete;
   Patch & operator=(const Patch &) = delete;
 
-  Patch(Patch && other)
-  {
-    mock_ = other.mock_;
-    other.mock_ = nullptr;
-  }
+  Patch(Patch && other) noexcept
+  : target_stub_(std::exchange(other.target_stub_, MMK_STUB_INVALID)),
+    self_stub_(std::exchange(other.self_stub_, MMK_STUB_INVALID)),
+    target_(std::move(other.target_)),
+    proxy_(std::move(other.proxy_)),
+    configured_(other.configured_)
+  {}
 
-  Patch & operator=(Patch && other)
+  Patch & operator=(Patch && other) noexcept
   {
-    if (mock_) {
-      mmk_reset(mock_);
+    if (this != &other) {
+      reset();
+      target_stub_ = std::exchange(other.target_stub_, MMK_STUB_INVALID);
+      self_stub_ = std::exchange(other.self_stub_, MMK_STUB_INVALID);
+      target_ = std::move(other.target_);
+      proxy_ = std::move(other.proxy_);
+      configured_ = other.configured_;
     }
-    mock_ = other.mock_;
-    other.mock_ = nullptr;
+    return *this;
   }
 
   ~Patch()
   {
-    if (mock_) {
-      mmk_reset(mock_);
-    }
+    reset();
   }
 
   /// Inject a @p replacement for the patched function.
@@ -446,27 +447,49 @@ public:
   }
 
 private:
-  // Helper for template parameter pack expansion using `mmk_any`
-  // macro as pattern.
-  template<typename T>
-  T any() {return mmk_any(T);}
-
   void replace_with(std::function<ReturnT(ArgTs...)> replacement)
   {
-    if (mock_) {
+    if (configured_) {
       throw std::logic_error("Cannot configure patch more than once");
     }
     auto type_erased_trampoline =
       reinterpret_cast<mmk_fn>(prepare_trampoline<ID>(replacement));
-    auto MMK_MANGLE(mock_type, create) =
-      PatchTraits<ID, ReturnT(ArgTs...)>::MMK_MANGLE(mock_type, create);
-    mock_ = mmk_mock(target_.c_str(), mock_type);
-    mmk_when(proxy_(any<ArgTs>()...), .then_call = type_erased_trampoline);
+    const auto scope_separator = target_.find('@');
+    const bool patch_self =
+      scope_separator != std::string::npos && target_.substr(scope_separator + 1) != "self";
+    const auto self_target = patch_self ? target_.substr(0, scope_separator) : std::string{};
+
+    configured_ = true;
+    target_stub_ = mmk_stub_create(target_.c_str(), type_erased_trampoline, nullptr);
+    if (target_stub_ == MMK_STUB_INVALID) {
+      throw std::runtime_error("Failed to create patch for '" + target_ + "'");
+    }
+    if (patch_self) {
+      self_stub_ = mmk_stub_create(self_target.c_str(), type_erased_trampoline, nullptr);
+      if (self_stub_ == MMK_STUB_INVALID) {
+        reset();
+        throw std::runtime_error("Failed to create patch for '" + target_ + "'");
+      }
+    }
   }
 
-  mock_type mock_{nullptr};
+  void reset() noexcept
+  {
+    if (self_stub_ != MMK_STUB_INVALID) {
+      mmk_stub_destroy(self_stub_);
+      self_stub_ = MMK_STUB_INVALID;
+    }
+    if (target_stub_ != MMK_STUB_INVALID) {
+      mmk_stub_destroy(target_stub_);
+      target_stub_ = MMK_STUB_INVALID;
+    }
+  }
+
+  struct mmk_stub * target_stub_{MMK_STUB_INVALID};
+  struct mmk_stub * self_stub_{MMK_STUB_INVALID};
   std::string target_;
   std::function<ReturnT(ArgTs...)> proxy_;
+  bool configured_{false};
 };
 
 /// Make a patch for a `target` function.
@@ -474,7 +497,8 @@ private:
  * Useful for type deduction during \ref mocking_utils::Patch construction.
  *
  * \param[in] target Symbol target string, using Mimick syntax.
- * \param[in] proxy An indirection to call the target function.
+ * \param[in] proxy An indirection that keeps a reference to the target symbol
+ *   in the main executable.
  * \return a mocking_utils::Patch instance.
  *
  * \tparam ID Numerical identifier for this patch. Ought to be unique.
@@ -490,8 +514,8 @@ auto make_patch(const std::string & target, std::function<SignatureT> proxy)
 
 /// Define a dummy operator `op` for a given `type`.
 /**
- * Useful to enable patching functions that take arguments whose types
- * do not define basic comparison operators, as required by Mimick.
+ * Retained for compatibility with tests that define comparison operators
+ * for types passed through the mocking utility.
 */
 #define MOCKING_UTILS_BOOL_OPERATOR_RETURNS_FALSE(type_, op) \
   template<typename T> \
@@ -509,7 +533,7 @@ auto make_patch(const std::string & target, std::function<SignatureT> proxy)
 
 /// A transparent forwarding proxy to a given `function`.
 /**
- * Useful to ensure a call to `function` goes through its trampoline.
+ * Useful to keep the target symbol reachable in the main executable.
  */
 #define MOCKING_UTILS_PATCH_PROXY(function) \
   [] (auto && ... args)->decltype(auto) { \

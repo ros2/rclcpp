@@ -25,19 +25,7 @@
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp/utilities.hpp"
 
-#ifdef __clang__
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wordered-compare-function-pointers"
-#endif
-// TODO(ahcorde): the function mocking_utils::patch_and_return called with
-// rcl_logging_configure_with_output_handler is returning: "Comparison between pointer and integer"
-// Disabling this warning is fine for now.
-// Related issue https://github.com/ros2/rclcpp/issues/2488
 #include "../mocking_utils/patch.hpp"
-
-#ifdef __clang__
-#pragma clang diagnostic pop
-#endif
 
 #include "../utils/rclcpp_gtest_macros.hpp"
 
@@ -171,6 +159,17 @@ TEST(TestUtilities, test_context_basic_access_const_methods) {
   EXPECT_EQ(0u, context1->get_pre_shutdown_callbacks().size());
 }
 
+TEST(TestUtilities, patch_install_failure_is_reported) {
+  auto mock = mocking_utils::make_patch<__COUNTER__, rcl_ret_t(void)>(
+    "mocking_utils_symbol_that_does_not_exist@self", nullptr);
+  EXPECT_THROW(
+    mock.then_call([]() {return RCL_RET_OK;}),
+    std::runtime_error);
+  EXPECT_THROW(
+    mock.then_call([]() {return RCL_RET_OK;}),
+    std::logic_error);
+}
+
 MOCKING_UTILS_BOOL_OPERATOR_RETURNS_FALSE(rcl_guard_condition_options_t, ==)
 MOCKING_UTILS_BOOL_OPERATOR_RETURNS_FALSE(rcl_guard_condition_options_t, !=)
 MOCKING_UTILS_BOOL_OPERATOR_RETURNS_FALSE(rcl_guard_condition_options_t, >)
@@ -187,10 +186,21 @@ TEST(TestUtilities, test_context_init_shutdown_fails) {
 
   {
     auto context_fail_init = std::make_shared<rclcpp::contexts::DefaultContext>();
-    auto mock = mocking_utils::patch_and_return(
-      "lib:rclcpp", rcl_logging_configure_with_output_handler, RCL_RET_ERROR);
+    bool replacement_called = false;
+    rcl_logging_output_handler_t received_output_handler = nullptr;
+    auto mock = mocking_utils::patch(
+      "lib:rclcpp", rcl_logging_configure_with_output_handler,
+      ([&replacement_called, &received_output_handler](
+        const rcl_arguments_t *, const rcl_allocator_t *,
+        rcl_logging_output_handler_t output_handler) {
+        replacement_called = true;
+        received_output_handler = output_handler;
+        return RCL_RET_ERROR;
+      }));
     EXPECT_THROW(context_fail_init->init(0, nullptr), rclcpp::exceptions::RCLError);
     EXPECT_FALSE(context_fail_init->is_valid());
+    EXPECT_TRUE(replacement_called);
+    EXPECT_NE(nullptr, received_output_handler);
   }
 
   {
