@@ -54,7 +54,7 @@ ServiceBase::take_type_erased_request(void * request_out, rmw_request_id_t & req
 }
 
 const char *
-ServiceBase::get_service_name()
+ServiceBase::get_service_name() const
 {
   return rcl_service_get_service_name(this->get_service_handle().get());
 }
