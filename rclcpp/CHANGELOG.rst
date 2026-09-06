@@ -2,6 +2,11 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* register shutdown callback without shutdown mutex (`#3239 <https://github.com/ros2/rclcpp/issues/3239>`_) (`#3241 <https://github.com/ros2/rclcpp/issues/3241>`_)
+* Contributors: mergify[bot]
+
 16.0.20 (2026-08-31)
 --------------------
 * address context shutdown racy condition. (`#3219 <https://github.com/ros2/rclcpp/issues/3219>`_) (`#3224 <https://github.com/ros2/rclcpp/issues/3224>`_)
