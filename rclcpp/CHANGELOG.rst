@@ -2,8 +2,8 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+16.0.21 (2026-09-06)
+--------------------
 * register shutdown callback without shutdown mutex (`#3239 <https://github.com/ros2/rclcpp/issues/3239>`_) (`#3241 <https://github.com/ros2/rclcpp/issues/3241>`_)
 * Contributors: mergify[bot]
 
