@@ -22,6 +22,7 @@
 #include "rcl/arguments.h"
 #include "rcl/remap.h"
 
+#include "rclcpp/node.hpp"
 #include "rclcpp/node_options.hpp"
 
 #include "../mocking_utils/patch.hpp"
@@ -210,6 +211,8 @@ TEST(TestNodeOptions, copy) {
     // We separate attribute modification from variable initialisation (copy assignment operator)
     // to be sure the "non_default_options"'s properties are correctly set before testing the
     // assignment operator.
+    rclcpp::init(0, nullptr);
+    rclcpp::Node node("time_sink__test_node");
     auto non_default_options = rclcpp::NodeOptions();
     non_default_options
     .parameter_overrides({rclcpp::Parameter("foo", 0), rclcpp::Parameter("bar", "1")})
@@ -226,7 +229,8 @@ TEST(TestNodeOptions, copy) {
     .parameter_event_qos(rclcpp::ClockQoS())
     .rosout_qos(rclcpp::ParameterEventsQoS())
     .allow_undeclared_parameters(true)
-    .automatically_declare_parameters_from_overrides(true);
+    .automatically_declare_parameters_from_overrides(true)
+    .time_source(node.get_node_time_source_interface());
 
     auto copied_options = non_default_options;
     EXPECT_EQ(non_default_options.parameter_overrides(), copied_options.parameter_overrides());
@@ -250,6 +254,8 @@ TEST(TestNodeOptions, copy) {
       copied_options.allow_undeclared_parameters());
     EXPECT_EQ(non_default_options.automatically_declare_parameters_from_overrides(),
       copied_options.automatically_declare_parameters_from_overrides());
+    EXPECT_EQ(non_default_options.time_source(), copied_options.time_source());
+    rclcpp::shutdown();
   }
 }
 
