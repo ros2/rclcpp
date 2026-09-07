@@ -28,7 +28,11 @@
 
 #include "class_loader/class_loader.hpp"
 
+#include "rclcpp/executor.hpp"
+#include "rclcpp/logger.hpp"
 #include "rclcpp/node_options.hpp"
+#include "rclcpp/parameter.hpp"
+#include "rclcpp/parameter_value.hpp"
 #include "rclcpp/qos.hpp"
 
 #include "rclcpp_components/node_factory.hpp"
