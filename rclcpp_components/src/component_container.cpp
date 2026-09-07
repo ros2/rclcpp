@@ -19,8 +19,6 @@
 #include <thread>
 
 #include "rcutils/logging_macros.h"
-#include "rclcpp/executor.hpp"
-#include "rclcpp/executor_options.hpp"
 #include "rclcpp/executors/multi_threaded_executor.hpp"
 #include "rclcpp/executors/single_threaded_executor.hpp"
 #include "rclcpp/executors/events_cbg_executor/events_cbg_executor.hpp"

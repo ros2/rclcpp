@@ -14,7 +14,6 @@
 
 #include <memory>
 
-#include "rclcpp/executor_options.hpp"
 #include "rclcpp/executors/multi_threaded_executor.hpp"
 #include "rclcpp/utilities.hpp"
 
