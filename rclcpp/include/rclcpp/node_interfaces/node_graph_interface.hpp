@@ -29,6 +29,8 @@
 #include "rcl/graph.h"
 #include "rcl/guard_condition.h"
 
+#include "rmw/impl/cpp/buffer_backend_metadata.hpp"
+
 #include "rclcpp/event.hpp"
 #include "rclcpp/macros.hpp"
 #include "rclcpp/node_interfaces/detail/node_interfaces_helpers.hpp"
@@ -69,6 +71,9 @@ public:
     topic_type_ = info.topic_type;
 
     std::copy(info.endpoint_gid, info.endpoint_gid + RMW_GID_STORAGE_SIZE, endpoint_gid_.begin());
+
+    buffer_backend_metadata_ =
+      rmw::impl::cpp::parse_buffer_backend_metadata(info.buffer_backend_metadata);
   }
 
   /// Get a mutable reference to the node name.
@@ -141,6 +146,16 @@ public:
   const rosidl_type_hash_t &
   topic_type_hash() const;
 
+  /// Get a mutable reference to the buffer backend metadata.
+  RCLCPP_PUBLIC
+  std::map<std::string, std::string> &
+  buffer_backend_metadata();
+
+  /// Get a const reference to the buffer backend metadata.
+  RCLCPP_PUBLIC
+  const std::map<std::string, std::string> &
+  buffer_backend_metadata() const;
+
 private:
   std::string node_name_;
   std::string node_namespace_;
@@ -149,6 +164,7 @@ private:
   std::array<uint8_t, RMW_GID_STORAGE_SIZE> endpoint_gid_;
   rclcpp::QoS qos_profile_;
   rosidl_type_hash_t topic_type_hash_;
+  std::map<std::string, std::string> buffer_backend_metadata_;
 };
 
 /**
