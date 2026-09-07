@@ -12,11 +12,22 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#ifdef __linux__
+#include <pthread.h>
+#include <sched.h>
+#endif
+
 #include <chrono>
+#include <cstring>
 #include <functional>
 #include <memory>
 #include <set>
+#include <string>
+#include <unordered_map>
+#include <utility>
 #include <vector>
+
+#include "rcutils/logging_macros.h"
 
 #include "rcpputils/scope_exit.hpp"
 #include "rclcpp/exceptions/exceptions.hpp"
@@ -74,6 +85,15 @@ struct GlobalWeakExecutableCache
     guard_conditions.clear();
   }
 };
+
+struct DedicatedThreadPool
+{
+  std::mutex mutex;
+
+  /// The running dedicated worker threads, keyed by the scheduler
+  /// handle of their callback group
+  std::unordered_map<CBGScheduler::CallbackGroupHandle *, std::thread> threads;
+};
 }  // namespace cbg_executor
 
 EventsCBGExecutor::EventsCBGExecutor(
@@ -90,7 +110,8 @@ EventsCBGExecutor::EventsCBGExecutor(
   context_(options.context),
   timer_manager(std::make_unique<cbg_executor::TimerManager>(context_)),
   global_executable_cache(std::make_unique<cbg_executor::GlobalWeakExecutableCache>() ),
-  nodes_executable_cache(std::make_unique<cbg_executor::GlobalWeakExecutableCache>() )
+  nodes_executable_cache(std::make_unique<cbg_executor::GlobalWeakExecutableCache>() ),
+  dedicated_threads_(std::make_unique<cbg_executor::DedicatedThreadPool>() )
 {
   global_executable_cache->add_guard_condition_event (
         interrupt_guard_condition_,
@@ -138,6 +159,9 @@ void EventsCBGExecutor::shutdown()
   if(was_spinning) {
     scheduler->release_all_worker_threads();
   }
+
+  // release and join all dedicated worker threads
+  stop_dedicated_worker_threads();
 
   remove_all_nodes_and_callback_groups();
 
@@ -243,7 +267,7 @@ void EventsCBGExecutor::sync_callback_groups()
     return;
   }
 
-  std::scoped_lock l(callback_groups_mutex);
+  std::unique_lock l(callback_groups_mutex);
 
 
   std::vector<std::pair<CallbackGroupData *, rclcpp::CallbackGroup::SharedPtr>> cur_group_data;
@@ -279,9 +303,20 @@ void EventsCBGExecutor::sync_callback_groups()
         }
       }
 
+      bool dedicated_worker = false;
+      {
+        std::lock_guard cfg_lock{dedicated_thread_configs_mutex_};
+        for (const auto & config : dedicated_thread_configs_) {
+          if (config.callback_group.lock() == cbg) {
+            dedicated_worker = true;
+            break;
+          }
+        }
+      }
+
       CallbackGroupData new_entry{.callback_group = cbg,
         .registered_entities = std::make_unique<cbg_executor::RegisteredEntityCache>(*scheduler,
-        *timer_manager, cbg), .origin = origin};
+        *timer_manager, cbg, dedicated_worker), .origin = origin};
       new_entry.registered_entities->regenerate_events();
       next_group_data.push_back(std::move(new_entry) );
     };
@@ -335,6 +370,30 @@ void EventsCBGExecutor::sync_callback_groups()
   // FIXME inform scheduler about remove cbgs
 
   callback_groups.swap(next_group_data);
+
+  // entries that were not moved into callback_groups belong to callback
+  // groups that were removed from the executor. We move them out, so that
+  // their destructors (which unregister the entity ready callbacks) run
+  // after callback_groups_mutex was released.
+  std::vector<CallbackGroupData> dropped_group_data;
+  for (auto & old_entry : next_group_data) {
+    if (old_entry.registered_entities) {
+      dropped_group_data.push_back(std::move(old_entry) );
+    }
+  }
+
+  l.unlock();
+
+  // release the dedicated workers of removed callback groups. The threads
+  // terminate on their own, and are joined on spin exit or shutdown.
+  for (const auto & dropped : dropped_group_data) {
+    auto & handle = dropped.registered_entities->scheduler_cbg_handle;
+    if (handle.has_dedicated_worker() ) {
+      handle.release_dedicated_worker();
+    }
+  }
+
+  start_dedicated_worker_threads();
 }
 
 void
@@ -502,11 +561,20 @@ EventsCBGExecutor::spin()
     throw std::runtime_error("spin() called while already spinning");
   }
   RCPPUTILS_SCOPE_EXIT(
+    this->stop_dedicated_worker_threads();
     this->spinning.store(false);
     this->cancel_requested_.store(false););
   if (cancel_requested_.load()) {
     return;
   }
+
+  dedicated_exception_handler_ = std::function<void(const std::exception &)>();
+  dedicated_workers_active_.store(true);
+  // make sure the dedicated worker threads of already
+  // known callback groups are running
+  sync_callback_groups();
+  start_dedicated_worker_threads();
+
   std::vector<std::thread> threads;
   size_t thread_id = 0;
   for ( ; thread_id < number_of_threads_ - 1; ++thread_id) {
@@ -529,11 +597,20 @@ void EventsCBGExecutor::spin(
     throw std::runtime_error("spin() called while already spinning");
   }
   RCPPUTILS_SCOPE_EXIT(
+    this->stop_dedicated_worker_threads();
     this->spinning.store(false);
     this->cancel_requested_.store(false););
   if (cancel_requested_.load()) {
     return;
   }
+
+  dedicated_exception_handler_ = exception_handler;
+  dedicated_workers_active_.store(true);
+  // make sure the dedicated worker threads of already
+  // known callback groups are running
+  sync_callback_groups();
+  start_dedicated_worker_threads();
+
   std::vector<std::thread> threads;
   size_t thread_id = 0;
   for ( ; thread_id < number_of_threads_ - 1; ++thread_id) {
@@ -820,5 +897,227 @@ EventsCBGExecutor::remove_node(const std::shared_ptr<rclcpp::Node> & node_ptr, b
 void EventsCBGExecutor::add_callback_group_only(const rclcpp::CallbackGroup::SharedPtr & group_ptr)
 {
   add_callback_group(group_ptr, nullptr, true);
+}
+
+namespace
+{
+/**
+ * Applies the given thread settings to the calling thread.
+ * Failures are logged, and do not prevent the thread from running
+ * with the inherited settings.
+ */
+void apply_dedicated_thread_options(
+  const EventsCBGExecutor::DedicatedThreadOptions & options)
+{
+  using SchedulingPolicy = EventsCBGExecutor::DedicatedThreadOptions::SchedulingPolicy;
+
+#ifdef __linux__
+  if (!options.name.empty() ) {
+    // linux limits thread names to 15 characters plus null terminator
+    const std::string truncated_name = options.name.substr(0, 15);
+    const int ret = pthread_setname_np(pthread_self(), truncated_name.c_str() );
+    if (ret != 0) {
+      RCUTILS_LOG_ERROR_NAMED(
+        "rclcpp", "Failed to set name '%s' of dedicated thread: %s",
+        truncated_name.c_str(), strerror(ret) );
+    }
+  }
+
+  if (options.scheduling_policy != SchedulingPolicy::Inherit) {
+    int policy = SCHED_OTHER;
+    switch (options.scheduling_policy) {
+      case SchedulingPolicy::Inherit:
+      case SchedulingPolicy::Other:
+        policy = SCHED_OTHER;
+        break;
+      case SchedulingPolicy::RoundRobin:
+        policy = SCHED_RR;
+        break;
+      case SchedulingPolicy::Fifo:
+        policy = SCHED_FIFO;
+        break;
+    }
+
+    sched_param param{};
+    param.sched_priority = options.priority;
+    const int ret = pthread_setschedparam(pthread_self(), policy, &param);
+    if (ret != 0) {
+      RCUTILS_LOG_ERROR_NAMED(
+        "rclcpp",
+        "Failed to set scheduling policy / priority %d of dedicated thread: %s "
+        "(realtime policies usually require CAP_SYS_NICE or RLIMIT_RTPRIO)",
+        options.priority, strerror(ret) );
+    }
+  }
+
+  if (!options.cpu_affinity.empty() ) {
+    cpu_set_t cpuset;
+    CPU_ZERO(&cpuset);
+    for (const size_t core : options.cpu_affinity) {
+      if (core >= CPU_SETSIZE) {
+        RCUTILS_LOG_ERROR_NAMED(
+          "rclcpp", "Ignoring out of range cpu core %zu in cpu_affinity", core);
+        continue;
+      }
+      CPU_SET(core, &cpuset);
+    }
+    const int ret = pthread_setaffinity_np(pthread_self(), sizeof(cpuset), &cpuset);
+    if (ret != 0) {
+      RCUTILS_LOG_ERROR_NAMED(
+        "rclcpp", "Failed to set cpu affinity of dedicated thread: %s", strerror(ret) );
+    }
+  }
+#else
+  if (!options.name.empty() ||
+    options.scheduling_policy != SchedulingPolicy::Inherit ||
+    !options.cpu_affinity.empty() )
+  {
+    RCUTILS_LOG_WARN_NAMED(
+      "rclcpp",
+      "The name, scheduling_policy and cpu_affinity settings of "
+      "DedicatedThreadOptions are only supported on Linux");
+  }
+#endif
+
+  if (options.thread_init_callback) {
+    options.thread_init_callback();
+  }
+}
+}  // namespace
+
+void EventsCBGExecutor::set_dedicated_thread_for_callback_group(
+  const rclcpp::CallbackGroup::SharedPtr & group_ptr,
+  DedicatedThreadOptions options)
+{
+  {
+    std::lock_guard lock{callback_groups_mutex};
+    for (const auto & cbg_data : callback_groups) {
+      if (cbg_data.callback_group.lock() == group_ptr) {
+        throw std::runtime_error(
+                "set_dedicated_thread_for_callback_group must be called before "
+                "the callback group is added to the executor");
+      }
+    }
+  }
+
+  std::lock_guard lock{dedicated_thread_configs_mutex_};
+
+  // drop expired entries
+  dedicated_thread_configs_.erase(
+    std::remove_if(
+      dedicated_thread_configs_.begin(), dedicated_thread_configs_.end(),
+      [](const DedicatedThreadConfig & config) {
+        return config.callback_group.expired();
+      }), dedicated_thread_configs_.end() );
+
+  for (DedicatedThreadConfig & config : dedicated_thread_configs_) {
+    if (config.callback_group.lock() == group_ptr) {
+      config.options = std::move(options);
+      return;
+    }
+  }
+
+  dedicated_thread_configs_.push_back({group_ptr, std::move(options)});
+}
+
+void EventsCBGExecutor::set_dedicated_thread_for_callback_group(
+  const rclcpp::CallbackGroup::SharedPtr & group_ptr)
+{
+  set_dedicated_thread_for_callback_group(group_ptr, DedicatedThreadOptions());
+}
+
+void EventsCBGExecutor::start_dedicated_worker_threads()
+{
+  if (!dedicated_workers_active_.load() ) {
+    return;
+  }
+
+  std::scoped_lock l(callback_groups_mutex, dedicated_threads_->mutex);
+
+  for (const CallbackGroupData & cbg_data : callback_groups) {
+    auto & handle = cbg_data.registered_entities->scheduler_cbg_handle;
+    if (!handle.has_dedicated_worker() ) {
+      continue;
+    }
+    if (dedicated_threads_->threads.count(&handle) > 0) {
+      continue;
+    }
+
+    DedicatedThreadOptions thread_options;
+    {
+      const auto group = cbg_data.callback_group.lock();
+      if (!group) {
+        continue;
+      }
+      std::lock_guard cfg_lock{dedicated_thread_configs_mutex_};
+      for (const auto & config : dedicated_thread_configs_) {
+        if (config.callback_group.lock() == group) {
+          thread_options = config.options;
+          break;
+        }
+      }
+    }
+
+    // allow the worker to block again, in case this is
+    // a new spin cycle after a cancel
+    handle.reset_dedicated_worker_release();
+
+    cbg_executor::CBGScheduler::CallbackGroupHandle * handle_ptr = &handle;
+    dedicated_threads_->threads.emplace(
+      handle_ptr,
+      std::thread(
+        [this, handle_ptr, thread_options = std::move(thread_options),
+        exception_handler = dedicated_exception_handler_]() {
+          apply_dedicated_thread_options(thread_options);
+
+          while (rclcpp::ok(this->context_) && !cancel_requested_.load() ) {
+            auto ready_entity = handle_ptr->get_next_ready_entity();
+            if (!ready_entity) {
+              if (!handle_ptr->dedicated_worker_wait_for_work() ) {
+                return;
+              }
+              continue;
+            }
+
+            if (exception_handler) {
+              try {
+                ready_entity->execute_function();
+              } catch (const std::exception & e) {
+                exception_handler(e);
+              }
+            } else {
+              ready_entity->execute_function();
+            }
+
+            scheduler->mark_entity_as_executed(*ready_entity);
+          }
+        }) );
+  }
+}
+
+void EventsCBGExecutor::stop_dedicated_worker_threads()
+{
+  dedicated_workers_active_.store(false);
+
+  std::unordered_map<cbg_executor::CBGScheduler::CallbackGroupHandle *, std::thread> threads;
+  {
+    std::lock_guard l(dedicated_threads_->mutex);
+    threads.swap(dedicated_threads_->threads);
+  }
+
+  for (auto & entry : threads) {
+    entry.first->release_dedicated_worker();
+  }
+
+  const auto this_thread_id = std::this_thread::get_id();
+  for (auto & entry : threads) {
+    if (entry.second.get_id() == this_thread_id) {
+      // stop was initiated from inside a dedicated worker callback,
+      // (e.g. the callback triggered the shutdown) we can not join ourself
+      entry.second.detach();
+      continue;
+    }
+    entry.second.join();
+  }
 }
 }  // namespace rclcpp::executors

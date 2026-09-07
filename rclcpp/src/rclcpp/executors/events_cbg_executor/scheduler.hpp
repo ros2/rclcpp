@@ -14,10 +14,13 @@
 #pragma once
 
 #include <algorithm>
+#include <condition_variable>
 #include <deque>
 #include <functional>
 #include <list>
 #include <memory>
+#include <mutex>
+#include <optional>
 #include <utility>
 
 #include <rclcpp/callback_group.hpp>
@@ -58,6 +61,16 @@ public:
     }
   };
 
+  struct CallbackGroupHandle;
+
+  struct ExecutableEntity
+  {
+    // if called executes the entity
+    std::function<void()> execute_function;
+    // The callback group associated with the entity. Can be nullptr.
+    CallbackGroupHandle *callback_handle = nullptr;
+  };
+
   struct CallbackGroupHandle
   {
     explicit CallbackGroupHandle(CBGScheduler & scheduler, CallbackGroupType type)
@@ -85,6 +98,76 @@ public:
       int)> get_ready_callback_for_entity(const rclcpp::Waitable::WeakPtr & entity) = 0;
     virtual std::function<void(size_t)> get_ready_callback_for_entity(
       const CallbackEventType & entity) = 0;
+
+    /**
+     * Removes and returns the next ready entity of this callback group.
+     * In contrast to CBGScheduler::get_next_ready_entity, this operates
+     * only on the entities of this callback group, and does not interact
+     * with the scheduler wide ready queue. Used by dedicated worker threads.
+     */
+    virtual std::optional<ExecutableEntity> get_next_ready_entity() = 0;
+
+    /**
+     * Puts this handle into dedicated worker mode. Ready events of this
+     * callback group will not be announced via the scheduler wide ready
+     * queue. Instead the dedicated worker is woken up, and is expected to
+     * pop the events using get_next_ready_entity().
+     *
+     * Must be called before any ready callbacks were registered for
+     * entities of this callback group.
+     */
+    void enable_dedicated_worker()
+    {
+      dedicated_worker_state = std::make_unique<DedicatedWorkerState>();
+    }
+
+    bool has_dedicated_worker() const
+    {
+      return static_cast<bool>(dedicated_worker_state);
+    }
+
+    void wake_dedicated_worker()
+    {
+      {
+        std::lock_guard l(dedicated_worker_state->mutex);
+        dedicated_worker_state->work_signaled = true;
+      }
+      dedicated_worker_state->condition_variable.notify_one();
+    }
+
+    /**
+     * Blocks until new work is signaled, or the worker is released.
+     * @return false if the dedicated worker shall terminate
+     */
+    bool dedicated_worker_wait_for_work()
+    {
+      std::unique_lock lk(dedicated_worker_state->mutex);
+      dedicated_worker_state->condition_variable.wait(
+        lk, [this]() {
+          return dedicated_worker_state->work_signaled || dedicated_worker_state->released;
+      });
+      dedicated_worker_state->work_signaled = false;
+      return !dedicated_worker_state->released;
+    }
+
+    void release_dedicated_worker()
+    {
+      {
+        std::lock_guard l(dedicated_worker_state->mutex);
+        dedicated_worker_state->released = true;
+      }
+      dedicated_worker_state->condition_variable.notify_all();
+    }
+
+    /**
+     * Allows a newly spawned dedicated worker to block again,
+     * after a previous release. (spin cycle after cancel)
+     */
+    void reset_dedicated_worker_release()
+    {
+      std::lock_guard l(dedicated_worker_state->mutex);
+      dedicated_worker_state->released = false;
+    }
 
       /**
        * Marks the last removed ready entity as executed.
@@ -169,6 +252,17 @@ protected:
     std::mutex ready_mutex;
 
 private:
+    struct DedicatedWorkerState
+    {
+      std::mutex mutex;
+      std::condition_variable condition_variable;
+      bool work_signaled = false;
+      bool released = false;
+    };
+
+    // only set if this callback group is executed by a dedicated worker thread
+    std::unique_ptr<DedicatedWorkerState> dedicated_worker_state;
+
     // will be set if cbg is mutual exclusive and something is executing
     bool not_ready = false;
 
@@ -177,14 +271,6 @@ private:
 
     // type of the underlying callback group
     CallbackGroupType type;
-  };
-
-  struct ExecutableEntity
-  {
-    // if called executes the entity
-    std::function<void()> execute_function;
-    // The callback group associated with the entity. Can be nullptr.
-    CallbackGroupHandle *callback_handle = nullptr;
   };
 
   /**
@@ -235,6 +321,15 @@ private:
    */
   void callback_group_ready(CallbackGroupHandle *handle, bool callback_group_was_idle)
   {
+    if (handle->has_dedicated_worker()) {
+      // dedicated callback groups are not scheduled via the ready queue,
+      // their worker pops the events directly from the handle
+      if (callback_group_was_idle) {
+        handle->wake_dedicated_worker();
+      }
+      return;
+    }
+
     {
       std::lock_guard l(ready_callback_groups_mutex);
 
@@ -366,6 +461,12 @@ private:
     {
       std::lock_guard lk(ready_callback_groups_mutex);
       release_workers = true;
+
+      for (const auto & handle : callback_groups) {
+        if (handle->has_dedicated_worker()) {
+          handle->release_dedicated_worker();
+        }
+      }
     }
     work_ready_conditional.notify_all();
   }

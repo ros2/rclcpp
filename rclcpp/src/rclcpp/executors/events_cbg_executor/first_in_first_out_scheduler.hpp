@@ -50,7 +50,7 @@ public:
   std::function<void(size_t)> get_ready_callback_for_entity(
     const CBGScheduler::CallbackEventType & entity) final;
 
-  std::optional<CBGScheduler::ExecutableEntity> get_next_ready_entity();
+  std::optional<CBGScheduler::ExecutableEntity> get_next_ready_entity() final;
   std::optional<CBGScheduler::ExecutableEntity> get_next_ready_entity(
     GlobalEventIdProvider::MonotonicId max_id);
 
