@@ -30,7 +30,7 @@
   <build_export_depend>rosidl_typesupport_cpp</build_export_depend>
 
   <depend>libstatistics_collector</depend>
-  <depend>rcl</depend>
+  <depend version_gte="5.3.4">rcl</depend>
   <depend>rcl_yaml_param_parser</depend>
   <depend>rcpputils</depend>
   <depend>rcutils</depend>
