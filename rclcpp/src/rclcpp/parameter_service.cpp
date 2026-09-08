@@ -15,8 +15,8 @@
 #include "rclcpp/parameter_service.hpp"
 
 #include <algorithm>
-#include <exception>
 #include <memory>
+#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -91,7 +91,11 @@ ParameterService::ParameterService(
         try {
           result = node_params->set_parameters_atomically(
             {rclcpp::Parameter::from_parameter_msg(p)});
-        } catch (const std::exception & ex) {
+        } catch (const rclcpp::exceptions::ParameterNotDeclaredException & ex) {
+          RCLCPP_WARN(rclcpp::get_logger("rclcpp"), "Failed to set parameter: %s", ex.what());
+          result.successful = false;
+          result.reason = ex.what();
+        } catch (const std::runtime_error & ex) {
           RCLCPP_WARN(rclcpp::get_logger("rclcpp"), "Failed to set parameter: %s", ex.what());
           result.successful = false;
           result.reason = ex.what();
@@ -124,7 +128,7 @@ ParameterService::ParameterService(
           rclcpp::get_logger("rclcpp"), "Failed to set parameters atomically: %s", ex.what());
         response->result.successful = false;
         response->result.reason = "One or more parameters were not declared before setting";
-      } catch (const std::exception & ex) {
+      } catch (const std::runtime_error & ex) {
         RCLCPP_WARN(
           rclcpp::get_logger("rclcpp"), "Failed to set parameters atomically: %s", ex.what());
         response->result.successful = false;
