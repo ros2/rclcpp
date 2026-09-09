@@ -143,7 +143,8 @@ TEST_F(TestParameterService, set_parameters_unknown_type_returns_failure) {
 
 TEST_F(TestParameterService, set_parameters_atomically_unknown_type_returns_failure) {
   auto raw_client = node->create_client<rcl_interfaces::srv::SetParametersAtomically>(
-    std::string(node->get_name()) + "/" + rclcpp::parameter_service_names::set_parameters_atomically);
+    std::string(node->get_name()) + "/" +
+    rclcpp::parameter_service_names::set_parameters_atomically);
   ASSERT_TRUE(raw_client->wait_for_service(10s));
 
   auto request = std::make_shared<rcl_interfaces::srv::SetParametersAtomically::Request>();
