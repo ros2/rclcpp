@@ -164,8 +164,16 @@ builtin_interfaces::msg::Time
 operator+(const builtin_interfaces::msg::Time & lhs, const rclcpp::Duration & rhs);
 
 RCLCPP_PUBLIC
+builtin_interfaces::msg::Time &
+operator+=(builtin_interfaces::msg::Time & lhs, const rclcpp::Duration & rhs);
+
+RCLCPP_PUBLIC
 builtin_interfaces::msg::Time
 operator-(const builtin_interfaces::msg::Time & lhs, const rclcpp::Duration & rhs);
+
+RCLCPP_PUBLIC
+builtin_interfaces::msg::Time &
+operator-=(builtin_interfaces::msg::Time & lhs, const rclcpp::Duration & rhs);
 
 }  // namespace rclcpp
 
