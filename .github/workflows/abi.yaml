@@ -1,0 +1,49 @@
+# This workflow checks ABI compatibility of the shared libraries built from
+# this repository on every PR:
+#
+#   - librclcpp.so            (rclcpp)
+#   - librclcpp_action.so     (rclcpp_action)
+#   - libcomponent_manager.so (rclcpp_components)
+#   - librclcpp_lifecycle.so  (rclcpp_lifecycle)
+#
+# It uses the reusable ros2-abi-action workflow, which:
+#   1. resolves the ROS 2 distro from the PR's target branch (rolling/lyrical/kilted/jazzy/humble),
+#   2. builds all listed packages twice in the matching container (once against
+#      the target branch, once against the PR head) with -g -Og so DWARF debug
+#      info is present; a single colcon invocation builds the union of the
+#      dependency closures exactly once,
+#   3. expands the soname glob and delegates the binary ABI diff to
+#      fujitatomoya/libabigail-action (abidiff), one job per library,
+#   4. applies REP-0009 policy automatically: released distros (humble/jazzy/kilted/lyrical)
+#      fail on an incompatible ABI break, rolling is advisory only,
+#   5. surfaces per-library verdicts as sticky PR comments, labels, and a pass/fail check.
+#
+# See https://github.com/fujitatomoya/ros2-abi-action for details.
+name: abi
+
+on:
+  pull_request:
+    branches: [ "rolling", "lyrical", "kilted", "jazzy", "humble" ]
+
+  # Allows you to run this workflow manually from the Actions tab.
+  workflow_dispatch:
+
+jobs:
+  abi:
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: write
+    uses: fujitatomoya/ros2-abi-action/.github/workflows/check.yml@main
+    with:
+      # Colcon package names to build (whitespace-separated); no single package
+      # depends on all the others, so list every package in this repository.
+      package: rclcpp rclcpp_action rclcpp_components rclcpp_lifecycle
+      # Shared libraries produced by the packages above. The glob matches all
+      # libraries in the install tree; tests are not built (BUILD_TESTING=OFF),
+      # so no test-only libraries are picked up.
+      soname: "lib*.so"
+      # auto -> distro derived from the PR target branch.
+      distro: auto
+      # auto -> REP-0009: strict on released distros, advisory on rolling.
+      policy: auto
