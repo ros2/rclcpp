@@ -20,14 +20,7 @@
 #include <utility>
 #include <vector>
 
-<<<<<<< HEAD
 #include "rclcpp/rclcpp.hpp"
-=======
-#include "rcl_interfaces/msg/parameter.hpp"
-#include "rcl_interfaces/srv/set_parameters.hpp"
-#include "rcl_interfaces/srv/set_parameters_atomically.hpp"
-
->>>>>>> 2e5a8b9 (Don't let malformed set_parameters requests crash the node (#3256))
 #include "../../src/rclcpp/parameter_service_names.hpp"
 
 using namespace std::chrono_literals;
