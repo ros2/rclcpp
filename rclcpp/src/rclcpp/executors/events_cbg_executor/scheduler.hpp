@@ -263,25 +263,14 @@ private:
    */
   ExecutableEntityWithInfo get_next_ready_entity()
   {
-<<<<<<< HEAD
-    {
-      std::lock_guard l(ready_callback_groups_mutex);
-      if(needs_sync) {
-        needs_sync = false;
-        return ExecutableEntityWithInfo{
-          ExecutableEntity{sync_function, nullptr},
-          false};
-      }
-=======
     std::lock_guard l(ready_callback_groups_mutex);
     worker_checking_for_work = false;
 
     if(needs_sync) {
       needs_sync = false;
-      return ExecutableEntityWithInfo{.entity =
-          ExecutableEntity{.execute_function = sync_function, .callback_handle = nullptr},
-        .moreEntitiesReady = false};
->>>>>>> c36e550 (fix: Improved thread usage under congestion (#3258))
+      return ExecutableEntityWithInfo{
+        ExecutableEntity{sync_function, nullptr},
+        false};
     }
 
     return get_next_ready_entity_intern();
@@ -290,25 +279,14 @@ private:
   ExecutableEntityWithInfo get_next_ready_entity(
     GlobalEventIdProvider::MonotonicId max_id)
   {
-<<<<<<< HEAD
-    {
-      std::lock_guard l(ready_callback_groups_mutex);
-      if(needs_sync) {
-        needs_sync = false;
-        return ExecutableEntityWithInfo{
-          ExecutableEntity{sync_function, nullptr},
-          false};
-      }
-=======
     std::lock_guard l(ready_callback_groups_mutex);
     worker_checking_for_work = false;
 
     if(needs_sync) {
       needs_sync = false;
-      return ExecutableEntityWithInfo{.entity =
-          ExecutableEntity{.execute_function = sync_function, .callback_handle = nullptr},
-        .moreEntitiesReady = false};
->>>>>>> c36e550 (fix: Improved thread usage under congestion (#3258))
+      return ExecutableEntityWithInfo{
+        ExecutableEntity{sync_function, nullptr},
+        false};
     }
 
     return get_next_ready_entity_intern(max_id);
