@@ -16,6 +16,7 @@
 
 #include <algorithm>
 #include <memory>
+#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -94,6 +95,10 @@ ParameterService::ParameterService(
           RCLCPP_WARN(rclcpp::get_logger("rclcpp"), "Failed to set parameter: %s", ex.what());
           result.successful = false;
           result.reason = ex.what();
+        } catch (const std::runtime_error & ex) {
+          RCLCPP_WARN(rclcpp::get_logger("rclcpp"), "Failed to set parameter: %s", ex.what());
+          result.successful = false;
+          result.reason = ex.what();
         }
         response->results.push_back(result);
       }
@@ -108,14 +113,14 @@ ParameterService::ParameterService(
       const std::shared_ptr<rcl_interfaces::srv::SetParametersAtomically::Request> request,
       std::shared_ptr<rcl_interfaces::srv::SetParametersAtomically::Response> response)
     {
-      std::vector<rclcpp::Parameter> pvariants;
-      std::transform(
-        request->parameters.cbegin(), request->parameters.cend(),
-        std::back_inserter(pvariants),
-        [](const rcl_interfaces::msg::Parameter & p) {
-          return rclcpp::Parameter::from_parameter_msg(p);
-        });
       try {
+        std::vector<rclcpp::Parameter> pvariants;
+        std::transform(
+          request->parameters.cbegin(), request->parameters.cend(),
+          std::back_inserter(pvariants),
+          [](const rcl_interfaces::msg::Parameter & p) {
+            return rclcpp::Parameter::from_parameter_msg(p);
+          });
         auto result = node_params->set_parameters_atomically(pvariants);
         response->result = result;
       } catch (const rclcpp::exceptions::ParameterNotDeclaredException & ex) {
@@ -123,6 +128,11 @@ ParameterService::ParameterService(
           rclcpp::get_logger("rclcpp"), "Failed to set parameters atomically: %s", ex.what());
         response->result.successful = false;
         response->result.reason = "One or more parameters were not declared before setting";
+      } catch (const std::runtime_error & ex) {
+        RCLCPP_WARN(
+          rclcpp::get_logger("rclcpp"), "Failed to set parameters atomically: %s", ex.what());
+        response->result.successful = false;
+        response->result.reason = ex.what();
       }
     },
     qos_profile, nullptr);
