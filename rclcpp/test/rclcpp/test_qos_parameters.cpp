@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <cstdint>
 #include <map>
 #include <memory>
 #include <stdexcept>
@@ -19,7 +20,10 @@
 
 #include "gmock/gmock.h"
 
+#include "rmw/time.h"
+
 #include "rclcpp/detail/qos_parameters.hpp"
+#include "rclcpp/duration.hpp"
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp/node.hpp"
 #include "rclcpp/node_options.hpp"
@@ -193,6 +197,53 @@ TEST(TestQosParameters, declare_qos_subscription_parameters) {
         "qos_overrides./my/fully/qualified/topic_name.subscription", qos_params));
     EXPECT_EQ(8u, qos_params.size());
   }
+  rclcpp::shutdown();
+}
+
+TEST(TestQosParameters, declare_infinite_durations) {
+  // RMW_DURATION_INFINITE, and the "best available" deadline and liveliness lease
+  // sentinels, all carry 9223372036 seconds, which does not fit in the int32_t
+  // seconds field of rclcpp::Duration(int32_t, uint32_t).
+  constexpr rmw_time_t infinite = RMW_DURATION_INFINITE;
+  const int64_t infinite_ns = rclcpp::Duration::from_rmw_time(infinite).nanoseconds();
+
+  rclcpp::init(0, nullptr);
+  auto node = std::make_shared<rclcpp::Node>("my_node", "/ns");
+
+  rclcpp::QoS qos{rclcpp::KeepLast{10}};
+  qos.deadline(infinite);
+  qos.lifespan(infinite);
+  qos.liveliness_lease_duration(infinite);
+
+  EXPECT_EQ(
+    infinite_ns,
+    rclcpp::detail::get_default_qos_param_value(
+      rclcpp::QosPolicyKind::Deadline, qos).get<int64_t>());
+  EXPECT_EQ(
+    infinite_ns,
+    rclcpp::detail::get_default_qos_param_value(
+      rclcpp::QosPolicyKind::Lifespan, qos).get<int64_t>());
+  EXPECT_EQ(
+    infinite_ns,
+    rclcpp::detail::get_default_qos_param_value(
+      rclcpp::QosPolicyKind::LivelinessLeaseDuration, qos).get<int64_t>());
+
+  // Without a parameter override, declaring the overrides must hand back the profile
+  // it was given.
+  rclcpp::QoS declared = rclcpp::detail::declare_qos_parameters(
+  {
+    rclcpp::QosPolicyKind::Deadline, rclcpp::QosPolicyKind::Lifespan,
+    rclcpp::QosPolicyKind::LivelinessLeaseDuration
+  },
+    node,
+    "/my/fully/qualified/topic_name",
+    qos,
+    rclcpp::detail::PublisherQosParametersTraits{});
+
+  EXPECT_EQ(infinite_ns, declared.deadline().nanoseconds());
+  EXPECT_EQ(infinite_ns, declared.lifespan().nanoseconds());
+  EXPECT_EQ(infinite_ns, declared.liveliness_lease_duration().nanoseconds());
+
   rclcpp::shutdown();
 }
 
