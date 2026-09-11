@@ -14,10 +14,12 @@
 #pragma once
 
 #include <algorithm>
+#include <condition_variable>
 #include <deque>
 #include <functional>
 #include <list>
 #include <memory>
+#include <mutex>
 #include <utility>
 
 #include <rclcpp/callback_group.hpp>
@@ -29,6 +31,114 @@ namespace executors
 {
 namespace cbg_executor
 {
+struct Worker
+{
+  std::mutex mutex;
+  std::condition_variable condition_variable;
+  std::atomic<bool> wakeup = false;
+
+  void prepare_block()
+  {
+    wakeup = false;
+  }
+
+  void block()
+  {
+    std::unique_lock lk(mutex);
+    condition_variable.wait(lk, [this]() -> bool {
+        return wakeup;
+    });
+  }
+
+  void block_for(std::chrono::nanoseconds timeout)
+  {
+    std::unique_lock lk(mutex);
+    condition_variable.wait_for(lk, timeout, [this]() -> bool {
+        return wakeup;
+    });
+  }
+
+  void unblock()
+  {
+    {
+      std::unique_lock lk(mutex);
+      wakeup = true;
+    }
+    condition_variable.notify_one();
+  }
+};
+
+/**
+ * Queue of blocked (idle) worker threads.
+ *
+ * All member functions must be called while holding workers_mutex.
+ * The mutex is exposed so that the scheduler can lock it together
+ * with its own ready_callback_groups_mutex, which is needed to make
+ * "check for work and enqueue self" atomic with respect to
+ * "add work and wake a worker".
+ */
+struct WorkerQueue
+{
+  std::mutex workers_mutex;
+  std::deque<Worker *> workers;
+
+  bool release_workers = false;
+
+  /**
+   * Removes and returns the most recently blocked worker, or nullptr
+   * if no worker is blocked.
+   */
+  Worker * pop_blocked_worker_thread()
+  {
+    if(workers.empty()) {
+      // no threads available
+      return nullptr;
+    }
+    Worker * worker = workers.front();
+    workers.pop_front();
+    return worker;
+  }
+
+  /**
+   * Registers the worker as blocked. Returns false if the queue was
+   * released and the worker must not block.
+   */
+  bool push_blocked_worker_thread(Worker * worker)
+  {
+    if(release_workers) {
+      return false;
+    }
+    workers.push_front(worker);
+    return true;
+  }
+
+  /**
+   * Removes the given worker from the queue, if it is still in there.
+   * Needed for timed blocks, where the worker may wake up on its own
+   * without anyone having removed it from the queue.
+   */
+  void remove_worker_thread(Worker * worker)
+  {
+    auto it = std::find(workers.begin(), workers.end(), worker);
+    if(it != workers.end()) {
+      workers.erase(it);
+    }
+  }
+
+  /**
+   * Removes all blocked workers from the queue and marks the queue as
+   * released. Returns the removed workers, the caller must unblock them
+   * after dropping the lock.
+   */
+  std::deque<Worker *> release_all_worker_threads()
+  {
+    std::deque<Worker *> cpy;
+    cpy.swap(workers);
+    release_workers = true;
+    return cpy;
+  }
+};
+
 class CBGScheduler
 {
 public:
@@ -335,51 +445,94 @@ private:
   }
 
   /**
-   * Wakes up a worker thread
+   * Suppresses the next thread wakeup. This is useful when we know that
+   * a thread is about to check for work anyway. In this case it would
+   * be harmful to wake another thread for nothing
+   */
+  void suppress_thread_wakeup()
+  {
+    std::lock_guard l(ready_callback_groups_mutex);
+    worker_checking_for_work = true;
+  }
+
+  /**
+   * Wakes up one blocked worker thread, unless a worker is already
+   * on its way to get_next_ready_entity(). The flag is only set if
+   * a worker was actually woken, otherwise no one would ever clear it.
    */
   void unblock_one_worker_thread()
   {
+    Worker * worker = nullptr;
     {
-      std::lock_guard lk(ready_callback_groups_mutex);
+      std::scoped_lock l(ready_callback_groups_mutex, worker_queue.workers_mutex);
       if(worker_checking_for_work) {
         return;
       }
+      worker = worker_queue.pop_blocked_worker_thread();
+      if(worker == nullptr) {
+        return;
+      }
       worker_checking_for_work = true;
-      release_worker_once = true;
     }
-    work_ready_conditional.notify_one();
+    worker->unblock();
   }
 
-  void block_worker_thread()
+  /**
+   * Blocks the worker until work is available. Checking for work and
+   * registering as blocked happens atomically under the same lock that
+   * callback_group_ready / trigger_sync use to add work, so no wakeup
+   * can be lost in between. Returns immediately if work showed up,
+   * or if the worker queue was released.
+   */
+  void block_worker_thread(Worker * worker)
   {
-    std::unique_lock lk(ready_callback_groups_mutex);
-    work_ready_conditional.wait(lk, [this]() -> bool {
-        return !ready_callback_groups.empty() || release_worker_once || release_workers;
-    });
-    release_worker_once = false;
+    if(!prepare_and_enqueue_worker(worker)) {
+      return;
+    }
+    worker->block();
   }
 
-  void block_worker_thread_for(std::chrono::nanoseconds timeout)
+  void block_worker_thread_for(Worker * worker, std::chrono::nanoseconds timeout)
   {
-    std::unique_lock lk(ready_callback_groups_mutex);
-    work_ready_conditional.wait_for(lk, timeout, [this]() -> bool {
-        return !ready_callback_groups.empty() || release_worker_once || release_workers;
-    });
-    release_worker_once = false;
+    if(!prepare_and_enqueue_worker(worker)) {
+      return;
+    }
+    worker->block_for(timeout);
+    // on timeout the worker is still in the queue, remove it, as the
+    // worker may not be valid any more after this call
+    std::lock_guard lk(worker_queue.workers_mutex);
+    worker_queue.remove_worker_thread(worker);
   }
 
   void release_all_worker_threads()
   {
+    std::deque<Worker *> workers;
     {
-      std::lock_guard lk(ready_callback_groups_mutex);
-      release_workers = true;
+      std::lock_guard lk(worker_queue.workers_mutex);
+      workers = worker_queue.release_all_worker_threads();
     }
-    work_ready_conditional.notify_all();
+    for(Worker * worker : workers) {
+      worker->unblock();
+    }
   }
 
 protected:
   virtual std::unique_ptr<CallbackGroupHandle> get_handle_for_callback_group(
     const rclcpp::CallbackGroup::SharedPtr & callback_group) = 0;
+
+  /**
+   * Returns true if the worker was enqueued and shall block.
+   * Returns false if there is work pending or the queue was released.
+   */
+  bool prepare_and_enqueue_worker(Worker * worker)
+  {
+    worker->prepare_block();
+    std::scoped_lock l(ready_callback_groups_mutex, worker_queue.workers_mutex);
+    if(needs_sync || !ready_callback_groups.empty()) {
+      return false;
+    }
+    return worker_queue.push_blocked_worker_thread(worker);
+  }
 
   // sync function, will be triggered if the executor needs
   // resync. E.g. if entities / cbg or nodes were added / removed
@@ -390,11 +543,9 @@ protected:
   std::mutex ready_callback_groups_mutex;
   std::deque<CallbackGroupHandle *> ready_callback_groups;
 
-  bool release_workers = false;
-  bool release_worker_once = false;
   bool worker_checking_for_work = false;
 
-  std::condition_variable work_ready_conditional;
+  WorkerQueue worker_queue;
 
   std::list<std::unique_ptr<CallbackGroupHandle>> callback_groups;
 };
