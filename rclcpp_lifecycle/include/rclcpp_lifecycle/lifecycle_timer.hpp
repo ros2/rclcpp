@@ -15,6 +15,10 @@
 #ifndef RCLCPP_LIFECYCLE__LIFECYCLE_TIMER_HPP_
 #define RCLCPP_LIFECYCLE__LIFECYCLE_TIMER_HPP_
 
+#include <chrono>
+#include <memory>
+#include <utility>
+
 #include "rclcpp/timer.hpp"
 
 #include "rclcpp_lifecycle/managed_entity.hpp"
@@ -81,6 +85,6 @@ protected:
   RCLCPP_DISABLE_COPY(LifecycleWallTimer)
 };
 
-} // namespace rclcpp_lifecycle
+}  // namespace rclcpp_lifecycle
 
-#endif
+#endif  // RCLCPP_LIFECYCLE__LIFECYCLE_TIMER_HPP_
