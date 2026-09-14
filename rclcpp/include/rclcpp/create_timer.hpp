@@ -187,6 +187,7 @@ create_timer(
  * \return shared pointer to a generic timer
  * \throws std::invalid_argument if either clock, node_base or node_timers
  * are nullptr, or period is negative or too large
+ * \throws std::runtime_error if initial_call_time's clock type does not match clock's
  */
 template<typename DurationRepT, typename DurationT, typename CallbackT>
 typename rclcpp::GenericTimer<CallbackT>::SharedPtr
@@ -277,6 +278,7 @@ create_wall_timer(
  * \return shared pointer to a wall timer
  * \throws std::invalid_argument if either node_base or node_timers
  * are null, or period is negative or too large
+ * \throws std::runtime_error if initial_call_time's clock type is not RCL_STEADY_TIME
  */
 template<typename DurationRepT, typename DurationT, typename CallbackT>
 typename rclcpp::WallTimer<CallbackT>::SharedPtr

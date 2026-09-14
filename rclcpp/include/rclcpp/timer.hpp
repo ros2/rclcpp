@@ -79,6 +79,8 @@ public:
    *
    * In order to activate a timer that is not started on initialization,
    * user should call the reset() method.
+   *
+   * \throws std::runtime_error if initial_call_time's clock type does not match clock's
    */
   RCLCPP_PUBLIC
   explicit TimerBase(
@@ -285,6 +287,8 @@ public:
    * \param[in] callback User-specified callback function.
    * \param[in] context custom context to be used.
    * \param autostart timer state on initialization
+   *
+   * \throws std::runtime_error if initial_call_time's clock type does not match clock's
    */
   explicit GenericTimer(
     Clock::SharedPtr clock, Time initial_call_time, std::chrono::nanoseconds period,
@@ -435,6 +439,8 @@ public:
    * \param callback The callback function to execute every interval
    * \param context node context
    * \param autostart timer state on initialization
+   *
+   * \throws std::runtime_error if initial_call_time's clock type is not RCL_STEADY_TIME
    */
   WallTimer(
     Time initial_call_time,
