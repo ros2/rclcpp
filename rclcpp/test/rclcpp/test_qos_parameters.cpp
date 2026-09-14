@@ -231,10 +231,8 @@ TEST(TestQosParameters, declare_infinite_durations) {
   // Without a parameter override, declaring the overrides must hand back the profile
   // it was given.
   rclcpp::QoS declared = rclcpp::detail::declare_qos_parameters(
-  {
-    rclcpp::QosPolicyKind::Deadline, rclcpp::QosPolicyKind::Lifespan,
-    rclcpp::QosPolicyKind::LivelinessLeaseDuration
-  },
+    {rclcpp::QosPolicyKind::Deadline, rclcpp::QosPolicyKind::Lifespan,
+      rclcpp::QosPolicyKind::LivelinessLeaseDuration},
     node,
     "/my/fully/qualified/topic_name",
     qos,
