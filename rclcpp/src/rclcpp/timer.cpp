@@ -81,6 +81,15 @@ TimerBase::TimerBase(
   bool autostart)
 : clock_(clock), timer_handle_(nullptr)
 {
+  // An uninitialized clock is rejected below by rcl_timer_init3 itself; skip the type
+  // comparison here so that pre-existing error path is still what surfaces in that case.
+  if (clock_->get_clock_type() != RCL_CLOCK_UNINITIALIZED &&
+    initial_call_time.get_clock_type() != clock_->get_clock_type())
+  {
+    throw std::runtime_error(
+            "initial_call_time's clock type does not match clock's clock type");
+  }
+
   if (nullptr == context) {
     context = rclcpp::contexts::get_global_default_context();
   }

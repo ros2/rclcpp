@@ -232,6 +232,20 @@ TEST(TestCreateTimer, call_timer_with_initial_call_time_bad_arguments)
     rclcpp::create_timer(clock, initial_call_time, 1ms, callback, group, node_interface, nullptr),
     std::invalid_argument);
 
+  // initial_call_time's clock type does not match clock's clock type
+  rclcpp::Time mismatched_clock_type_time(static_cast<int64_t>(0), RCL_STEADY_TIME);
+  EXPECT_THROW(
+    rclcpp::create_timer(
+      clock, mismatched_clock_type_time, 1ms, callback, group, node_interface, timers_interface),
+    std::runtime_error);
+
+  // Same check for create_wall_timer, which always uses a steady clock internally regardless of
+  // what clock type initial_call_time was constructed with.
+  EXPECT_THROW(
+    rclcpp::create_wall_timer(
+      initial_call_time, 1ms, callback, group, node_interface, timers_interface),
+    std::runtime_error);
+
   rclcpp::shutdown();
 }
 

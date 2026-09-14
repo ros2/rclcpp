@@ -250,6 +250,19 @@ TEST_P(TestTimer, test_bad_arguments) {
   EXPECT_THROW(
     rclcpp::GenericTimer<void (*)()>(unitialized_clock, now, 1us, []() {}, context),
     rclcpp::exceptions::RCLError);
+
+  // initial_call_time's clock type does not match the timer's clock
+  rclcpp::Time mismatched_clock_type_time(static_cast<int64_t>(0), RCL_SYSTEM_TIME);
+  EXPECT_THROW(
+    rclcpp::GenericTimer<void (*)()>(
+      steady_clock, mismatched_clock_type_time, 1ms, []() {}, context),
+    std::runtime_error);
+
+  // Same check for WallTimer, which always uses a steady clock internally regardless of what
+  // clock type initial_call_time was constructed with.
+  EXPECT_THROW(
+    rclcpp::WallTimer<void (*)()>(mismatched_clock_type_time, 1ms, []() {}, context),
+    std::runtime_error);
 }
 
 TEST_P(TestTimer, test_initial_call_time)
