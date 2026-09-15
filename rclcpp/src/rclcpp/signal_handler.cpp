@@ -16,6 +16,7 @@
 
 #include <atomic>
 #include <csignal>
+#include <cstring>
 #include <mutex>
 #include <string>
 #include <thread>
