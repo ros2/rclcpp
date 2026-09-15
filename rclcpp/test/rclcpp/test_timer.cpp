@@ -22,6 +22,7 @@
 #include <string>
 #include <utility>
 
+#include "rcl/time.h"
 #include "rcl/timer.h"
 
 #include "rclcpp/clock.hpp"
@@ -298,6 +299,111 @@ TEST_P(TestTimer, test_initial_call_time)
   initial_time_timer->cancel();
 }
 
+TEST_P(TestTimer, resume_does_not_advance_if_not_yet_due)
+{
+  const auto period = 50ms;
+  const auto initial_delay = std::chrono::seconds(10);
+
+  std::shared_ptr<rclcpp::TimerBase> timer;
+  switch (timer_type) {
+    case TimerType::WALL_TIMER:
+      {
+        rclcpp::Clock steady_clock(RCL_STEADY_TIME);
+        timer = test_node->create_wall_timer(
+          steady_clock.now() + rclcpp::Duration(initial_delay), period, []() {},
+          nullptr, false);
+        break;
+      }
+    case TimerType::GENERIC_TIMER:
+      {
+        timer = test_node->create_timer(
+          test_node->get_clock()->now() + rclcpp::Duration(initial_delay), period, []() {},
+          nullptr, false);
+        break;
+      }
+  }
+
+  EXPECT_TRUE(timer->is_canceled());
+  timer->resume();
+  EXPECT_FALSE(timer->is_canceled());
+
+  // The original phase-anchored schedule should be preserved, not recomputed from now().
+  EXPECT_GT(
+    timer->time_until_trigger().count(),
+    std::chrono::nanoseconds(period).count());
+  EXPECT_LE(
+    timer->time_until_trigger().count(),
+    std::chrono::nanoseconds(initial_delay).count());
+
+  timer->cancel();
+}
+
+TEST_P(TestTimer, resume_catches_up_if_overdue)
+{
+  // Simulate a timer that was paused (canceled) for much longer than several periods.
+  const auto period = 100ms;
+  const auto overdue_by = 1050ms;
+
+  std::shared_ptr<rclcpp::TimerBase> timer;
+  switch (timer_type) {
+    case TimerType::WALL_TIMER:
+      {
+        rclcpp::Clock steady_clock(RCL_STEADY_TIME);
+        timer = test_node->create_wall_timer(
+          steady_clock.now() - rclcpp::Duration(overdue_by), period, []() {},
+          nullptr, false);
+        break;
+      }
+    case TimerType::GENERIC_TIMER:
+      {
+        timer = test_node->create_timer(
+          test_node->get_clock()->now() - rclcpp::Duration(overdue_by), period, []() {},
+          nullptr, false);
+        break;
+      }
+  }
+
+  timer->resume();
+  EXPECT_FALSE(timer->is_canceled());
+
+  // Should have caught up to the next period boundary after now, not restarted from now().
+  EXPECT_GT(timer->time_until_trigger().count(), 0);
+  EXPECT_LE(timer->time_until_trigger().count(), std::chrono::nanoseconds(period).count());
+
+  timer->cancel();
+}
+
+TEST_P(TestTimer, resume_uncancels_a_canceled_timer)
+{
+  const auto period = 10s;
+
+  std::shared_ptr<rclcpp::TimerBase> timer;
+  switch (timer_type) {
+    case TimerType::WALL_TIMER:
+      timer = test_node->create_wall_timer(period, []() {});
+      break;
+    case TimerType::GENERIC_TIMER:
+      timer = test_node->create_timer(period, []() {});
+      break;
+  }
+
+  const auto time_until_trigger_before = timer->time_until_trigger();
+
+  timer->cancel();
+  EXPECT_TRUE(timer->is_canceled());
+
+  timer->resume();
+  EXPECT_FALSE(timer->is_canceled());
+
+  // A short cancel/resume cycle with a long period should not have shifted the phase.
+  EXPECT_NEAR(
+    static_cast<double>(time_until_trigger_before.count()),
+    static_cast<double>(timer->time_until_trigger().count()),
+    static_cast<double>(std::chrono::nanoseconds(500ms).count()));
+
+  timer->cancel();
+}
+
 TEST_P(TestTimer, callback_with_timer) {
   rclcpp::TimerBase * timer_ptr = nullptr;
   auto timer_callback = [&timer_ptr](rclcpp::TimerBase & timer) {
@@ -449,4 +555,68 @@ TEST_P(TestTimer, test_timer_without_autostart)
     timer_without_autostart->time_until_trigger().count(),
     std::chrono::nanoseconds::max().count());
   EXPECT_FALSE(timer_without_autostart->is_canceled());
+}
+
+class TestComputePhaseAlignedTime : public ::testing::Test
+{
+protected:
+  void SetUp() override
+  {
+    rclcpp::init(0, nullptr);
+    clock_ = std::make_shared<rclcpp::Clock>(RCL_ROS_TIME);
+    rcl_clock_ = clock_->get_clock_handle();
+    ASSERT_EQ(RCL_RET_OK, rcl_enable_ros_time_override(rcl_clock_));
+  }
+
+  void TearDown() override
+  {
+    rclcpp::shutdown();
+  }
+
+  void set_now(rcl_time_point_value_t now_ns)
+  {
+    ASSERT_EQ(RCL_RET_OK, rcl_set_ros_time_override(rcl_clock_, now_ns));
+  }
+
+  rclcpp::Clock::SharedPtr clock_;
+  rcl_clock_t * rcl_clock_;
+};
+
+TEST_F(TestComputePhaseAlignedTime, rejects_non_positive_interval)
+{
+  set_now(1);
+  EXPECT_THROW(
+    rclcpp::compute_phase_aligned_time(*clock_, 0ns),
+    std::invalid_argument);
+  EXPECT_THROW(
+    rclcpp::compute_phase_aligned_time(*clock_, -1ns),
+    std::invalid_argument);
+}
+
+TEST_F(TestComputePhaseAlignedTime, advances_to_next_boundary_with_zero_phase)
+{
+  set_now(1'000'000'000);  // 1.0s
+  auto result = rclcpp::compute_phase_aligned_time(*clock_, 300ms);
+  EXPECT_EQ(1'200'000'000, result.nanoseconds());
+}
+
+TEST_F(TestComputePhaseAlignedTime, returns_now_when_already_on_a_boundary)
+{
+  set_now(900'000'000);  // 0.9s, an exact multiple of the 300ms interval
+  auto result = rclcpp::compute_phase_aligned_time(*clock_, 300ms);
+  EXPECT_EQ(900'000'000, result.nanoseconds());
+}
+
+TEST_F(TestComputePhaseAlignedTime, honors_phase_offset)
+{
+  set_now(1'000'000'000);  // 1.0s
+  auto result = rclcpp::compute_phase_aligned_time(*clock_, 300ms, 50ms);
+  EXPECT_EQ(1'250'000'000, result.nanoseconds());
+}
+
+TEST_F(TestComputePhaseAlignedTime, result_uses_clocks_type)
+{
+  set_now(1);
+  auto result = rclcpp::compute_phase_aligned_time(*clock_, 300ms);
+  EXPECT_EQ(RCL_ROS_TIME, result.get_clock_type());
 }

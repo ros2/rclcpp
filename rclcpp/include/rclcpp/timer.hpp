@@ -47,6 +47,30 @@ struct TimerInfo
   Time actual_call_time;
 };
 
+/// Compute a phase-aligned start time for a periodic timer.
+/**
+ * The result is the smallest time greater than or equal to `clock.now()`
+ * of the form `k * interval + phase` for some non-negative integer `k`.
+ *
+ * This is useful for synchronizing periodic timers across multiple nodes
+ * or processes that share a common, synchronized clock (e.g. ROS time)
+ * without needing to exchange an explicit start time out-of-band: any two
+ * callers with a synchronized clock computing this function with the same
+ * interval and phase will agree on the same sequence of aligned instants.
+ *
+ * \param[in] clock clock used to obtain the current time
+ * \param[in] interval alignment interval; must be greater than zero
+ * \param[in] phase offset added to each interval boundary
+ * \return the computed, phase-aligned start time, using clock's clock type
+ * \throws std::invalid_argument if interval is not greater than zero
+ */
+RCLCPP_PUBLIC
+Time
+compute_phase_aligned_time(
+  const Clock & clock,
+  std::chrono::nanoseconds interval,
+  std::chrono::nanoseconds phase = std::chrono::nanoseconds(0));
+
 class TimerBase
 {
 public:
@@ -120,6 +144,28 @@ public:
   RCLCPP_PUBLIC
   void
   reset();
+
+  /// Resume the timer, preserving its existing schedule phase.
+  /**
+   * Unlike reset(), this does not unconditionally recompute the next call
+   * time from the current time; if the timer's next call time is still in
+   * the future, it is left unchanged.
+   * If it is in the past (e.g. because the timer was canceled and is being
+   * resumed some time later), it is advanced by whole periods until it is
+   * in the future again, without shifting the phase established when the
+   * timer was initialized (or last had its next call time explicitly set).
+   * A canceled timer is also made not canceled by this call.
+   *
+   * This makes it possible to initialize a timer with autostart false and
+   * an explicit initial call time, and later resume it without losing the
+   * originally intended schedule, which is not possible with reset() since
+   * it always recomputes the next call time as now() + period.
+   *
+   * \throws std::runtime_error if the rcl_timer_resume returns a failure
+   */
+  RCLCPP_PUBLIC
+  void
+  resume();
 
   /// Indicate that we're about to execute the callback.
   /**
