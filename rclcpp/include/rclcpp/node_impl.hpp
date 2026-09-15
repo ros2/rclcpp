@@ -157,7 +157,8 @@ Node::create_timer(
   rclcpp::Time initial_call_time,
   std::chrono::duration<DurationRepT, DurationT> period,
   CallbackT callback,
-  const rclcpp::CallbackGroup::SharedPtr & group)
+  const rclcpp::CallbackGroup::SharedPtr & group,
+  bool autostart)
 {
   return rclcpp::create_timer(
     this->get_clock(),
@@ -166,7 +167,8 @@ Node::create_timer(
     std::move(callback),
     group,
     this->node_base_.get(),
-    this->node_timers_.get());
+    this->node_timers_.get(),
+    autostart);
 }
 
 template<typename ServiceT>

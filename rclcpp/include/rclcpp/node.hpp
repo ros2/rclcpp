@@ -279,6 +279,7 @@ public:
    * \param[in] period Time interval between triggers of the callback.
    * \param[in] callback User-defined callback function.
    * \param[in] group Callback group to execute this timer's callback in.
+   * \param[in] autostart The state of the timer on initialization.
    */
   template<typename DurationRepT = int64_t, typename DurationT = std::milli, typename CallbackT>
   typename rclcpp::GenericTimer<CallbackT>::SharedPtr
@@ -286,7 +287,8 @@ public:
     Time initial_call_time,
     std::chrono::duration<DurationRepT, DurationT> period,
     CallbackT callback,
-    const rclcpp::CallbackGroup::SharedPtr & group = nullptr);
+    const rclcpp::CallbackGroup::SharedPtr & group = nullptr,
+    bool autostart = true);
 
   /// Create and return a Client.
   /**
