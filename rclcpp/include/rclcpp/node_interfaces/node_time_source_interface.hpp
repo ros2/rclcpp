@@ -17,6 +17,7 @@
 
 #include "rclcpp/macros.hpp"
 #include "rclcpp/node_interfaces/detail/node_interfaces_helpers.hpp"
+#include "rclcpp/node_interfaces/node_clock_interface.hpp"
 #include "rclcpp/visibility_control.hpp"
 
 namespace rclcpp
@@ -29,6 +30,10 @@ class NodeTimeSourceInterface
 {
 public:
   RCLCPP_SMART_PTR_ALIASES_ONLY(NodeTimeSourceInterface)
+
+  RCLCPP_PUBLIC
+  virtual
+  void attachClock(rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock) = 0;
 
   RCLCPP_PUBLIC
   virtual
