@@ -12,17 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <algorithm>
 #include <array>
-#include <atomic>
 #include <chrono>
 #include <future>
 #include <map>
 #include <memory>
-#include <stdexcept>
 #include <string>
-#include <thread>
 #include <utility>
+#include <thread>
 
 #include "gtest/gtest.h"
 
@@ -35,17 +32,14 @@
 #include "rcl_action/action_client.h"
 #include "rcl_action/wait.h"
 
-#include "rclcpp/callback_group.hpp"
 #include "rclcpp/clock.hpp"
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp/executors.hpp"
-#include "rclcpp/executors/single_threaded_executor.hpp"
 #include "rclcpp/node.hpp"
 #include "rclcpp/publisher.hpp"
-#include "rclcpp/qos.hpp"
+#include "rclcpp/rclcpp.hpp"
 #include "rclcpp/service.hpp"
 #include "rclcpp/time.hpp"
-#include "rclcpp/utilities.hpp"
 
 #include "test_msgs/action/fibonacci.hpp"
 #include "test_msgs/msg/empty.hpp"
@@ -706,6 +700,60 @@ TEST_F(TestClientAgainstServer, async_send_goal_with_goal_response_callback_wait
     EXPECT_EQ(3, wrapped_result.result->sequence.back());
   }
 }
+
+TEST_F(TestClientAgainstServer, status_message_before_goal_response)
+{
+  auto action_client = rclcpp_action::create_client<ActionType>(client_node, action_name);
+  ASSERT_TRUE(action_client->wait_for_action_server(WAIT_FOR_SERVER_TIMEOUT));
+
+  enable_pending_handling_goal();
+
+  bool goal_response_received = false;
+  auto send_goal_ops = rclcpp_action::Client<ActionType>::SendGoalOptions();
+  send_goal_ops.goal_response_callback =
+    [&goal_response_received](typename ActionGoalHandle::SharedPtr goal_handle)
+    {
+      if (goal_handle) {
+        goal_response_received = true;
+      }
+    };
+
+  ActionGoal goal;
+  goal.order = 4;
+  auto future_goal_handle = action_client->async_send_goal(goal, send_goal_ops);
+
+  // Spin server to process the goal request service call
+  server_executor.spin_some();
+
+  // Publish status message with STATUS_EXECUTING before completing the service response handling on the client side
+  ASSERT_EQ(1u, goals.size());
+  auto goal_request = goals.begin()->second.first;
+  auto goal_response = goals.begin()->second.second;
+
+  ActionStatusMessage status_message;
+  rclcpp_action::GoalStatus goal_status;
+  goal_status.goal_info.goal_id.uuid = goal_request->goal_id.uuid;
+  goal_status.goal_info.stamp = goal_response->stamp;
+  goal_status.status = rclcpp_action::GoalStatus::STATUS_EXECUTING;
+  status_message.status_list.push_back(goal_status);
+  status_publisher->publish(status_message);
+
+  server_executor.spin_some();
+
+  // Allow server goal handling to proceed
+  disable_pending_handling_goal();
+
+  // Dual spin until goal handle future completes
+  dual_spin_until_future_complete(future_goal_handle);
+
+  auto goal_handle = future_goal_handle.get();
+  EXPECT_TRUE(goal_response_received);
+  ASSERT_NE(nullptr, goal_handle);
+  EXPECT_TRUE(
+    goal_handle->get_status() == rclcpp_action::GoalStatus::STATUS_ACCEPTED ||
+    goal_handle->get_status() == rclcpp_action::GoalStatus::STATUS_EXECUTING);
+}
+
 
 TEST_F(TestClientAgainstServer, async_send_goal_with_feedback_callback_wait_for_result)
 {

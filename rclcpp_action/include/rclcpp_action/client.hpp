@@ -15,6 +15,7 @@
 #ifndef RCLCPP_ACTION__CLIENT_HPP_
 #define RCLCPP_ACTION__CLIENT_HPP_
 
+#include <algorithm>
 #include <chrono>
 #include <functional>
 #include <future>
@@ -29,12 +30,15 @@
 #include "rcl/event_callback.h"
 
 #include "rclcpp/exceptions.hpp"
+#include "rclcpp/clock.hpp"
 #include "rclcpp/macros.hpp"
 #include "rclcpp/node_interfaces/node_base_interface.hpp"
 #include "rclcpp/node_interfaces/node_logging_interface.hpp"
 #include "rclcpp/node_interfaces/node_graph_interface.hpp"
 #include "rclcpp/logger.hpp"
+#include "rclcpp/qos.hpp"
 #include "rclcpp/time.hpp"
+#include "rclcpp/waitable.hpp"
 
 #include "rosidl_runtime_c/action_type_support_struct.h"
 #include "rosidl_typesupport_cpp/action_type_support.hpp"
@@ -194,6 +198,10 @@ public:
         using GoalResponse = typename ActionT::Impl::SendGoalService::Response;
         auto goal_response = std::static_pointer_cast<GoalResponse>(response);
         if (!goal_response->accepted) {
+          {
+            std::lock_guard<std::recursive_mutex> guard(goal_handles_mutex_);
+            pending_statuses_.erase(goal_request->goal_id.uuid);
+          }
           promise->set_value(nullptr);
           if (options.goal_response_callback) {
             options.goal_response_callback(nullptr);
@@ -222,6 +230,11 @@ public:
           new GoalHandle(goal_info, options.feedback_callback, options.result_callback));
         {
           std::lock_guard<std::recursive_mutex> guard(goal_handles_mutex_);
+          auto pending_it = pending_statuses_.find(goal_info.goal_id.uuid);
+          if (pending_it != pending_statuses_.end()) {
+            goal_handle->set_status(pending_it->second);
+            pending_statuses_.erase(pending_it);
+          }
           goal_handles_[goal_handle->get_goal_id()] = goal_handle;
         }
         promise->set_value(goal_handle);
@@ -510,9 +523,11 @@ private:
     for (const GoalStatus & status : status_message->status_list) {
       const GoalUUID & goal_id = status.goal_info.goal_id.uuid;
       if (goal_handles_.count(goal_id) == 0) {
+        pending_statuses_[goal_id] = status.status;
         RCLCPP_DEBUG(
           this->get_logger(),
-          "Received status for unknown goal. Ignoring...");
+          "Received status for pending goal prior to response callback. Stored status %d.",
+          static_cast<int>(status.status));
         continue;
       }
       typename GoalHandle::SharedPtr goal_handle = goal_handles_[goal_id].lock();
@@ -522,6 +537,7 @@ private:
           this->get_logger(),
           "Dropping weak reference to goal handle during status callback");
         goal_handles_.erase(goal_id);
+        pending_statuses_.erase(goal_id);
         continue;
       }
       goal_handle->set_status(status.status);
@@ -622,6 +638,7 @@ private:
   }
 
   std::map<GoalUUID, typename GoalHandle::WeakPtr> goal_handles_;
+  std::map<GoalUUID, int8_t> pending_statuses_;
   std::recursive_mutex goal_handles_mutex_;
 };
 }  // namespace rclcpp_action
