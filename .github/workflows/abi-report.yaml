@@ -1,0 +1,34 @@
+# Publishes the result of the "abi" workflow (abi.yaml) on the pull request:
+# one sticky comment with the per-library ABI verdicts and the
+# "ABI compatible" / "ABI break" label.
+#
+# This is a separate workflow because abi.yaml builds and diffs the pull
+# request's own code. For pull requests from forks GitHub therefore runs it
+# with a read-only token, whatever permissions it asks for, and it cannot
+# write to the PR. workflow_run workflows instead run the workflow file from
+# the default branch of this repository with a normal token; this one never
+# checks out or executes anything from the pull request, it only downloads the
+# report artifacts the abi run uploaded and posts what they say.
+#
+# The pass/fail check on the pull request still comes from abi.yaml; this
+# workflow only adds the comment and the label. It only starts firing once it
+# exists on the default branch, and a first-time contributor's abi run still
+# needs a maintainer's approval before anything is published.
+#
+# See https://github.com/fujitatomoya/ros2-abi-action for details.
+name: abi-report
+
+on:
+  workflow_run:
+    # Must match the `name:` of abi.yaml.
+    workflows: [abi]
+    types: [completed]
+
+jobs:
+  report:
+    permissions:
+      contents: read
+      pull-requests: write   # sticky comment + label
+      issues: write          # label
+      actions: read          # download the abi run's report artifacts
+    uses: fujitatomoya/ros2-abi-action/.github/workflows/report.yml@main

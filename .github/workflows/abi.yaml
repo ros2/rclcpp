@@ -21,7 +21,15 @@
 #      fujitatomoya/libabigail-action (abidiff), one job per library,
 #   5. applies REP-0009 policy automatically: released distros (humble/jazzy/kilted/lyrical)
 #      fail on an incompatible ABI break, rolling is advisory only,
-#   6. surfaces per-library verdicts as sticky PR comments, labels, and a pass/fail check.
+#   6. surfaces the verdict as a pass/fail check and uploads one report bundle
+#      (abidiff report + verdict.json) per library.
+#
+# The sticky PR comment and the "ABI compatible" / "ABI break" labels are NOT
+# posted from here (publish: workflow-run). Most rclcpp pull requests come from
+# forks, and on pull_request events from a fork GitHub gives this workflow a
+# read-only token regardless of the permissions requested below, so any write
+# to the PR would fail. abi-report.yaml runs on workflow_run once this workflow
+# completes and publishes the comment and labels with a token that may write.
 #
 # Paired changes in other repositories (e.g. an rcl PR this PR depends on) are
 # declared by the PR author in the PR description and applied to the PR side
@@ -41,10 +49,10 @@ on:
 
 jobs:
   abi:
+    # Nothing is written to the pull request from this workflow; the report
+    # workflow holds the write permissions.
     permissions:
       contents: read
-      pull-requests: write
-      issues: write
     uses: fujitatomoya/ros2-abi-action/.github/workflows/check.yml@main
     with:
       # Colcon package names to build (whitespace-separated); no single package
@@ -63,3 +71,6 @@ jobs:
       distro: auto
       # auto -> REP-0009: strict on released distros, advisory on rolling.
       policy: auto
+      # Leave the PR comment and labels to abi-report.yaml (workflow_run), so
+      # pull requests from forks get them too.
+      publish: workflow-run
