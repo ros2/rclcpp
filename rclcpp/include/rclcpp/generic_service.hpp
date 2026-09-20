@@ -23,6 +23,7 @@
 #include <utility>
 #include <variant>
 
+#include "rclcpp/any_service_callback.hpp"
 #include "rclcpp/typesupport_helpers.hpp"
 
 #include "rosidl_runtime_c/service_type_support_struct.h"
@@ -45,9 +46,7 @@ public:
   : callback_(std::monostate{})
   {}
 
-  template<
-    typename CallbackT,
-    typename std::enable_if_t<!detail::can_be_nullptr<CallbackT>::value, int> = 0>
+  template<typename CallbackT>
   void
   set(CallbackT && callback)
   {
@@ -85,50 +84,10 @@ public:
       // of all the above workaround ...
       callback_ = std::forward<CallbackT>(callback);
     }
-  }
 
-  template<
-    typename CallbackT,
-    typename std::enable_if_t<detail::can_be_nullptr<CallbackT>::value, int> = 0>
-  void
-  set(CallbackT && callback)
-  {
-    if (!callback) {
-      throw std::invalid_argument("AnyServiceCallback::set(): callback cannot be nullptr");
-    }
-    // Workaround Windows issue with std::bind
-    if constexpr (
-      rclcpp::function_traits::same_arguments<
-        CallbackT,
-        SharedPtrCallback
-      >::value)
-    {
-      callback_.template emplace<SharedPtrCallback>(callback);
-    } else if constexpr (  // NOLINT
-      rclcpp::function_traits::same_arguments<
-        CallbackT,
-        SharedPtrWithRequestHeaderCallback
-      >::value)
-    {
-      callback_.template emplace<SharedPtrWithRequestHeaderCallback>(callback);
-    } else if constexpr (  // NOLINT
-      rclcpp::function_traits::same_arguments<
-        CallbackT,
-        SharedPtrDeferResponseCallback
-      >::value)
-    {
-      callback_.template emplace<SharedPtrDeferResponseCallback>(callback);
-    } else if constexpr (  // NOLINT
-      rclcpp::function_traits::same_arguments<
-        CallbackT,
-        SharedPtrDeferResponseCallbackWithServiceHandle
-      >::value)
-    {
-      callback_.template emplace<SharedPtrDeferResponseCallbackWithServiceHandle>(callback);
-    } else {
-      // the else clause is not needed, but anyways we should only be doing this instead
-      // of all the above workaround ...
-      callback_ = std::forward<CallbackT>(callback);
+    // Reject a null target (e.g. a null function pointer or empty std::function).
+    if (detail::callback_is_null(callback_)) {
+      throw std::invalid_argument("GenericServiceCallback::set(): callback cannot be nullptr");
     }
   }
 
