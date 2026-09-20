@@ -391,6 +391,33 @@ public:
     );
   }
 
+  /// Get parameter values, reporting the wait outcome so failures are distinguishable.
+  /**
+   * Behaves like get_parameters(parameter_names, timeout), but additionally stores the
+   * outcome of waiting for the service response in \p result. The other overloads return
+   * an empty vector both when the server has no matching parameters and when the request
+   * does not complete (timeout or interruption); this overload lets callers tell those
+   * cases apart. On any non-SUCCESS result the returned vector is empty.
+   *
+   * \param[in] parameter_names the names of the parameters to get.
+   * \param[in] timeout how long to wait for the response before giving up.
+   * \param[out] result the outcome of waiting for the response.
+   * \return the parameter values, or an empty vector if \p result is not SUCCESS.
+   */
+  template<typename RepT = int64_t, typename RatioT = std::milli>
+  std::vector<rclcpp::Parameter>
+  get_parameters(
+    const std::vector<std::string> & parameter_names,
+    std::chrono::duration<RepT, RatioT> timeout,
+    rclcpp::FutureReturnCode & result)
+  {
+    return get_parameters(
+      parameter_names,
+      std::chrono::duration_cast<std::chrono::nanoseconds>(timeout),
+      result
+    );
+  }
+
   RCLCPP_PUBLIC
   bool
   has_parameter(const std::string & parameter_name);
@@ -582,6 +609,13 @@ protected:
   get_parameters(
     const std::vector<std::string> & parameter_names,
     std::chrono::nanoseconds timeout);
+
+  RCLCPP_PUBLIC
+  std::vector<rclcpp::Parameter>
+  get_parameters(
+    const std::vector<std::string> & parameter_names,
+    std::chrono::nanoseconds timeout,
+    rclcpp::FutureReturnCode & result);
 
   RCLCPP_PUBLIC
   std::vector<rcl_interfaces::msg::ParameterDescriptor>
