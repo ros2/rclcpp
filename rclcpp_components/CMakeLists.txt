@@ -134,6 +134,15 @@ if(BUILD_TESTING)
     target_link_libraries(test_component_manager_api component_manager)
   endif()
 
+  ament_add_gtest(test_component_manager_isolated_shutdown
+    test/test_component_manager_isolated_shutdown.cpp
+    APPEND_ENV AMENT_PREFIX_PATH=${CMAKE_CURRENT_BINARY_DIR}/test_ament_index/$<CONFIG>
+    APPEND_LIBRARY_DIRS "${append_library_dirs}"
+    TIMEOUT 30)
+  if(TARGET test_component_manager_isolated_shutdown)
+    target_link_libraries(test_component_manager_isolated_shutdown component_manager)
+  endif()
+
   ament_add_google_benchmark(benchmark_components
     test/benchmark/benchmark_components.cpp
     APPEND_ENV AMENT_PREFIX_PATH=${CMAKE_CURRENT_BINARY_DIR}/test_ament_index/$<CONFIG>
