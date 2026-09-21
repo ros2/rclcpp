@@ -58,12 +58,33 @@ struct Worker
     });
   }
 
+  /**
+   * This function is for normal unblocking, when there is
+   * no risk that the worker might get deleted. This version
+   * is more performant, as the notified thread will not directly
+   * run into the locked mutex.
+   */
   void unblock()
   {
     {
       std::unique_lock lk(mutex);
       wakeup = true;
     }
+    condition_variable.notify_one();
+  }
+
+  /*
+   * This function shall be used if there is a risk that the worker
+   * might get deleted after wakeup. This function is supposed to
+   * be used in the shutdown case.
+   * This function is less performant as the unblock function, as
+   * the notofied thread may be tempoarlily blocked again until the
+   * mutex is released.
+   */
+  void unblock_thread_safe()
+  {
+    std::unique_lock lk(mutex);
+    wakeup = true;
     condition_variable.notify_one();
   }
 };
@@ -512,7 +533,7 @@ private:
       workers = worker_queue.release_all_worker_threads();
     }
     for(Worker * worker : workers) {
-      worker->unblock();
+      worker->unblock_thread_safe();
     }
   }
 
