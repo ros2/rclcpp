@@ -20,6 +20,7 @@
 #include <shared_mutex>
 
 #include <algorithm>
+#include <atomic>
 #include <iterator>
 #include <memory>
 #include <stdexcept>
@@ -125,7 +126,7 @@ public:
 
     uint64_t sub_id = IntraProcessManager::get_next_unique_id();
 
-    subscriptions_[sub_id] = {subscription};
+    subscriptions_.try_emplace(sub_id, subscription);
 
     // adds the subscription id to all the matchable publishers
     for (auto & pair : publishers_) {
@@ -447,14 +448,27 @@ public:
 private:
   struct SubscriptionData
   {
+    explicit SubscriptionData(
+      rclcpp::experimental::SubscriptionIntraProcessBase::WeakPtr subscription)
+    : weak_subscription(std::move(subscription))
+    {}
+
     rclcpp::experimental::SubscriptionIntraProcessBase::WeakPtr weak_subscription;
-    uint64_t reception_sequence_number{0};
+    // Incremented from do_intra_process_publish(), which only holds a shared (reader) lock on
+    // mutex_, so concurrent publishers delivering to this subscription need this to be atomic.
+    std::atomic<uint64_t> reception_sequence_number{0};
   };
 
   struct PublisherData
   {
+    explicit PublisherData(rclcpp::PublisherBase::WeakPtr publisher)
+    : weak_publisher(std::move(publisher))
+    {}
+
     rclcpp::PublisherBase::WeakPtr weak_publisher;
-    uint64_t publication_sequence_number{0};
+    // Incremented from do_intra_process_publish(), which only holds a shared (reader) lock on
+    // mutex_, so concurrent publishes from this same publisher need this to be atomic.
+    std::atomic<uint64_t> publication_sequence_number{0};
   };
 
   struct SplittedSubscriptions

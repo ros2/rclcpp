@@ -127,7 +127,11 @@ public:
   take_data() override
   {
     auto data = this->buffer_->consume();
-    if (data.message.index() == std::variant_npos) {
+    // An empty buffer's consume() returns a default-constructed Data, whose message variant
+    // holds a null pointer in whichever alternative is default (not std::variant_npos, which
+    // only occurs for a valueless-by-exception variant).
+    bool no_data = std::visit([](const auto & ptr) {return !ptr;}, data.message);
+    if (no_data) {
       return nullptr;
     }
 

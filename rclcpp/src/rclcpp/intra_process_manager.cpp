@@ -40,8 +40,6 @@ IntraProcessManager::add_publisher(
 
   uint64_t pub_id = IntraProcessManager::get_next_unique_id();
 
-  PublisherData data;
-  data.weak_publisher = publisher;
   if (publisher->is_durability_transient_local()) {
     if (buffer) {
       publisher_buffers_[pub_id] = buffer;
@@ -52,7 +50,7 @@ IntraProcessManager::add_publisher(
     }
   }
 
-  publishers_[pub_id] = data;
+  publishers_.try_emplace(pub_id, publisher);
 
   // Add GID to publisher info mapping for fast lookups (stores both ID and weak_ptr)
   gid_to_publisher_info_[publisher->get_gid()] = {pub_id, publisher};

@@ -139,15 +139,14 @@ public:
     data.message_info = message_info;
     if constexpr (std::is_same<SubscribedType, ROSMessageType>::value) {
       data.message = std::move(message);
-      trigger_guard_condition();
     } else {
       std::visit(
         [this, &data](auto && msg) {
           data.message = convert_ros_message_to_subscribed_type_unique_ptr(*msg);
         }, message);
-      trigger_guard_condition();
     }
     buffer_->add(std::move(data));
+    trigger_guard_condition();
     this->invoke_on_new_message();
   }
 

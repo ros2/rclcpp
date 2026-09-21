@@ -162,9 +162,10 @@ private:
     if (std::holds_alternative<MessageSharedPtr>(data.message)) {
       buffer_->enqueue(std::move(data));
     } else {
-      // Promote to a shared pointer
+      // Promote to a shared pointer, preserving the unique_ptr's (possibly allocator-aware)
+      // deleter rather than defaulting to plain delete.
       auto unique_msg = std::move(std::get<MessageUniquePtr>(data.message));
-      data.message = MessageSharedPtr(unique_msg.release());
+      data.message = MessageSharedPtr(std::move(unique_msg));
       buffer_->enqueue(std::move(data));
     }
   }
