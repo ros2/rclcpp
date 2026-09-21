@@ -40,7 +40,6 @@ IntraProcessManager::add_publisher(
 
   uint64_t pub_id = IntraProcessManager::get_next_unique_id();
 
-  publishers_[pub_id] = publisher;
   if (publisher->is_durability_transient_local()) {
     if (buffer) {
       publisher_buffers_[pub_id] = buffer;
@@ -51,6 +50,8 @@ IntraProcessManager::add_publisher(
     }
   }
 
+  publishers_.try_emplace(pub_id, publisher);
+
   // Add GID to publisher info mapping for fast lookups (stores both ID and weak_ptr)
   gid_to_publisher_info_[publisher->get_gid()] = {pub_id, publisher};
 
@@ -59,7 +60,7 @@ IntraProcessManager::add_publisher(
 
   // create an entry for the publisher id and populate with already existing subscriptions
   for (auto & pair : subscriptions_) {
-    auto subscription = pair.second.lock();
+    auto subscription = pair.second.weak_subscription.lock();
     if (!subscription) {
       continue;
     }
@@ -105,7 +106,7 @@ IntraProcessManager::remove_publisher(uint64_t intra_process_publisher_id)
   // First try via the publisher's own GID (fast path).
   auto pub_it = publishers_.find(intra_process_publisher_id);
   if (pub_it != publishers_.end()) {
-    auto publisher = pub_it->second.lock();
+    auto publisher = pub_it->second.weak_publisher.lock();
     if (publisher) {
       gid_to_publisher_info_.erase(publisher->get_gid());
     } else {
@@ -170,7 +171,7 @@ IntraProcessManager::get_subscription_intra_process(uint64_t intra_process_subsc
   if (subscription_it == subscriptions_.end()) {
     return nullptr;
   } else {
-    auto subscription = subscription_it->second.lock();
+    auto subscription = subscription_it->second.weak_subscription.lock();
     if (subscription) {
       return subscription;
     } else {
@@ -258,7 +259,7 @@ IntraProcessManager::lowest_available_capacity(const uint64_t intra_process_publ
     {
       auto subscription_it = subscriptions_.find(intra_process_subscription_id);
       if (subscription_it != subscriptions_.end()) {
-        auto subscription = subscription_it->second.lock();
+        auto subscription = subscription_it->second.weak_subscription.lock();
         if (subscription) {
           capacity = std::min(capacity, subscription->available_capacity());
         }

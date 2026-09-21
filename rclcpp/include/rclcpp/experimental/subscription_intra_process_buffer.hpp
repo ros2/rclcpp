@@ -69,11 +69,11 @@ public:
   using ConstDataSharedPtr = std::shared_ptr<const SubscribedType>;
   using SubscribedTypeUniquePtr = std::unique_ptr<SubscribedType, SubscribedTypeDeleter>;
 
-  using BufferUniquePtr = typename rclcpp::experimental::buffers::IntraProcessBuffer<
+  using IntraProcessBuffer = typename rclcpp::experimental::buffers::IntraProcessBuffer<
     SubscribedType,
-    Alloc,
     SubscribedTypeDeleter
-    >::UniquePtr;
+  >;
+  using BufferUniquePtr = typename IntraProcessBuffer::UniquePtr;
 
   SubscriptionIntraProcessBuffer(
     std::shared_ptr<Alloc> allocator,
@@ -89,8 +89,8 @@ public:
     allocator::set_allocator_for_deleter(&subscribed_type_deleter_, &subscribed_type_allocator_);
 
     // Create the intra-process buffer.
-    buffer_ = rclcpp::experimental::create_intra_process_buffer<SubscribedType, Alloc,
-        SubscribedTypeDeleter>(
+    buffer_ = rclcpp::experimental::create_intra_process_buffer<SubscribedType,
+        SubscribedTypeAllocator, SubscribedTypeDeleter>(
       buffer_type,
       qos_profile,
       std::make_shared<Alloc>(subscribed_type_allocator_));
@@ -131,51 +131,36 @@ public:
   }
 
   void
-  provide_intra_process_message(ConstMessageSharedPtr message) override
+  provide_intra_process_message(
+    std::variant<MessageUniquePtr, ConstMessageSharedPtr> message,
+    const rmw_message_info_t & message_info) override
   {
+    typename IntraProcessBuffer::Data data;
+    data.message_info = message_info;
     if constexpr (std::is_same<SubscribedType, ROSMessageType>::value) {
-      buffer_->add_shared(std::move(message));
-      trigger_guard_condition();
+      data.message = std::move(message);
     } else {
-      buffer_->add_shared(convert_ros_message_to_subscribed_type_unique_ptr(*message));
-      trigger_guard_condition();
+      std::visit(
+        [this, &data](auto && msg) {
+          data.message = convert_ros_message_to_subscribed_type_unique_ptr(*msg);
+        }, message);
     }
-    this->invoke_on_new_message();
-  }
-
-  void
-  provide_intra_process_message(MessageUniquePtr message) override
-  {
-    if constexpr (std::is_same<SubscribedType, ROSMessageType>::value) {
-      buffer_->add_unique(std::move(message));
-      trigger_guard_condition();
-    } else {
-      buffer_->add_unique(convert_ros_message_to_subscribed_type_unique_ptr(*message));
-      trigger_guard_condition();
-    }
-    this->invoke_on_new_message();
-  }
-
-  void
-  provide_intra_process_data(ConstDataSharedPtr message)
-  {
-    buffer_->add_shared(std::move(message));
+    buffer_->add(std::move(data));
     trigger_guard_condition();
     this->invoke_on_new_message();
   }
 
   void
-  provide_intra_process_data(SubscribedTypeUniquePtr message)
+  provide_intra_process_data(
+    std::variant<SubscribedTypeUniquePtr, ConstDataSharedPtr> message,
+    const rmw_message_info_t & message_info)
   {
-    buffer_->add_unique(std::move(message));
+    typename IntraProcessBuffer::Data data;
+    data.message_info = message_info;
+    data.message = std::move(message);
+    buffer_->add(std::move(data));
     trigger_guard_condition();
     this->invoke_on_new_message();
-  }
-
-  bool
-  use_take_shared_method() const override
-  {
-    return buffer_->use_take_shared_method();
   }
 
   size_t available_capacity() const override

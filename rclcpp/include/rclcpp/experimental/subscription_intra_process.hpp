@@ -17,7 +17,6 @@
 
 #include <rmw/types.h>
 
-#include <chrono>
 #include <functional>
 #include <memory>
 #include <stdexcept>
@@ -31,7 +30,6 @@
 #include "rclcpp/context.hpp"
 #include "rclcpp/experimental/buffers/intra_process_buffer.hpp"
 #include "rclcpp/experimental/subscription_intra_process_buffer.hpp"
-#include "rclcpp/logging.hpp"
 #include "rclcpp/qos.hpp"
 #include "rclcpp/time.hpp"
 #include "rclcpp/type_support_decl.hpp"
@@ -128,19 +126,13 @@ public:
   std::shared_ptr<void>
   take_data() override
   {
-    ConstMessageSharedPtr shared_msg;
-    MessageUniquePtr unique_msg;
-
-    if (any_callback_.use_take_shared_method()) {
-      shared_msg = this->buffer_->consume_shared();
-      if (!shared_msg) {
-        return nullptr;
-      }
-    } else {
-      unique_msg = this->buffer_->consume_unique();
-      if (!unique_msg) {
-        return nullptr;
-      }
+    auto data = this->buffer_->consume();
+    // An empty buffer's consume() returns a default-constructed Data, whose message variant
+    // holds a null pointer in whichever alternative is default (not std::variant_npos, which
+    // only occurs for a valueless-by-exception variant).
+    bool no_data = std::visit([](const auto & ptr) {return !ptr;}, data.message);
+    if (no_data) {
+      return nullptr;
     }
 
     if (this->buffer_->has_data()) {
@@ -150,9 +142,9 @@ public:
     }
 
     return std::static_pointer_cast<void>(
-      std::make_shared<std::pair<ConstMessageSharedPtr, MessageUniquePtr>>(
-        std::pair<ConstMessageSharedPtr, MessageUniquePtr>(
-          shared_msg, std::move(unique_msg)))
+      std::make_shared<
+        typename SubscriptionIntraProcessBufferT::IntraProcessBuffer::Data>(
+        std::move(data))
     );
   }
 
@@ -184,6 +176,16 @@ public:
     any_callback_.enable();
   }
 
+  bool
+  use_take_shared_method() const override
+  {
+    if (this->buffer_->buffer_type() == IntraProcessBufferType::CallbackDefault) {
+      return any_callback_.use_take_shared_method();
+    } else {
+      return this->buffer_->buffer_type() == IntraProcessBufferType::SharedPtr;
+    }
+  }
+
 protected:
   template<typename T>
   typename std::enable_if<std::is_same<T, rcl_serialized_message_t>::value, void>::type
@@ -200,36 +202,23 @@ protected:
       return;
     }
 
-    rmw_message_info_t msg_info;
-    msg_info.publisher_gid = {0, {0}};
-    msg_info.from_intra_process = true;
-
-    const auto nanos = std::chrono::time_point_cast<std::chrono::nanoseconds>(
-      std::chrono::system_clock::now());
-    if (stats_handler_) {
-      RCLCPP_WARN_ONCE(
-        rclcpp::get_logger("rclcpp"),
-        "Intra-process communication does not support accurate message age statistics");
-      // Set source_timestamp to "now" so that message_age reports 0ms rather than
-      // an invalid value taken from an un-initialised timestamp. IPC delivery
-      // has little/no transport latency by definition, so near-zero age is expected.
-      msg_info.source_timestamp = nanos.time_since_epoch().count();
-    }
-
-    auto shared_ptr = std::static_pointer_cast<std::pair<ConstMessageSharedPtr, MessageUniquePtr>>(
+    auto shared_ptr = std::static_pointer_cast<
+      typename SubscriptionIntraProcessBufferT::IntraProcessBuffer::Data>(
       data);
 
-    if (any_callback_.use_take_shared_method()) {
-      ConstMessageSharedPtr shared_msg = shared_ptr->first;
-      any_callback_.dispatch_intra_process(shared_msg, msg_info);
-    } else {
-      MessageUniquePtr unique_msg = std::move(shared_ptr->second);
-      any_callback_.dispatch_intra_process(std::move(unique_msg), msg_info);
-    }
+    // Copy the message info out before the callback (potentially) moves the message, since
+    // the stats handler below is invoked after the callback has run.
+    const rmw_message_info_t message_info = shared_ptr->message_info;
+
+    std::visit(
+      [&shared_ptr, this](auto && msg) {
+        any_callback_.dispatch_intra_process(std::move(msg), shared_ptr->message_info);
+      }, shared_ptr->message);
+
     shared_ptr.reset();
 
     if (stats_handler_) {
-      stats_handler_(msg_info, rclcpp::Time(nanos.time_since_epoch().count()));
+      stats_handler_(message_info, rclcpp::Time(message_info.source_timestamp));
     }
   }
 

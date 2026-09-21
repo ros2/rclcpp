@@ -56,10 +56,9 @@ public:
   {}
 
   virtual void
-  provide_intra_process_message(ConstMessageSharedPtr message) = 0;
-
-  virtual void
-  provide_intra_process_message(MessageUniquePtr message) = 0;
+  provide_intra_process_message(
+    std::variant<MessageUniquePtr, ConstMessageSharedPtr> message,
+    const rmw_message_info_t & message_info) = 0;
 };
 
 }  // namespace experimental
