@@ -130,6 +130,60 @@ TEST(TestIntraProcessBuffer, shared_buffer_add) {
 }
 
 /*
+  Regression test: adding a unique_ptr to a SharedPtr-typed buffer promotes it to a
+  shared_ptr. That promotion must preserve the unique_ptr's original deleter (which may be
+  allocator-aware) rather than defaulting to plain `delete`, or destruction ends up mismatched
+  with however the object was actually allocated.
+ */
+TEST(TestIntraProcessBuffer, shared_buffer_add_preserves_custom_deleter) {
+  using MessageT = char;
+  using Alloc = std::allocator<void>;
+
+  bool custom_deleter_called = false;
+  struct TrackingDeleter
+  {
+    bool * called = nullptr;
+    void operator()(MessageT * ptr) const
+    {
+      if (called) {
+        *called = true;
+      }
+      delete ptr;
+    }
+  };
+  using Deleter = TrackingDeleter;
+  using SharedMessageT = std::shared_ptr<const MessageT>;
+  using SharedIntraProcessBufferT = rclcpp::experimental::buffers::TypedIntraProcessBuffer<
+    MessageT, Alloc, Deleter, rclcpp::IntraProcessBufferType::SharedPtr>;
+  using BufferT = rclcpp::experimental::buffers::IntraProcessBufferData<MessageT, Deleter>;
+  using BufferImplT = rclcpp::experimental::buffers::RingBufferImplementation<BufferT>;
+
+  auto buffer_impl = std::make_unique<BufferImplT>(1);
+  SharedIntraProcessBufferT intra_process_buffer(std::move(buffer_impl));
+
+  std::unique_ptr<MessageT, Deleter> original_unique_msg(
+    new MessageT('c'), TrackingDeleter{&custom_deleter_called});
+  rmw_message_info_t message_info = generate_message_info<0>();
+
+  intra_process_buffer.add({std::move(original_unique_msg), message_info});
+
+  SharedMessageT popped_shared_msg;
+  {
+    // Scoped so popped_data (which also holds a reference) is gone before the checks below --
+    // otherwise popped_shared_msg would never be the last reference.
+    auto popped_data = intra_process_buffer.consume();
+    ASSERT_TRUE(std::holds_alternative<SharedMessageT>(popped_data.message));
+    popped_shared_msg = std::get<SharedMessageT>(popped_data.message);
+  }
+
+  // Still alive, held by popped_shared_msg -- the deleter must not have run yet.
+  EXPECT_FALSE(custom_deleter_called);
+  popped_shared_msg.reset();
+  // The original TrackingDeleter must be what runs here, not a plain `delete`.
+  EXPECT_TRUE(custom_deleter_called);
+}
+
+/*
   Add data to an intra-process buffer with an implementations that stores unique_ptr
   Messages are extracted using the same data as the implementation, i.e. unique_ptr
   - Add shared_ptr a copy is expected

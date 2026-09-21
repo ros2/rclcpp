@@ -14,12 +14,16 @@
 
 #include <gtest/gtest.h>
 
+#include <algorithm>
+#include <atomic>
 #include <chrono>
 #include <functional>
 #include <future>
 #include <memory>
+#include <mutex>
 #include <stdexcept>
 #include <string>
+#include <thread>
 #include <utility>
 #include <vector>
 
@@ -32,6 +36,7 @@
 #include "rclcpp/future_return_code.hpp"
 #include "rclcpp/intra_process_setting.hpp"
 #include "rclcpp/loaned_message.hpp"
+#include "rclcpp/message_info.hpp"
 #include "rclcpp/node.hpp"
 #include "rclcpp/node_options.hpp"
 #include "rclcpp/publisher.hpp"
@@ -840,4 +845,67 @@ TEST_F(TestPublisher, intra_process_inter_process_mix_transient_local) {
     std::chrono::milliseconds(100)), rclcpp::FutureReturnCode::SUCCESS);
   EXPECT_EQ(executor.spin_until_future_complete(intra_callback_future,
     std::chrono::milliseconds(100)), rclcpp::FutureReturnCode::TIMEOUT);
+}
+
+// Regression test: publication_sequence_number used to be a plain uint64_t incremented
+// (via postfix ++) from do_intra_process_publish(), which only holds a shared (reader) lock,
+// so concurrent publishers on the same publisher could race on it. Publishes from several
+// threads at once and checks that every delivered sequence number is unique.
+TEST_F(TestPublisher, concurrent_publish_produces_unique_sequence_numbers) {
+  initialize(rclcpp::NodeOptions().use_intra_process_comms(true));
+  using test_msgs::msg::Empty;
+
+  constexpr size_t num_threads = 8;
+  constexpr size_t publishes_per_thread = 200;
+  constexpr size_t total_publishes = num_threads * publishes_per_thread;
+
+  std::mutex collected_mutex;
+  std::vector<uint64_t> collected_sequence_numbers;
+  std::atomic<size_t> received_count{0};
+
+  auto publisher = node->create_publisher<Empty>("topic", rclcpp::QoS(total_publishes));
+  auto callback = [&collected_mutex, &collected_sequence_numbers, &received_count](
+    std::unique_ptr<Empty>, const rclcpp::MessageInfo & info) {
+      {
+        std::lock_guard<std::mutex> lock(collected_mutex);
+        collected_sequence_numbers.push_back(
+          info.get_rmw_message_info().publication_sequence_number);
+      }
+      received_count.fetch_add(1);
+    };
+  auto subscription = node->create_subscription<Empty>(
+    "topic", rclcpp::QoS(total_publishes), callback);
+
+  rclcpp::executors::SingleThreadedExecutor executor;
+  executor.add_node(node);
+  std::thread executor_thread([&executor]() {executor.spin();});
+
+  std::vector<std::thread> publish_threads;
+  for (size_t t = 0; t < num_threads; ++t) {
+    publish_threads.emplace_back(
+      [&publisher]() {
+        for (size_t i = 0; i < publishes_per_thread; ++i) {
+          publisher->publish(std::make_unique<Empty>());
+        }
+      });
+  }
+  for (auto & thread : publish_threads) {
+    thread.join();
+  }
+
+  auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds(10);
+  while (received_count.load() < total_publishes && std::chrono::steady_clock::now() < deadline) {
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+  }
+
+  executor.cancel();
+  executor_thread.join();
+
+  ASSERT_EQ(total_publishes, collected_sequence_numbers.size());
+  std::sort(collected_sequence_numbers.begin(), collected_sequence_numbers.end());
+  collected_sequence_numbers.erase(
+    std::unique(collected_sequence_numbers.begin(), collected_sequence_numbers.end()),
+    collected_sequence_numbers.end());
+  // If any two publishes had raced on the same sequence number, this count would be lower.
+  EXPECT_EQ(total_publishes, collected_sequence_numbers.size());
 }

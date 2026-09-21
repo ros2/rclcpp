@@ -572,6 +572,13 @@ if(TARGET test_guard_condition)
   target_link_libraries(test_guard_condition ${PROJECT_NAME} mimick)
 endif()
 
+ament_add_ros_isolated_gtest(test_subscription_intra_process test_subscription_intra_process.cpp
+  APPEND_LIBRARY_DIRS "${append_library_dirs}")
+ament_add_test_label(test_subscription_intra_process mimick)
+if(TARGET test_subscription_intra_process)
+  target_link_libraries(test_subscription_intra_process ${PROJECT_NAME} test_msgs::test_msgs mimick)
+endif()
+
 ament_add_ros_isolated_gtest(test_wait_set test_wait_set.cpp
   APPEND_LIBRARY_DIRS "${append_library_dirs}")
 if(TARGET test_wait_set)
