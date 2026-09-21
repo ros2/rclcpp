@@ -20,10 +20,15 @@
 #include <string>
 #include <type_traits>
 
+#include "rcpputils/compile_warnings.hpp"
+
 #include "rclcpp/executors/events_cbg_executor/events_cbg_executor.hpp"
 #include "rclcpp/experimental/executors/events_executor/events_executor.hpp"
 #include "rclcpp/executors/single_threaded_executor.hpp"
 #include "rclcpp/executors/multi_threaded_executor.hpp"
+
+// Disable deprecation warnings while maintaining the EventsExecutor
+RCPPUTILS_DEPRECATION_WARNING_OFF_START
 
 using ExecutorTypes =
   ::testing::Types<
@@ -64,5 +69,7 @@ using StandardExecutors =
   rclcpp::executors::MultiThreadedExecutor,
   rclcpp::executors::EventsCBGExecutor,
   rclcpp::experimental::executors::EventsExecutor>;
+
+RCPPUTILS_DEPRECATION_WARNING_OFF_STOP
 
 #endif  // RCLCPP__EXECUTORS__EXECUTOR_TYPES_HPP_

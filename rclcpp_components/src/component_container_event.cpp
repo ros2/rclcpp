@@ -14,6 +14,7 @@
 
 #include <memory>
 
+#include "rcpputils/compile_warnings.hpp"
 #include "rclcpp/utilities.hpp"
 #include "rclcpp/experimental/executors/events_executor/events_executor.hpp"
 
@@ -27,7 +28,12 @@ int main(int argc, char * argv[])
 
   /// Component container with an events executor.
   rclcpp::init(argc, argv);
+
+  // Disable deprecation warnings while maintaining the EventsExecutor
+  RCPPUTILS_DEPRECATION_WARNING_OFF_START
   auto exec = std::make_shared<rclcpp::experimental::executors::EventsExecutor>();
+  RCPPUTILS_DEPRECATION_WARNING_OFF_STOP
+
   auto node = std::make_shared<rclcpp_components::ComponentManager>(exec);
   exec->add_node(node);
   exec->spin();
