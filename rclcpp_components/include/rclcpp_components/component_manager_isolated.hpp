@@ -96,13 +96,16 @@ private:
     // spin in a separate thread, i.e. the time gap between when the executor is created and when
     // it starts to spin is small (although it's not negligible).
 
-    while (!executor_wrapper.executor->is_spinning()) {
+    auto context = this->get_node_base_interface()->get_context();
+    while (
+      !executor_wrapper.executor->is_spinning() && rclcpp::ok(context))
+    {
       // This is an arbitrarily small delay to avoid busy looping
       rclcpp::sleep_for(std::chrono::milliseconds(1));
     }
 
-    // After the while loop we are sure that the executor is now spinning, so
-    // the call to cancel() will work.
+    // Cancel the executor if it is spinning. If shutdown made spin() return before this method
+    // observed it spinning, joining the thread is sufficient.
     executor_wrapper.executor->cancel();
     // Wait for the thread task to return
     executor_wrapper.thread.join();
