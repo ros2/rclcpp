@@ -18,7 +18,6 @@
 #include <rmw/types.h>
 
 #include <chrono>
-#include <functional>
 #include <memory>
 #include <stdexcept>
 #include <string>
@@ -33,7 +32,7 @@
 #include "rclcpp/experimental/subscription_intra_process_buffer.hpp"
 #include "rclcpp/logging.hpp"
 #include "rclcpp/qos.hpp"
-#include "rclcpp/time.hpp"
+#include "rclcpp/subscription_statistics_monitor.hpp"
 #include "rclcpp/type_support_decl.hpp"
 #include "tracetools/tracetools.h"
 
@@ -74,7 +73,8 @@ public:
   using ConstMessageSharedPtr = typename SubscriptionIntraProcessBufferT::ConstDataSharedPtr;
   using MessageUniquePtr = typename SubscriptionIntraProcessBufferT::SubscribedTypeUniquePtr;
   using BufferUniquePtr = typename SubscriptionIntraProcessBufferT::BufferUniquePtr;
-  using StatsHandlerFn = std::function<void(const rmw_message_info_t &, const rclcpp::Time &)>;
+  using SubscriptionStatisticsMonitorSharedPtr =
+    rclcpp::SubscriptionStatisticsMonitor::SharedPtr;
 
   SubscriptionIntraProcess(
     AnySubscriptionCallback<MessageT, Alloc> callback,
@@ -83,7 +83,7 @@ public:
     const std::string & topic_name,
     const rclcpp::QoS & qos_profile,
     rclcpp::IntraProcessBufferType buffer_type,
-    StatsHandlerFn stats_handler = nullptr)
+    SubscriptionStatisticsMonitorSharedPtr monitor = nullptr)
   : SubscriptionIntraProcessBuffer<SubscribedType, SubscribedTypeAlloc,
       SubscribedTypeDeleter, ROSMessageType>(
       std::make_shared<SubscribedTypeAlloc>(*allocator),
@@ -92,7 +92,7 @@ public:
       qos_profile,
       buffer_type),
     any_callback_(callback),
-    stats_handler_(std::move(stats_handler))
+    monitor_(std::move(monitor))
   {
     TRACETOOLS_TRACEPOINT(
       rclcpp_subscription_callback_added,
@@ -206,7 +206,7 @@ protected:
 
     const auto nanos = std::chrono::time_point_cast<std::chrono::nanoseconds>(
       std::chrono::system_clock::now());
-    if (stats_handler_) {
+    if (monitor_) {
       RCLCPP_WARN_ONCE(
         rclcpp::get_logger("rclcpp"),
         "Intra-process communication does not support accurate message age statistics");
@@ -214,6 +214,7 @@ protected:
       // an invalid value taken from an un-initialised timestamp. IPC delivery
       // has little/no transport latency by definition, so near-zero age is expected.
       msg_info.source_timestamp = nanos.time_since_epoch().count();
+      monitor_->before_message_dispatch(msg_info);
     }
 
     auto shared_ptr = std::static_pointer_cast<std::pair<ConstMessageSharedPtr, MessageUniquePtr>>(
@@ -228,13 +229,13 @@ protected:
     }
     shared_ptr.reset();
 
-    if (stats_handler_) {
-      stats_handler_(msg_info, rclcpp::Time(nanos.time_since_epoch().count()));
+    if (monitor_) {
+      monitor_->after_message_dispatch(msg_info);
     }
   }
 
   AnySubscriptionCallback<MessageT, Alloc> any_callback_;
-  StatsHandlerFn stats_handler_;
+  SubscriptionStatisticsMonitorSharedPtr monitor_;
 };
 
 }  // namespace experimental

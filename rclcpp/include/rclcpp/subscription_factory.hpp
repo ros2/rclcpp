@@ -30,8 +30,8 @@
 #include "rclcpp/qos.hpp"
 #include "rclcpp/subscription.hpp"
 #include "rclcpp/subscription_options.hpp"
+#include "rclcpp/subscription_statistics_monitor.hpp"
 #include "rclcpp/subscription_traits.hpp"
-#include "rclcpp/topic_statistics/subscription_topic_statistics.hpp"
 #include "rclcpp/visibility_control.hpp"
 
 namespace rclcpp
@@ -68,7 +68,7 @@ struct SubscriptionFactory
  * \param[in] callback The user-defined callback function to receive a message
  * \param[in] options Additional options for the creation of the Subscription.
  * \param[in] msg_mem_strat The message memory strategy to use for allocating messages.
- * \param[in] subscription_topic_stats Optional stats callback for topic_statistics
+ * \param[in] subscription_statistics_monitor Optional monitor for subscription statistics.
  */
 template<
   typename MessageT,
@@ -82,8 +82,8 @@ create_subscription_factory(
   CallbackT && callback,
   const rclcpp::SubscriptionOptionsWithAllocator<AllocatorT> & options,
   typename MessageMemoryStrategyT::SharedPtr msg_mem_strat,
-  std::shared_ptr<rclcpp::topic_statistics::SubscriptionTopicStatistics>
-  subscription_topic_stats = nullptr
+  std::shared_ptr<rclcpp::SubscriptionStatisticsMonitor>
+  subscription_statistics_monitor = nullptr
 )
 {
   auto allocator = options.get_allocator();
@@ -94,7 +94,7 @@ create_subscription_factory(
 
   SubscriptionFactory factory {
     // factory function that creates a MessageT specific SubscriptionT
-    [options, msg_mem_strat, any_subscription_callback, subscription_topic_stats](
+    [options, msg_mem_strat, any_subscription_callback, subscription_statistics_monitor](
       rclcpp::node_interfaces::NodeBaseInterface * node_base,
       const std::string & topic_name,
       const rclcpp::QoS & qos
@@ -111,7 +111,7 @@ create_subscription_factory(
         any_subscription_callback,
         options,
         msg_mem_strat,
-        subscription_topic_stats);
+        subscription_statistics_monitor);
       // This is used for setting up things like intra process comms which
       // require this->shared_from_this() which cannot be called from
       // the constructor.
