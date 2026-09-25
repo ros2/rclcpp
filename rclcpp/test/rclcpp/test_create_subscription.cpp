@@ -14,14 +14,11 @@
 
 #include <gtest/gtest.h>
 
-#include <chrono>
 #include <memory>
 
 #include "rclcpp/create_subscription.hpp"
 #include "rclcpp/node.hpp"
 #include "test_msgs/msg/empty.hpp"
-
-using namespace std::chrono_literals;
 
 class TestCreateSubscription : public ::testing::Test
 {
@@ -72,22 +69,6 @@ TEST_F(TestCreateSubscription, create_separated_node_topics_and_parameters) {
   auto node_topics = node->get_node_topics_interface();
   auto subscription = rclcpp::create_subscription<test_msgs::msg::Empty>(
     node_parameters, node_topics, "topic_name", qos, callback, options);
-
-  ASSERT_NE(nullptr, subscription);
-  EXPECT_STREQ("/ns/topic_name", subscription->get_topic_name());
-}
-
-TEST_F(TestCreateSubscription, create_with_statistics) {
-  auto node = std::make_shared<rclcpp::Node>("my_node", "/ns");
-  const rclcpp::QoS qos(10);
-  auto options = rclcpp::SubscriptionOptions();
-  options.topic_stats_options.state = rclcpp::TopicStatisticsState::Enable;
-  options.topic_stats_options.publish_topic = "topic_statistics";
-  options.topic_stats_options.publish_period = 5min;
-
-  auto callback = [](test_msgs::msg::Empty::ConstSharedPtr) {};
-  auto subscription =
-    rclcpp::create_subscription<test_msgs::msg::Empty>(node, "topic_name", qos, callback, options);
 
   ASSERT_NE(nullptr, subscription);
   EXPECT_STREQ("/ns/topic_name", subscription->get_topic_name());

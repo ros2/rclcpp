@@ -195,12 +195,6 @@ It is **Quality Level 1**, see its [Quality Declaration document](https://github
 
 It is **Quality Level 1**, see its [Quality Declaration document](https://github.com/ros2/rmw/blob/rolling/rmw/QUALITY_DECLARATION.md).
 
-#### `statistics_msgs`
-
-The `statistics_msgs` package contains ROS 2 message definitions for reporting statistics for topics and system resources.
-
-It is **Quality Level 1**, see its [Quality Declaration document](https://github.com/ros2/rcl_interfaces/blob/rolling/statistics_msgs/QUALITY_DECLARATION.md).
-
 #### `tracetools`
 
 The `tracetools` package provides utilities for instrumenting the code in `rclcpp` so that it may be traced for debugging and performance analysis.
