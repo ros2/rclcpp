@@ -580,11 +580,6 @@ if(TARGET test_wait_set)
 endif()
 
 
-ament_add_ros_isolated_gtest(test_subscription_options test_subscription_options.cpp)
-if(TARGET test_subscription_options)
-  target_link_libraries(test_subscription_options ${PROJECT_NAME})
-endif()
-
 ament_add_ros_isolated_gtest(test_dynamic_storage wait_set_policies/test_dynamic_storage.cpp)
 if(TARGET test_dynamic_storage)
   target_link_libraries(test_dynamic_storage ${PROJECT_NAME} test_msgs::test_msgs)

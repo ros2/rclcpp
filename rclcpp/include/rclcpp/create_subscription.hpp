@@ -67,8 +67,7 @@ create_subscription(
   auto factory = rclcpp::create_subscription_factory<MessageT>(
     std::forward<CallbackT>(callback),
     options,
-    msg_mem_strat,
-    options.subscription_statistics_monitor
+    msg_mem_strat
   );
 
   const rclcpp::QoS & actual_qos = options.qos_overriding_options.get_policy_kinds().size() ?

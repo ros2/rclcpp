@@ -224,12 +224,6 @@ ComponentManager::create_node_options(const std::shared_ptr<LoadNode::Request> r
             "Extra component argument 'use_intra_process_comms' must be a boolean");
       }
       options.use_intra_process_comms(extra_argument.get_value<bool>());
-    } else if (extra_argument.get_name() == "enable_topic_statistics") {
-      if (extra_argument.get_type() != rclcpp::ParameterType::PARAMETER_BOOL) {
-        throw ComponentManagerException(
-            "Extra component argument 'enable_topic_statistics' must be a boolean");
-      }
-      options.enable_topic_statistics(extra_argument.get_value<bool>());
     } else if (extra_argument.get_name() == "start_parameter_services") {
       if (extra_argument.get_type() != rclcpp::ParameterType::PARAMETER_BOOL) {
         throw ComponentManagerException(

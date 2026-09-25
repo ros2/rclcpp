@@ -208,11 +208,10 @@ void test_components_api(bool use_dedicated_executor)
     EXPECT_EQ(result->unique_id, 6u);
   }
 
-  std::array<std::string, 8u> valid_extra_arguments = {
+  std::array<std::string, 7u> valid_extra_arguments = {
     "forward_global_arguments",
     "use_intra_process_comms",
     "enable_rosout",
-    "enable_topic_statistics",
     "start_parameter_services",
     "start_parameter_event_publisher",
     "use_clock_thread",

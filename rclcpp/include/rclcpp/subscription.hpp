@@ -43,7 +43,6 @@
 #include "rclcpp/type_support_decl.hpp"
 #include "rclcpp/visibility_control.hpp"
 #include "rclcpp/waitable.hpp"
-#include "rclcpp/subscription_statistics_monitor.hpp"
 #include "tracetools/tracetools.h"
 
 namespace rclcpp
@@ -86,10 +85,6 @@ public:
   using ROSMessageTypeAllocator = typename ROSMessageTypeAllocatorTraits::allocator_type;
   using ROSMessageTypeDeleter = allocator::Deleter<ROSMessageTypeAllocator, ROSMessageType>;
 
-private:
-  using SubscriptionStatisticsMonitorSharedPtr =
-    std::shared_ptr<rclcpp::SubscriptionStatisticsMonitor>;
-
 public:
   RCLCPP_SMART_PTR_DEFINITIONS(Subscription)
 
@@ -106,7 +101,6 @@ public:
    * \param[in] callback User defined callback to call when a message is received.
    * \param[in] options Options for the subscription.
    * \param[in] message_memory_strategy The memory strategy to be used for managing message memory.
-   * \param[in] subscription_statistics_monitor Optional monitor for subscription statistics.
    * \throws std::invalid_argument if the QoS is uncompatible with intra-process (if one
    *   of the following conditions are true: qos_profile.history == RMW_QOS_POLICY_HISTORY_KEEP_ALL,
    *   qos_profile.depth == 0 or qos_profile.durability != RMW_QOS_POLICY_DURABILITY_VOLATILE).
@@ -119,8 +113,7 @@ public:
     const rclcpp::QoS & qos,
     AnySubscriptionCallback<MessageT, AllocatorT> callback,
     const rclcpp::SubscriptionOptionsWithAllocator<AllocatorT> & options,
-    typename MessageMemoryStrategyT::SharedPtr message_memory_strategy,
-    SubscriptionStatisticsMonitorSharedPtr subscription_statistics_monitor = nullptr)
+    typename MessageMemoryStrategyT::SharedPtr message_memory_strategy)
   : SubscriptionBase(
       node_base,
       type_support_handle,
@@ -168,8 +161,7 @@ public:
         context,
         this->get_topic_name(),  // important to get like this, as it has the fully-qualified name
         qos_profile,
-        resolve_intra_process_buffer_type(options_.intra_process_buffer_type, callback),
-        subscription_statistics_monitor);
+        resolve_intra_process_buffer_type(options_.intra_process_buffer_type, callback));
       TRACETOOLS_TRACEPOINT(
         rclcpp_subscription_init,
         static_cast<const void *>(get_subscription_handle().get()),
@@ -182,8 +174,6 @@ public:
         ROSMessageType, ROSMessageTypeAllocator>(subscription_intra_process_);
       this->setup_intra_process(intra_process_subscription_id, ipm);
     }
-
-    this->subscription_statistics_monitor_ = std::move(subscription_statistics_monitor);
 
     TRACETOOLS_TRACEPOINT(
       rclcpp_subscription_init,
@@ -329,18 +319,7 @@ public:
       return;
     }
     auto typed_message = std::static_pointer_cast<ROSMessageType>(message);
-
-    if (subscription_statistics_monitor_) {
-      subscription_statistics_monitor_->before_message_dispatch(
-        message_info.get_rmw_message_info());
-    }
-
     any_callback_.dispatch(typed_message, message_info);
-
-    if (subscription_statistics_monitor_) {
-      subscription_statistics_monitor_->after_message_dispatch(
-        message_info.get_rmw_message_info());
-    }
   }
 
   void
@@ -348,17 +327,7 @@ public:
     const std::shared_ptr<rclcpp::SerializedMessage> & serialized_message,
     const rclcpp::MessageInfo & message_info) override
   {
-    if (subscription_statistics_monitor_) {
-      subscription_statistics_monitor_->before_message_dispatch(
-        message_info.get_rmw_message_info());
-    }
-
     any_callback_.dispatch(serialized_message, message_info);
-
-    if (subscription_statistics_monitor_) {
-      subscription_statistics_monitor_->after_message_dispatch(
-        message_info.get_rmw_message_info());
-    }
   }
 
   void
@@ -376,18 +345,7 @@ public:
     // message is loaned, so we have to make sure that the deleter does not deallocate the message
     auto sptr = std::shared_ptr<ROSMessageType>(
       typed_message, [](ROSMessageType * msg) {(void) msg;});
-
-    if (subscription_statistics_monitor_) {
-      subscription_statistics_monitor_->before_message_dispatch(
-        message_info.get_rmw_message_info());
-    }
-
     any_callback_.dispatch(sptr, message_info);
-
-    if (subscription_statistics_monitor_) {
-      subscription_statistics_monitor_->after_message_dispatch(
-        message_info.get_rmw_message_info());
-    }
   }
 
   /// Return the borrowed message.
@@ -477,9 +435,6 @@ private:
   const rclcpp::SubscriptionOptionsWithAllocator<AllocatorT> options_;
   typename message_memory_strategy::MessageMemoryStrategy<ROSMessageType, AllocatorT>::SharedPtr
     message_memory_strategy_;
-
-  /// Optional external monitor for subscription statistics.
-  SubscriptionStatisticsMonitorSharedPtr subscription_statistics_monitor_{nullptr};
 };
 
 }  // namespace rclcpp

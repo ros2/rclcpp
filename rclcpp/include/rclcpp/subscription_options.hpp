@@ -28,7 +28,6 @@
 #include "rclcpp/event_handler.hpp"
 #include "rclcpp/qos_overriding_options.hpp"
 #include "rclcpp/subscription_content_filter_options.hpp"
-#include "rclcpp/subscription_statistics_monitor.hpp"
 
 namespace rclcpp
 {
@@ -62,15 +61,6 @@ struct SubscriptionOptionsBase
   /// Optional RMW implementation specific payload to be used during creation of the subscription.
   std::shared_ptr<rclcpp::detail::RMWImplementationSpecificSubscriptionPayload>
   rmw_implementation_payload = nullptr;
-
-  /// Optional external monitor for subscription statistics.
-  /**
-   * If set, the subscription will call before_message_dispatch() and
-   * after_message_dispatch() on this monitor for each received message. The
-   * monitor is responsible for any aggregation, timers, and publication of
-   * statistics.
-   */
-  std::shared_ptr<rclcpp::SubscriptionStatisticsMonitor> subscription_statistics_monitor;
 
   QosOverridingOptions qos_overriding_options;
 

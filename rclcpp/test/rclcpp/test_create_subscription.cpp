@@ -18,10 +18,7 @@
 
 #include "rclcpp/create_subscription.hpp"
 #include "rclcpp/node.hpp"
-#include "rclcpp/subscription_statistics_monitor.hpp"
 #include "test_msgs/msg/empty.hpp"
-
-#include "rmw/types.h"
 
 class TestCreateSubscription : public ::testing::Test
 {
@@ -72,37 +69,6 @@ TEST_F(TestCreateSubscription, create_separated_node_topics_and_parameters) {
   auto node_topics = node->get_node_topics_interface();
   auto subscription = rclcpp::create_subscription<test_msgs::msg::Empty>(
     node_parameters, node_topics, "topic_name", qos, callback, options);
-
-  ASSERT_NE(nullptr, subscription);
-  EXPECT_STREQ("/ns/topic_name", subscription->get_topic_name());
-}
-
-class MockSubscriptionStatisticsMonitor : public rclcpp::SubscriptionStatisticsMonitor
-{
-public:
-  void before_message_dispatch(const rmw_message_info_t &) override
-  {
-    before_message_dispatch_count++;
-  }
-  void after_message_dispatch(const rmw_message_info_t &) override
-  {
-    after_message_dispatch_count++;
-  }
-
-  size_t before_message_dispatch_count{0};
-  size_t after_message_dispatch_count{0};
-};
-
-TEST_F(TestCreateSubscription, create_with_monitor) {
-  auto node = std::make_shared<rclcpp::Node>("my_node", "/ns");
-  const rclcpp::QoS qos(10);
-  auto options = rclcpp::SubscriptionOptions();
-  auto monitor = std::make_shared<MockSubscriptionStatisticsMonitor>();
-  options.subscription_statistics_monitor = monitor;
-
-  auto callback = [](test_msgs::msg::Empty::ConstSharedPtr) {};
-  auto subscription =
-    rclcpp::create_subscription<test_msgs::msg::Empty>(node, "topic_name", qos, callback, options);
 
   ASSERT_NE(nullptr, subscription);
   EXPECT_STREQ("/ns/topic_name", subscription->get_topic_name());
