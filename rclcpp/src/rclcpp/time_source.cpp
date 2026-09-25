@@ -203,7 +203,16 @@ public:
       node_base_ || node_topics_ || node_graph_ || node_services_ ||
       node_logging_ || node_clock_ || node_parameters_)
     {
-      detachNode();
+      // detachNode() removes the parameter callbacks, which throws while a set-parameters
+      // callback is running. A destructor is noexcept, so letting that escape would terminate
+      // the process.
+      try {
+        detachNode();
+      } catch (const std::exception & exc) {
+        RCLCPP_ERROR(logger_, "unhandled exception in ~NodeState(): %s", exc.what());
+      } catch (...) {
+        RCLCPP_ERROR(logger_, "unhandled exception in ~NodeState()");
+      }
     }
   }
 
