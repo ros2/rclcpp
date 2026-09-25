@@ -180,6 +180,9 @@ RCLCPP_LOCAL
 bool
 __are_doubles_equal(double x, double y, double ulp = 100.0)
 {
+  if (!std::isfinite(x) || !std::isfinite(y)) {
+    return x == y;
+  }
   return std::abs(x - y) <= std::numeric_limits<double>::epsilon() * std::abs(x + y) * ulp;
 }
 
@@ -194,6 +197,68 @@ format_range_reason(const std::string & name, const char * range_type)
 
 RCLCPP_LOCAL
 rcl_interfaces::msg::SetParametersResult
+<<<<<<< HEAD
+=======
+__check_integer_range(
+  const rcl_interfaces::msg::ParameterDescriptor & descriptor,
+  const int64_t value)
+{
+  rcl_interfaces::msg::SetParametersResult result;
+  result.successful = true;
+  auto integer_range = descriptor.integer_range.at(0);
+  if (value == integer_range.from_value || value == integer_range.to_value) {
+    return result;
+  }
+  if ((value < integer_range.from_value) || (value > integer_range.to_value)) {
+    result.successful = false;
+    result.reason = format_range_reason(descriptor.name, "integer");
+    return result;
+  }
+  if (integer_range.step == 0) {
+    return result;
+  }
+  if (((value - integer_range.from_value) % integer_range.step) == 0) {
+    return result;
+  }
+  result.successful = false;
+  result.reason = format_range_reason(descriptor.name, "integer");
+  return result;
+}
+
+RCLCPP_LOCAL
+rcl_interfaces::msg::SetParametersResult
+__check_double_range(
+  const rcl_interfaces::msg::ParameterDescriptor & descriptor,
+  const double value)
+{
+  rcl_interfaces::msg::SetParametersResult result;
+  result.successful = true;
+  auto fp_range = descriptor.floating_point_range.at(0);
+  if (__are_doubles_equal(value, fp_range.from_value) || __are_doubles_equal(value,
+    fp_range.to_value))
+  {
+    return result;
+  }
+  if (!(value >= fp_range.from_value && value <= fp_range.to_value)) {
+    result.successful = false;
+    result.reason = format_range_reason(descriptor.name, "floating point");
+    return result;
+  }
+  if (fp_range.step == 0.0) {
+    return result;
+  }
+  double rounded_div = std::round((value - fp_range.from_value) / fp_range.step);
+  if (__are_doubles_equal(value, fp_range.from_value + rounded_div * fp_range.step)) {
+    return result;
+  }
+  result.successful = false;
+  result.reason = format_range_reason(descriptor.name, "floating point");
+  return result;
+}
+
+RCLCPP_LOCAL
+rcl_interfaces::msg::SetParametersResult
+>>>>>>> fa8478f (node_parameters: reject non-finite values in floating-point range check (#3143))
 __check_parameter_value_in_range(
   const rcl_interfaces::msg::ParameterDescriptor & descriptor,
   const rclcpp::ParameterValue & value)
