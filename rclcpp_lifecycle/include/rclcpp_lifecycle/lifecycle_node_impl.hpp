@@ -91,6 +91,37 @@ LifecycleNode::create_subscription(
 }
 
 template<typename DurationRepT, typename DurationT, typename CallbackT>
+typename LifecycleWallTimer<CallbackT>::SharedPtr
+LifecycleNode::create_lifecycle_wall_timer(
+  std::chrono::duration<DurationRepT, DurationT> period, CallbackT callback,
+  rclcpp::CallbackGroup::SharedPtr group)
+{
+  auto timer = std::make_shared<LifecycleWallTimer<CallbackT>>(
+      period, std::move(callback), this->node_base_->get_context());
+
+  this->node_timers_->add_timer(timer, group);
+  this->add_managed_entity(timer);
+
+  return timer;
+}
+
+template<typename DurationRepT, typename DurationT, typename CallbackT>
+typename LifecycleGenericTimer<CallbackT>::SharedPtr
+LifecycleNode::create_lifecycle_timer(
+  std::chrono::duration<DurationRepT, DurationT> period, CallbackT callback,
+  rclcpp::CallbackGroup::SharedPtr group)
+{
+  auto timer = std::make_shared<LifecycleGenericTimer<CallbackT>>(
+      this->get_clock(), period, std::move(callback),
+      this->node_base_->get_context());
+
+  this->node_timers_->add_timer(timer, group);
+  this->add_managed_entity(timer);
+
+  return timer;
+}
+
+template<typename DurationRepT, typename DurationT, typename CallbackT>
 typename rclcpp::WallTimer<CallbackT>::SharedPtr
 LifecycleNode::create_wall_timer(
   std::chrono::duration<DurationRepT, DurationT> period,
