@@ -104,6 +104,17 @@ ClientGoalHandle<ActionT>::get_status()
 }
 
 template<typename ActionT>
+GoalStatusCode
+ClientGoalHandle<ActionT>::get_status_code()
+{
+  const int8_t status = get_status();
+  if (status < GoalStatus::STATUS_UNKNOWN || status > GoalStatus::STATUS_ABORTED) {
+    return GoalStatusCode::UNKNOWN;
+  }
+  return static_cast<GoalStatusCode>(status);
+}
+
+template<typename ActionT>
 void
 ClientGoalHandle<ActionT>::set_status(int8_t status)
 {

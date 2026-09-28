@@ -94,6 +94,14 @@ public:
   int8_t
   get_status();
 
+  /// Get the goal status code as a GoalStatusCode.
+  /**
+   * \return GoalStatusCode::UNKNOWN if the server sent a status that is not one of the
+   *   action_msgs::msg::GoalStatus values. get_status() still returns the raw value.
+   */
+  GoalStatusCode
+  get_status_code();
+
   /// Check if an action client has subscribed to feedback for the goal.
   bool
   is_feedback_aware();
