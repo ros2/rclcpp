@@ -114,11 +114,18 @@ struct RegisteredEntityCache
 {
   RegisteredEntityCache(
     CBGScheduler & scheduler, TimerManager & timer_manager,
-    const rclcpp::CallbackGroup::SharedPtr & callback_group)
+    const rclcpp::CallbackGroup::SharedPtr & callback_group,
+    bool dedicated_worker = false)
   : callback_group_weak_ptr(callback_group),
     scheduler_cbg_handle(*scheduler.add_callback_group(callback_group)),
     timer_manager(timer_manager)
   {
+    if (dedicated_worker) {
+      // must happen before any ready callbacks are registered,
+      // so that all events are routed to the dedicated worker
+      scheduler_cbg_handle.enable_dedicated_worker();
+    }
+
     auto cbg_gc = callback_group->get_notify_guard_condition();
 
     if(cbg_gc) {
