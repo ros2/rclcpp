@@ -23,6 +23,7 @@
 #define RCLCPP_BUILDING_LIBRARY 1
 #include "rclcpp/allocator/allocator_common.hpp"
 #include "rclcpp/context.hpp"
+#include "rclcpp/experimental/buffers/intra_process_buffer_data.hpp"
 #include "rclcpp/macros.hpp"
 #include "rclcpp/qos.hpp"
 #include "rmw/types.h"
@@ -61,40 +62,38 @@ namespace buffers
 {
 namespace mock
 {
+
 template<
   typename MessageT,
-  typename Alloc = std::allocator<MessageT>,
   typename MessageDeleter = std::default_delete<MessageT>>
 class IntraProcessBuffer : public IntraProcessBufferBase
 {
 public:
-  using ConstMessageSharedPtr = std::shared_ptr<const MessageT>;
-  using MessageUniquePtr = std::unique_ptr<MessageT>;
+  using Data = IntraProcessBufferData<MessageT, MessageDeleter>;
 
   RCLCPP_SMART_PTR_DEFINITIONS(IntraProcessBuffer)
 
   IntraProcessBuffer()
   {}
 
-  void add(ConstMessageSharedPtr msg)
+  void add(Data d)
   {
-    message_ptr = reinterpret_cast<std::uintptr_t>(msg.get());
-    shared_msg = msg;
+    data = std::move(d);
+    std::visit(
+      [this](auto && msg) {
+        message_ptr = reinterpret_cast<std::uintptr_t>(msg.get());
+      }, data->message);
+    message_info = data->message_info;
     ++num_msgs;
   }
 
-  void add(MessageUniquePtr msg)
+  std::pair<std::uintptr_t, rmw_message_info_t> pop()
   {
-    message_ptr = reinterpret_cast<std::uintptr_t>(msg.get());
-    unique_msg = std::move(msg);
-    ++num_msgs;
-  }
-
-  void pop(std::uintptr_t & msg_ptr)
-  {
-    msg_ptr = message_ptr;
+    std::pair<std::uintptr_t, rmw_message_info_t> ret = {message_ptr, message_info};
     message_ptr = 0;
+    message_info = rmw_message_info_t{};
     --num_msgs;
+    return ret;
   }
 
   size_t size() const
@@ -102,33 +101,20 @@ public:
     return num_msgs;
   }
 
-  std::vector<ConstMessageSharedPtr> get_all_data_shared()
+  std::vector<Data> get_all_data() const
   {
-    if (shared_msg) {
-      return {shared_msg};
-    } else if (unique_msg) {
-      return {std::make_shared<const MessageT>(*unique_msg)};
+    if (data) {
+      return {*data};
     }
     return {};
   }
 
-  std::vector<MessageUniquePtr> get_all_data_unique()
-  {
-    std::vector<MessageUniquePtr> result;
-    if (shared_msg) {
-      result.push_back(std::make_unique<MessageT>(*shared_msg));
-    } else if (unique_msg) {
-      result.push_back(std::make_unique<MessageT>(*unique_msg));
-    }
-    return result;
-  }
-
 private:
   // need to store the messages somewhere otherwise the memory address will be reused
-  ConstMessageSharedPtr shared_msg;
-  MessageUniquePtr unique_msg;
+  std::optional<Data> data;
 
-  std::uintptr_t message_ptr;
+  std::uintptr_t message_ptr{};
+  rmw_message_info_t message_info{};
   // count add and pop
   size_t num_msgs = 0u;
 };
@@ -199,6 +185,12 @@ public:
     return qos_profile.durability() == rclcpp::DurabilityPolicy::TransientLocal;
   }
 
+  void
+  set_gid(const rmw_gid_t & gid)
+  {
+    gid_ = gid;
+  }
+
   const rmw_gid_t &
   get_gid() const
   {
@@ -206,15 +198,15 @@ public:
   }
 
   bool
-  operator==([[maybe_unused]] const rmw_gid_t & gid) const
+  operator==(const rmw_gid_t & gid) const
   {
-    return false;
+    return std::memcmp(&gid_, &gid, sizeof(rmw_gid_t)) == 0;
   }
 
   bool
-  operator==([[maybe_unused]] const rmw_gid_t * gid) const
+  operator==(const rmw_gid_t * gid) const
   {
-    return false;
+    return std::memcmp(&gid_, gid, sizeof(rmw_gid_t)) == 0;
   }
 
   uint64_t intra_process_publisher_id_;
@@ -322,42 +314,52 @@ class SubscriptionIntraProcessBuffer : public SubscriptionIntraProcessBase
 public:
   RCLCPP_SMART_PTR_DEFINITIONS(SubscriptionIntraProcessBuffer)
 
+  using ConstMessageSharedPtr = std::shared_ptr<const MessageT>;
+  using MessageUniquePtr = std::unique_ptr<MessageT, Deleter>;
+
+  using IntraProcessBuffer = typename rclcpp::experimental::buffers::mock::IntraProcessBuffer<
+    MessageT,
+    Deleter
+  >;
+
   explicit SubscriptionIntraProcessBuffer(const std::string & topic, const rclcpp::QoS & qos)
   : SubscriptionIntraProcessBase(nullptr, topic, qos), take_shared_method(false)
   {
-    buffer = std::make_unique<rclcpp::experimental::buffers::mock::IntraProcessBuffer<MessageT>>();
+    buffer = std::make_unique<IntraProcessBuffer>();
+  }
+
+  explicit SubscriptionIntraProcessBuffer(const rclcpp::QoS & qos = rclcpp::QoS(10))
+  : SubscriptionIntraProcessBase(nullptr, "topic", qos), take_shared_method(false)
+  {
+    buffer = std::make_unique<IntraProcessBuffer>();
   }
 
   void
-  provide_intra_process_message(std::shared_ptr<const MessageT> msg)
+  provide_intra_process_message(
+    std::variant<MessageUniquePtr, ConstMessageSharedPtr> message,
+    const rmw_message_info_t & message_info)
   {
-    buffer->add(msg);
+    typename IntraProcessBuffer::Data data;
+    data.message_info = message_info;
+    data.message = std::move(message);
+    buffer->add(std::move(data));
   }
 
   void
-  provide_intra_process_message(std::unique_ptr<MessageT> msg)
+  provide_intra_process_data(
+    std::variant<MessageUniquePtr, ConstMessageSharedPtr> message,
+    const rmw_message_info_t & message_info)
   {
-    buffer->add(std::move(msg));
+    typename IntraProcessBuffer::Data data;
+    data.message_info = message_info;
+    data.message = std::move(message);
+    buffer->add(std::move(data));
   }
 
-  void
-  provide_intra_process_data(std::shared_ptr<const MessageT> msg)
-  {
-    buffer->add(msg);
-  }
-
-  void
-  provide_intra_process_data(std::unique_ptr<MessageT> msg)
-  {
-    buffer->add(std::move(msg));
-  }
-
-  std::uintptr_t
+  std::pair<std::uintptr_t, rmw_message_info_t>
   pop()
   {
-    std::uintptr_t ptr;
-    buffer->pop(ptr);
-    return ptr;
+    return buffer->pop();
   }
 
   bool
@@ -392,6 +394,11 @@ public:
 
   explicit SubscriptionIntraProcess(const std::string & topic, const rclcpp::QoS & qos)
   : SubscriptionIntraProcessBuffer<MessageT, Alloc, Deleter>(topic, qos)
+  {
+  }
+
+  explicit SubscriptionIntraProcess(const rclcpp::QoS & qos = rclcpp::QoS(10))
+  : SubscriptionIntraProcessBuffer<MessageT, Alloc, Deleter>(qos)
   {
   }
 };
@@ -443,11 +450,14 @@ void Publisher<T, Alloc>::publish(MessageUniquePtr msg)
   }
 
   if (buffer) {
-    auto shared_msg = ipm->template do_intra_process_publish_and_return_shared<T, T, Alloc>(
+    auto pair = ipm->template do_intra_process_publish_and_return_shared<T, T, Alloc>(
       intra_process_publisher_id_,
       std::move(msg),
       *message_allocator_);
-    buffer->add(shared_msg);
+    experimental::buffers::IntraProcessBufferData<T> data;
+    data.message = pair.first;
+    data.message_info = pair.second;
+    buffer->add(std::move(data));
   } else {
     ipm->template do_intra_process_publish<T, T, Alloc>(
       intra_process_publisher_id_,
@@ -564,15 +574,29 @@ TEST(TestIntraProcessManager, single_subscription) {
   auto p1_id = ipm->add_publisher(p1);
   p1->set_intra_process_manager(p1_id, ipm);
 
-  auto s1 = std::make_shared<SubscriptionIntraProcessT>("topic", rclcpp::QoS(10));
+  rmw_gid_t p1_gid = {"test", {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16}};
+  p1->set_gid(p1_gid);
+
+  auto s1 = std::make_shared<SubscriptionIntraProcessT>();
   s1->take_shared_method = false;
   auto s1_id = ipm->template add_subscription<MessageT>(s1);
 
   auto unique_msg = std::make_unique<MessageT>();
   auto original_message_pointer = reinterpret_cast<std::uintptr_t>(unique_msg.get());
+  rmw_time_point_value_t last_timestamp;
   p1->publish(std::move(unique_msg));
-  auto received_message_pointer_1 = s1->pop();
-  ASSERT_EQ(original_message_pointer, received_message_pointer_1);
+  {
+    auto [received_message_pointer_1, received_message_info_1] = s1->pop();
+    ASSERT_EQ(original_message_pointer, received_message_pointer_1);
+    ASSERT_TRUE(received_message_info_1.from_intra_process);
+    ASSERT_EQ(received_message_info_1.publication_sequence_number, 0L);
+    ASSERT_EQ(received_message_info_1.reception_sequence_number, 0L);
+    ASSERT_NE(received_message_info_1.source_timestamp, 0L);
+    ASSERT_NE(received_message_info_1.received_timestamp, 0L);
+    ASSERT_EQ(received_message_info_1.source_timestamp, received_message_info_1.received_timestamp);
+    ASSERT_EQ(memcmp(&p1_gid, &received_message_info_1.publisher_gid, sizeof(rmw_gid_t)), 0);
+    last_timestamp = received_message_info_1.source_timestamp;
+  }
 
   ipm->remove_subscription(s1_id);
   auto s2 = std::make_shared<SubscriptionIntraProcessT>("topic", rclcpp::QoS(10));
@@ -583,16 +607,35 @@ TEST(TestIntraProcessManager, single_subscription) {
   unique_msg = std::make_unique<MessageT>();
   original_message_pointer = reinterpret_cast<std::uintptr_t>(unique_msg.get());
   p1->publish(std::move(unique_msg));
-  received_message_pointer_1 = s1->pop();
-  auto received_message_pointer_2 = s2->pop();
-  ASSERT_EQ(original_message_pointer, received_message_pointer_2);
-  ASSERT_EQ(0u, received_message_pointer_1);
+  {
+    auto [received_message_pointer_1, received_message_info_1] = s1->pop();
+    auto [received_message_pointer_2, received_message_info_2] = s2->pop();
+    ASSERT_EQ(original_message_pointer, received_message_pointer_2);
+    ASSERT_TRUE(received_message_info_2.from_intra_process);
+    ASSERT_EQ(received_message_info_2.publication_sequence_number, 1L);
+    ASSERT_EQ(received_message_info_2.reception_sequence_number, 0L);
+    ASSERT_GT(received_message_info_2.source_timestamp, last_timestamp);
+    ASSERT_GT(received_message_info_2.received_timestamp, last_timestamp);
+    ASSERT_EQ(received_message_info_2.source_timestamp, received_message_info_2.received_timestamp);
+    ASSERT_EQ(memcmp(&p1_gid, &received_message_info_2.publisher_gid, sizeof(rmw_gid_t)), 0);
+    ASSERT_EQ(0u, received_message_pointer_1);
+    last_timestamp = received_message_info_2.source_timestamp;
+  }
 
   unique_msg = std::make_unique<MessageT>();
   original_message_pointer = reinterpret_cast<std::uintptr_t>(unique_msg.get());
   p1->publish(std::move(unique_msg));
-  received_message_pointer_2 = s2->pop();
-  ASSERT_EQ(original_message_pointer, received_message_pointer_2);
+  {
+    auto [received_message_pointer_2, received_message_info_2] = s2->pop();
+    ASSERT_EQ(original_message_pointer, received_message_pointer_2);
+    ASSERT_TRUE(received_message_info_2.from_intra_process);
+    ASSERT_EQ(received_message_info_2.publication_sequence_number, 2L);
+    ASSERT_EQ(received_message_info_2.reception_sequence_number, 1L);
+    ASSERT_GT(received_message_info_2.source_timestamp, last_timestamp);
+    ASSERT_GT(received_message_info_2.received_timestamp, last_timestamp);
+    ASSERT_EQ(received_message_info_2.source_timestamp, received_message_info_2.received_timestamp);
+    ASSERT_EQ(memcmp(&p1_gid, &received_message_info_2.publisher_gid, sizeof(rmw_gid_t)), 0);
+  }
 }
 
 /*
@@ -629,8 +672,8 @@ TEST(TestIntraProcessManager, multiple_subscriptions_same_type) {
   auto unique_msg = std::make_unique<MessageT>();
   auto original_message_pointer = reinterpret_cast<std::uintptr_t>(unique_msg.get());
   p1->publish(std::move(unique_msg));
-  bool received_original_1 = s1->pop() == original_message_pointer;
-  bool received_original_2 = s2->pop() == original_message_pointer;
+  bool received_original_1 = s1->pop().first == original_message_pointer;
+  bool received_original_2 = s2->pop().first == original_message_pointer;
   std::vector<bool> received_original_vec =
   {received_original_1, received_original_2};
   ASSERT_THAT(received_original_vec, UnorderedElementsAre(true, false));
@@ -649,8 +692,8 @@ TEST(TestIntraProcessManager, multiple_subscriptions_same_type) {
   unique_msg = std::make_unique<MessageT>();
   original_message_pointer = reinterpret_cast<std::uintptr_t>(unique_msg.get());
   p1->publish(std::move(unique_msg));
-  auto received_message_pointer_3 = s3->pop();
-  auto received_message_pointer_4 = s4->pop();
+  auto received_message_pointer_3 = s3->pop().first;
+  auto received_message_pointer_4 = s4->pop().first;
   ASSERT_EQ(original_message_pointer, received_message_pointer_3);
   ASSERT_EQ(original_message_pointer, received_message_pointer_4);
 
@@ -668,8 +711,8 @@ TEST(TestIntraProcessManager, multiple_subscriptions_same_type) {
   unique_msg = std::make_unique<MessageT>();
   original_message_pointer = reinterpret_cast<std::uintptr_t>(unique_msg.get());
   p1->publish(std::move(unique_msg));
-  auto received_message_pointer_5 = s5->pop();
-  auto received_message_pointer_6 = s6->pop();
+  auto received_message_pointer_5 = s5->pop().first;
+  auto received_message_pointer_6 = s6->pop().first;
   ASSERT_NE(original_message_pointer, received_message_pointer_5);
   // Someone gets the original unique_ptr, the last one to take.
   ASSERT_EQ(original_message_pointer, received_message_pointer_6);
@@ -690,8 +733,8 @@ TEST(TestIntraProcessManager, multiple_subscriptions_same_type) {
   unique_msg = std::make_unique<MessageT>();
   original_message_pointer = reinterpret_cast<std::uintptr_t>(unique_msg.get());
   p1->publish(std::move(unique_msg));
-  auto received_message_pointer_7 = s7->pop();
-  auto received_message_pointer_8 = s8->pop();
+  auto received_message_pointer_7 = s7->pop().first;
+  auto received_message_pointer_8 = s8->pop().first;
   ASSERT_EQ(original_message_pointer, received_message_pointer_7);
   ASSERT_EQ(original_message_pointer, received_message_pointer_8);
 }
@@ -735,8 +778,8 @@ TEST(TestIntraProcessManager, multiple_subscriptions_different_type) {
   auto unique_msg = std::make_unique<MessageT>();
   auto original_message_pointer = reinterpret_cast<std::uintptr_t>(unique_msg.get());
   p1->publish(std::move(unique_msg));
-  auto received_message_pointer_1 = s1->pop();
-  auto received_message_pointer_2 = s2->pop();
+  auto received_message_pointer_1 = s1->pop().first;
+  auto received_message_pointer_2 = s2->pop().first;
   ASSERT_NE(original_message_pointer, received_message_pointer_1);
   ASSERT_EQ(original_message_pointer, received_message_pointer_2);
 
@@ -758,9 +801,9 @@ TEST(TestIntraProcessManager, multiple_subscriptions_different_type) {
   unique_msg = std::make_unique<MessageT>();
   original_message_pointer = reinterpret_cast<std::uintptr_t>(unique_msg.get());
   p1->publish(std::move(unique_msg));
-  auto received_message_pointer_3 = s3->pop();
-  auto received_message_pointer_4 = s4->pop();
-  auto received_message_pointer_5 = s5->pop();
+  auto received_message_pointer_3 = s3->pop().first;
+  auto received_message_pointer_4 = s4->pop().first;
+  auto received_message_pointer_5 = s5->pop().first;
   bool received_original_3 = received_message_pointer_3 == original_message_pointer;
   bool received_original_4 = received_message_pointer_4 == original_message_pointer;
   bool received_original_5 = received_message_pointer_5 == original_message_pointer;
@@ -794,10 +837,10 @@ TEST(TestIntraProcessManager, multiple_subscriptions_different_type) {
   unique_msg = std::make_unique<MessageT>();
   original_message_pointer = reinterpret_cast<std::uintptr_t>(unique_msg.get());
   p1->publish(std::move(unique_msg));
-  auto received_message_pointer_6 = s6->pop();
-  auto received_message_pointer_7 = s7->pop();
-  auto received_message_pointer_8 = s8->pop();
-  auto received_message_pointer_9 = s9->pop();
+  auto received_message_pointer_6 = s6->pop().first;
+  auto received_message_pointer_7 = s7->pop().first;
+  auto received_message_pointer_8 = s8->pop().first;
+  auto received_message_pointer_9 = s9->pop().first;
   bool received_original_8 = received_message_pointer_8 == original_message_pointer;
   bool received_original_9 = received_message_pointer_9 == original_message_pointer;
   received_original_vec = {received_original_8, received_original_9};
@@ -826,8 +869,8 @@ TEST(TestIntraProcessManager, multiple_subscriptions_different_type) {
   unique_msg = std::make_unique<MessageT>();
   original_message_pointer = reinterpret_cast<std::uintptr_t>(unique_msg.get());
   p1->publish(std::move(unique_msg));
-  auto received_message_pointer_10 = s10->pop();
-  auto received_message_pointer_11 = s11->pop();
+  auto received_message_pointer_10 = s10->pop().first;
+  auto received_message_pointer_11 = s11->pop().first;
   EXPECT_EQ(original_message_pointer, received_message_pointer_10);
   EXPECT_NE(original_message_pointer, received_message_pointer_11);
 }
@@ -985,9 +1028,9 @@ TEST(TestIntraProcessManager, transient_local) {
   ipm->template add_subscription<MessageT>(s2);
   ipm->template add_subscription<MessageT>(s3);
 
-  auto received_message_pointer_1 = s1->pop();
-  auto received_message_pointer_2 = s2->pop();
-  auto received_message_pointer_3 = s3->pop();
+  auto received_message_pointer_1 = s1->pop().first;
+  auto received_message_pointer_2 = s2->pop().first;
+  auto received_message_pointer_3 = s3->pop().first;
   ASSERT_NE(0u, received_message_pointer_1);
   ASSERT_NE(0u, received_message_pointer_2);
   ASSERT_NE(0u, received_message_pointer_3);
