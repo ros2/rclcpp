@@ -650,7 +650,15 @@ public:
   take_dynamic_message(
     rclcpp::dynamic_typesupport::DynamicMessage & message_out,
     rclcpp::MessageInfo & message_info_out);
+
+  RCLCPP_PUBLIC
+  std::shared_ptr<std::mutex>
+  get_loaned_message_mutex() const
+  {
+    return loaned_message_mutex_;
+  }
   // ===============================================================================================
+
 
 protected:
   template<typename EventCallbackT>
@@ -688,6 +696,9 @@ protected:
   std::shared_ptr<rcl_node_t> node_handle_;
 
   std::recursive_mutex on_new_message_callback_mutex_;
+
+  /// Mutex to protect rcl_take_loaned_message and rcl_return_loaned_message_from_subscription
+  std::shared_ptr<std::mutex> loaned_message_mutex_;
   // It is important to declare on_new_message_callback_ before
   // subscription_handle_, so on destruction the subscription is
   // destroyed first. Otherwise, the rmw subscription callback
