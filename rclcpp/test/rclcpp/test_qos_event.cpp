@@ -401,9 +401,90 @@ TEST_F(TestQosEvent, test_invalid_on_new_event_callback)
   sub = node->create_subscription<test_msgs::msg::Empty>(
     topic_name, 10, message_callback, sub_options);
 
+<<<<<<< HEAD
   EXPECT_THROW(
     sub->set_on_new_qos_event_callback(invalid_cb, RCL_SUBSCRIPTION_REQUESTED_DEADLINE_MISSED),
     std::invalid_argument);
+=======
+  std::promise<void> prom;
+  auto matched_event_callback = [&matched_count, &prom](size_t count) {
+      matched_count += count;
+      prom.set_value();
+    };
+
+  sub->set_on_new_qos_event_callback(matched_event_callback, RCL_SUBSCRIPTION_MATCHED);
+
+  rclcpp::executors::SingleThreadedExecutor ex;
+  ex.add_node(node->get_node_base_interface());
+
+  const auto timeout = std::chrono::seconds(10000);
+
+  {
+    auto pub1 = node->create_publisher<test_msgs::msg::Empty>(topic_name, 10);
+
+    ex.spin_until_future_complete(prom.get_future(), timeout);
+    prom = {};
+    EXPECT_EQ(matched_count, static_cast<size_t>(1));
+
+    {
+      auto pub2 = node->create_publisher<test_msgs::msg::Empty>(topic_name, 10);
+      ex.spin_until_future_complete(prom.get_future(), timeout);
+      prom = {};
+      EXPECT_EQ(matched_count, static_cast<size_t>(2));
+    }
+
+    ex.spin_until_future_complete(prom.get_future(), timeout);
+    prom = {};
+    EXPECT_EQ(matched_count, static_cast<size_t>(3));
+  }
+
+  ex.spin_until_future_complete(prom.get_future(), timeout);
+  EXPECT_EQ(matched_count, static_cast<size_t>(4));
+}
+
+TEST_F(TestQosEvent, matched_events_survive_count_queries)
+{
+  if (!rclcpp::PublisherBase::event_type_is_supported(RCL_PUBLISHER_MATCHED) ||
+    !rclcpp::SubscriptionBase::event_type_is_supported(RCL_SUBSCRIPTION_MATCHED))
+  {
+    GTEST_SKIP() << "matched events are not supported by this RMW implementation";
+  }
+
+  std::atomic_size_t matched_count{0};
+  std::promise<void> matched;
+  auto matched_callback = [&matched_count, &matched](rclcpp::MatchedInfo &) {
+      if (++matched_count == 2) {
+        matched.set_value();
+      }
+    };
+
+  rclcpp::SubscriptionOptions sub_options;
+  sub_options.event_callbacks.matched_callback = matched_callback;
+  auto sub = node->create_subscription<test_msgs::msg::Empty>(
+    topic_name, 10, message_callback, sub_options);
+
+  rclcpp::PublisherOptions pub_options;
+  pub_options.event_callbacks.matched_callback = matched_callback;
+  auto pub = node->create_publisher<test_msgs::msg::Empty>(
+    topic_name, 10, pub_options);
+
+  ASSERT_EQ(1u, pub->get_subscription_count());
+  ASSERT_EQ(1u, sub->get_publisher_count());
+
+  rclcpp::executors::SingleThreadedExecutor executor;
+  executor.add_node(node->get_node_base_interface());
+
+  const auto timeout = 10s;
+  EXPECT_EQ(
+    rclcpp::FutureReturnCode::SUCCESS,
+    executor.spin_until_future_complete(matched.get_future(), timeout));
+}
+
+TEST_F(TestQosEvent, test_pub_matched_event_by_option_event_callback)
+{
+  rmw_matched_status_t matched_expected_result;
+  std::promise<void> prom;
+>>>>>>> 9aea5c5 (Test matched events after count queries (#3279))
 
   rclcpp::PublisherOptions pub_options;
   pub_options.event_callbacks.deadline_callback = [](auto) {};
