@@ -61,10 +61,16 @@ int main(int argc, char * argv[])
   loaders.push_back(loader);
 
 
+<<<<<<< HEAD
   exec.spin();
 
   for (auto wrapper : node_wrappers) {
     exec.remove_node(wrapper.get_node_base_interface());
+=======
+    if (node->get_associated_with_executor_atomic().load()) {
+      exec.remove_node(node);
+    }
+>>>>>>> a2501cc (Check for association with an executor before removing the node in generated component main (#3287))
   }
   node_wrappers.clear();
 
