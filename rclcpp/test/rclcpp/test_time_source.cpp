@@ -24,6 +24,7 @@
 #include <stdexcept>
 #include <string>
 #include <thread>
+#include <vector>
 
 #include "rcl/error_handling.h"
 #include "rcl/time.h"
@@ -201,6 +202,27 @@ TEST_F(TestTimeSource, detachUnattached) {
 
   // Try multiple detach to see if error
   ASSERT_NO_THROW(ts.detachNode());
+}
+
+TEST_F(TestTimeSource, destructor_does_not_terminate_when_detach_throws) {
+  auto time_source = std::make_unique<rclcpp::TimeSource>(node);
+
+  // Destroying the time source from inside a set-parameters callback makes its destructor call
+  // NodeParameters::remove_on_set_parameters_callback(), which throws because parameter
+  // modification is disabled while such a callback runs. A destructor is implicitly noexcept, so
+  // an unguarded throw here terminates the process instead of failing this expectation.
+  auto handle = node->add_on_set_parameters_callback(
+    [&time_source](const std::vector<rclcpp::Parameter> &) {
+      time_source.reset();
+      rcl_interfaces::msg::SetParametersResult result;
+      result.successful = true;
+      return result;
+    });
+
+  EXPECT_NO_THROW(node->set_parameter({"use_sim_time", true}));
+  EXPECT_EQ(nullptr, time_source);
+
+  node->remove_on_set_parameters_callback(handle.get());
 }
 
 TEST_F(TestTimeSource, reattach) {
