@@ -239,6 +239,10 @@ void EventsCBGExecutor::trigger_callback_group_sync()
 
 void EventsCBGExecutor::sync_callback_groups()
 {
+  if (!needs_callback_group_resync.load(std::memory_order_acquire)) {
+    return;
+  }
+
   if (!needs_callback_group_resync.exchange(false) ) {
     return;
   }
@@ -342,17 +346,19 @@ EventsCBGExecutor::run(size_t this_thread_number, bool block_initially)
 {
   (void) this_thread_number;
 
+  cbg_executor::Worker worker;
+
   while (rclcpp::ok(this->context_) && !cancel_requested_.load() ) {
     if(block_initially) {
       block_initially = false;
-      scheduler->block_worker_thread();
+      scheduler->block_worker_thread(&worker);
     }
 
     sync_callback_groups();
 
     auto ready_entity = scheduler->get_next_ready_entity();
     if(!ready_entity.entity) {
-      scheduler->block_worker_thread();
+      scheduler->block_worker_thread(&worker);
       continue;
     }
 
@@ -362,6 +368,7 @@ EventsCBGExecutor::run(size_t this_thread_number, bool block_initially)
 
     ready_entity.entity->execute_function();
 
+    scheduler->suppress_thread_wakeup();
     scheduler->mark_entity_as_executed(*ready_entity.entity);
   }
 }
@@ -372,13 +379,14 @@ EventsCBGExecutor::run(
   const std::function<void(const std::exception & e)> & exception_handler)
 {
   (void) this_thread_number;
+  cbg_executor::Worker worker;
 
   while (rclcpp::ok(this->context_) && !cancel_requested_.load() ) {
     sync_callback_groups();
 
     auto ready_entity = scheduler->get_next_ready_entity();
     if(!ready_entity.entity) {
-      scheduler->block_worker_thread();
+      scheduler->block_worker_thread(&worker);
       continue;
     }
 
@@ -392,6 +400,7 @@ EventsCBGExecutor::run(
       exception_handler(e);
     }
 
+    scheduler->suppress_thread_wakeup();
     scheduler->mark_entity_as_executed(*ready_entity.entity);
   }
 }
@@ -414,7 +423,11 @@ void EventsCBGExecutor::spin_once_internal(std::chrono::nanoseconds timeout)
       timeout = std::chrono::hours(10000);
     }
 
-    scheduler->block_worker_thread_for(timeout);
+    cbg_executor::Worker worker;
+
+    // block_worker_thread_for removes the worker from the queue again
+    // before returning, so the stack allocated worker is safe to use here
+    scheduler->block_worker_thread_for(&worker, timeout);
 
     ready_entity = scheduler->get_next_ready_entity();
 
