@@ -82,9 +82,22 @@ public:
   get_goal_stamp() const;
 
   /// Get the goal status code.
+  /**
+   * \deprecated Use get_status_code(), which returns a GoalStatusCode.
+   */
+  [[deprecated("use get_status_code() instead")]]
   RCLCPP_ACTION_PUBLIC
   int8_t
   get_status();
+
+  /// Get the goal status code as a GoalStatusCode.
+  /**
+   * \throws exceptions::InvalidGoalStatusError If the server sent a status that is not one of
+   *   the action_msgs::msg::GoalStatus values.
+   */
+  RCLCPP_ACTION_PUBLIC
+  GoalStatusCode
+  get_status_code();
 
   /// Check if an action client has subscribed to feedback for the goal.
   RCLCPP_ACTION_PUBLIC

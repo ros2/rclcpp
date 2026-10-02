@@ -89,6 +89,17 @@ GenericClientGoalHandle::get_status()
   return status_;
 }
 
+GoalStatusCode
+GenericClientGoalHandle::get_status_code()
+{
+  std::lock_guard<std::recursive_mutex> guard(handle_mutex_);
+  const int8_t status = status_;
+  if (status < GoalStatus::STATUS_UNKNOWN || status > GoalStatus::STATUS_ABORTED) {
+    throw exceptions::InvalidGoalStatusError(status);
+  }
+  return static_cast<GoalStatusCode>(status);
+}
+
 void
 GenericClientGoalHandle::set_status(int8_t status)
 {

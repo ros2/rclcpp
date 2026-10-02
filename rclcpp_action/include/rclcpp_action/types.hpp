@@ -34,6 +34,18 @@ using GoalUUID = std::array<uint8_t, UUID_SIZE>;
 using GoalStatus = action_msgs::msg::GoalStatus;
 using GoalInfo = action_msgs::msg::GoalInfo;
 
+/// Every status a goal can have, as defined in action_msgs::msg::GoalStatus.
+enum class GoalStatusCode : int8_t
+{
+  UNKNOWN = GoalStatus::STATUS_UNKNOWN,
+  ACCEPTED = GoalStatus::STATUS_ACCEPTED,
+  EXECUTING = GoalStatus::STATUS_EXECUTING,
+  CANCELING = GoalStatus::STATUS_CANCELING,
+  SUCCEEDED = GoalStatus::STATUS_SUCCEEDED,
+  CANCELED = GoalStatus::STATUS_CANCELED,
+  ABORTED = GoalStatus::STATUS_ABORTED
+};
+
 /// Convert a goal id to a human readable RFC-4122 compliant string.
 RCLCPP_ACTION_PUBLIC
 std::string
