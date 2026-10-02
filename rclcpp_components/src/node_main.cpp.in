@@ -64,7 +64,10 @@ int main(int argc, char * argv[])
   exec.spin();
 
   for (auto wrapper : node_wrappers) {
-    exec.remove_node(wrapper.get_node_base_interface());
+    auto node = wrapper.get_node_base_interface();
+    if (node->get_associated_with_executor_atomic().load()) {
+      exec.remove_node(node);
+    }
   }
   node_wrappers.clear();
 
