@@ -96,8 +96,8 @@ public:
 
   /// Get the goal status code as a GoalStatusCode.
   /**
-   * \return GoalStatusCode::UNKNOWN if the server sent a status that is not one of the
-   *   action_msgs::msg::GoalStatus values. get_status() still returns the raw value.
+   * \throws exceptions::InvalidGoalStatusError If the server sent a status that is not one of
+   *   the action_msgs::msg::GoalStatus values. get_status() still returns the raw value.
    */
   GoalStatusCode
   get_status_code();

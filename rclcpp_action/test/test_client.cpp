@@ -695,7 +695,8 @@ TEST_F(TestClientAgainstServer, get_status_code_out_of_range)
     client_executor.spin_some();
   }
   ASSERT_EQ(out_of_range_status, goal_handle->get_status());
-  EXPECT_EQ(rclcpp_action::GoalStatusCode::UNKNOWN, goal_handle->get_status_code());
+  EXPECT_THROW(
+    goal_handle->get_status_code(), rclcpp_action::exceptions::InvalidGoalStatusError);
 }
 
 TEST_F(TestClientAgainstServer, async_send_goal_with_goal_response_callback_wait_for_result)

@@ -94,7 +94,7 @@ GenericClientGoalHandle::get_status_code()
 {
   const int8_t status = get_status();
   if (status < GoalStatus::STATUS_UNKNOWN || status > GoalStatus::STATUS_ABORTED) {
-    return GoalStatusCode::UNKNOWN;
+    throw exceptions::InvalidGoalStatusError(status);
   }
   return static_cast<GoalStatusCode>(status);
 }
