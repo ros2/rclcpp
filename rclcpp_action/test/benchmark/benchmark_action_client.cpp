@@ -234,7 +234,7 @@ BENCHMARK_F(ActionClientPerformanceTest, async_send_goal_get_accepted_response)(
     }
 
     auto goal_handle = future_goal_handle.get();
-    if (rclcpp_action::GoalStatus::STATUS_ACCEPTED != goal_handle->get_status()) {
+    if (rclcpp_action::GoalStatusCode::ACCEPTED != goal_handle->get_status_code()) {
       state.SkipWithError("Valid goal was not accepted");
       return;
     }

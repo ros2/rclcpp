@@ -91,13 +91,17 @@ public:
   get_goal_stamp() const;
 
   /// Get the goal status code.
+  /**
+   * \deprecated Use get_status_code(), which returns a GoalStatusCode.
+   */
+  [[deprecated("use get_status_code() instead")]]
   int8_t
   get_status();
 
   /// Get the goal status code as a GoalStatusCode.
   /**
    * \throws exceptions::InvalidGoalStatusError If the server sent a status that is not one of
-   *   the action_msgs::msg::GoalStatus values. get_status() still returns the raw value.
+   *   the action_msgs::msg::GoalStatus values.
    */
   GoalStatusCode
   get_status_code();

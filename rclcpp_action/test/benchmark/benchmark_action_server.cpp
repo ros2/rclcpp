@@ -157,7 +157,7 @@ BENCHMARK_F(ActionServerPerformanceTest, action_server_accept_goal)(benchmark::S
 
     rclcpp::spin_until_future_complete(node, client_goal_handle_future);
     auto goal_handle = client_goal_handle_future.get();
-    if (rclcpp_action::GoalStatus::STATUS_ACCEPTED != goal_handle->get_status()) {
+    if (rclcpp_action::GoalStatusCode::ACCEPTED != goal_handle->get_status_code()) {
       state.SkipWithError("Valid goal was not accepted");
       return;
     }
@@ -226,7 +226,7 @@ BENCHMARK_F(ActionServerPerformanceTest, action_server_execute_goal)(benchmark::
 
     rclcpp::spin_until_future_complete(node, client_goal_handle_future);
     auto goal_handle = client_goal_handle_future.get();
-    if (rclcpp_action::GoalStatus::STATUS_ACCEPTED != goal_handle->get_status()) {
+    if (rclcpp_action::GoalStatusCode::ACCEPTED != goal_handle->get_status_code()) {
       state.SkipWithError("Valid goal was not accepted");
       return;
     }
@@ -272,7 +272,7 @@ BENCHMARK_F(ActionServerPerformanceTest, action_server_set_success)(benchmark::S
 
     rclcpp::spin_until_future_complete(node, client_goal_handle_future);
     auto goal_handle = client_goal_handle_future.get();
-    if (rclcpp_action::GoalStatus::STATUS_ACCEPTED != goal_handle->get_status()) {
+    if (rclcpp_action::GoalStatusCode::ACCEPTED != goal_handle->get_status_code()) {
       state.SkipWithError("Valid goal was not accepted");
       return;
     }
@@ -317,7 +317,7 @@ BENCHMARK_F(ActionServerPerformanceTest, action_server_abort)(benchmark::State &
 
     rclcpp::spin_until_future_complete(node, client_goal_handle_future);
     auto goal_handle = client_goal_handle_future.get();
-    if (rclcpp_action::GoalStatus::STATUS_ACCEPTED != goal_handle->get_status()) {
+    if (rclcpp_action::GoalStatusCode::ACCEPTED != goal_handle->get_status_code()) {
       state.SkipWithError("Valid goal was not accepted");
       return;
     }
