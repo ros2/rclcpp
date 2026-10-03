@@ -239,6 +239,11 @@ public:
 
     bool is_ready();
 
+    std::mutex & get_ready_mutex()
+    {
+      return ready_mutex;
+    }
+
     // true if this cbg is inside the scheduler's queue
     bool in_queue = false;
 
