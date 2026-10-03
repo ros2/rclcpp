@@ -629,12 +629,14 @@ TEST_F(TestClientAgainstServer, async_send_goal_no_callbacks_wait_for_result)
   dual_spin_until_future_complete(future_goal_handle);
   auto goal_handle = future_goal_handle.get();
   EXPECT_EQ(rclcpp_action::GoalStatus::STATUS_ACCEPTED, goal_handle->get_status());
+  EXPECT_EQ(rclcpp_action::GoalStatusCode::ACCEPTED, goal_handle->get_status_code());
   EXPECT_FALSE(goal_handle->is_feedback_aware());
   EXPECT_FALSE(goal_handle->is_result_aware());
   auto future_result = action_client->async_get_result(goal_handle);
   EXPECT_TRUE(goal_handle->is_result_aware());
   dual_spin_until_future_complete(future_result);
   auto wrapped_result = future_result.get();
+  EXPECT_EQ(rclcpp_action::GoalStatusCode::SUCCEEDED, goal_handle->get_status_code());
   ASSERT_EQ(6ul, wrapped_result.result->sequence.size());
   EXPECT_EQ(0, wrapped_result.result->sequence[0]);
   EXPECT_EQ(1, wrapped_result.result->sequence[1]);
@@ -653,14 +655,48 @@ TEST_F(TestClientAgainstServer, async_send_goal_no_callbacks_then_invalidate)
   auto goal_handle = future_goal_handle.get();
   ASSERT_NE(nullptr, goal_handle);
   EXPECT_EQ(rclcpp_action::GoalStatus::STATUS_ACCEPTED, goal_handle->get_status());
+  EXPECT_EQ(rclcpp_action::GoalStatusCode::ACCEPTED, goal_handle->get_status_code());
   auto future_result = action_client->async_get_result(goal_handle);
   EXPECT_TRUE(goal_handle->is_result_aware());
 
   action_client.reset();  // Ensure goal handle is invalidated once client goes out of scope
 
   EXPECT_EQ(rclcpp_action::GoalStatus::STATUS_UNKNOWN, goal_handle->get_status());
+  EXPECT_EQ(rclcpp_action::GoalStatusCode::UNKNOWN, goal_handle->get_status_code());
   using rclcpp_action::exceptions::UnawareGoalHandleError;
   EXPECT_THROW(future_result.get(), UnawareGoalHandleError);
+}
+
+TEST_F(TestClientAgainstServer, get_status_code_out_of_range)
+{
+  auto action_client = rclcpp_action::create_client<ActionType>(client_node, action_name);
+  ASSERT_TRUE(action_client->wait_for_action_server(WAIT_FOR_SERVER_TIMEOUT));
+
+  ActionGoal goal;
+  goal.order = 5;
+  auto future_goal_handle = action_client->async_send_goal(goal);
+  dual_spin_until_future_complete(future_goal_handle);
+  auto goal_handle = future_goal_handle.get();
+  ASSERT_NE(nullptr, goal_handle);
+
+  // A server that does not follow the action protocol can send any int8_t as a status.
+  const int8_t out_of_range_status = 42;
+  ActionStatusMessage status_message;
+  rclcpp_action::GoalStatus goal_status;
+  goal_status.goal_info.goal_id.uuid = goal_handle->get_goal_id();
+  goal_status.status = out_of_range_status;
+  status_message.status_list.push_back(goal_status);
+  status_publisher->publish(status_message);
+
+  const auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds(5);
+  while (goal_handle->get_status() != out_of_range_status &&
+    std::chrono::steady_clock::now() < deadline)
+  {
+    client_executor.spin_some();
+  }
+  ASSERT_EQ(out_of_range_status, goal_handle->get_status());
+  EXPECT_THROW(
+    goal_handle->get_status_code(), rclcpp_action::exceptions::InvalidGoalStatusError);
 }
 
 TEST_F(TestClientAgainstServer, async_send_goal_with_goal_response_callback_wait_for_result)
@@ -894,6 +930,8 @@ TEST_F(TestClientAgainstServer, async_cancel_all_goals)
   EXPECT_EQ(goal_handle1->get_goal_id(), cancel_response->goals_canceling[1].goal_id.uuid);
   EXPECT_EQ(rclcpp_action::GoalStatus::STATUS_CANCELED, goal_handle0->get_status());
   EXPECT_EQ(rclcpp_action::GoalStatus::STATUS_CANCELED, goal_handle1->get_status());
+  EXPECT_EQ(rclcpp_action::GoalStatusCode::CANCELED, goal_handle0->get_status_code());
+  EXPECT_EQ(rclcpp_action::GoalStatusCode::CANCELED, goal_handle1->get_status_code());
 }
 
 TEST_F(TestClientAgainstServer, async_cancel_all_goals_with_callback)

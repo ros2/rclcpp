@@ -15,6 +15,7 @@
 #ifndef RCLCPP_ACTION__EXCEPTIONS_HPP_
 #define RCLCPP_ACTION__EXCEPTIONS_HPP_
 
+#include <cstdint>
 #include <stdexcept>
 #include <string>
 
@@ -37,6 +38,16 @@ public:
   UnawareGoalHandleError(
     const std::string & message = "Goal handle is not tracking the goal result.")
   : std::runtime_error(message)
+  {
+  }
+};
+
+class InvalidGoalStatusError : public std::runtime_error
+{
+public:
+  explicit InvalidGoalStatusError(int8_t status)
+  : std::runtime_error(
+      "Goal status " + std::to_string(status) + " is not an action_msgs/GoalStatus value.")
   {
   }
 };
