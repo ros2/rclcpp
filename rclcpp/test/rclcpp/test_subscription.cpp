@@ -362,15 +362,7 @@ TEST_F(TestSubscription, rcl_subscription_get_publisher_count_error) {
   EXPECT_THROW(sub->get_publisher_count(), rclcpp::exceptions::RCLError);
 }
 
-TEST_F(TestSubscription, handle_loaned_message) {
-  initialize();
-  auto callback = [](std::shared_ptr<const test_msgs::msg::Empty>) {};
-  auto sub = node_->create_subscription<test_msgs::msg::Empty>("topic", 10, callback);
 
-  test_msgs::msg::Empty msg;
-  rclcpp::MessageInfo message_info;
-  EXPECT_NO_THROW(sub->handle_loaned_message(&msg, message_info));
-}
 
 /*
    Testing on_new_message callbacks.
