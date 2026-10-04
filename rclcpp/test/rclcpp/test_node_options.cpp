@@ -216,7 +216,6 @@ TEST(TestNodeOptions, copy) {
     .use_global_arguments(false)
     .enable_rosout(false)
     .use_intra_process_comms(true)
-    .enable_topic_statistics(true)
     .start_parameter_services(false)
     .enable_logger_service(true)
     .start_parameter_event_publisher(false)
@@ -234,8 +233,6 @@ TEST(TestNodeOptions, copy) {
     EXPECT_EQ(non_default_options.enable_rosout(), copied_options.enable_rosout());
     EXPECT_EQ(non_default_options.use_intra_process_comms(),
       copied_options.use_intra_process_comms());
-    EXPECT_EQ(non_default_options.enable_topic_statistics(),
-      copied_options.enable_topic_statistics());
     EXPECT_EQ(non_default_options.start_parameter_services(),
       copied_options.start_parameter_services());
     EXPECT_EQ(non_default_options.enable_logger_service(), copied_options.enable_logger_service());
@@ -294,11 +291,6 @@ TEST(TestNodeOptions, bool_setters_and_getters) {
   EXPECT_FALSE(options.use_intra_process_comms());
   options.use_intra_process_comms(true);
   EXPECT_TRUE(options.use_intra_process_comms());
-
-  options.enable_topic_statistics(false);
-  EXPECT_FALSE(options.enable_topic_statistics());
-  options.enable_topic_statistics(true);
-  EXPECT_TRUE(options.enable_topic_statistics());
 
   options.start_parameter_services(false);
   EXPECT_FALSE(options.start_parameter_services());
