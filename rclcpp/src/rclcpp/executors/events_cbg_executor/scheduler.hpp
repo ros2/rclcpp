@@ -235,6 +235,16 @@ public:
       scheduler.callback_group_ready(this, false);
     }
 
+    /**
+     * Removes all pending ready entities. Must be called
+     * if the callback group is removed from the executor.
+     */
+    void clear_ready_entities()
+    {
+      std::lock_guard l(ready_mutex);
+      clear_ready_entities_intern();
+    }
+
     CallbackGroupType get_type() {return type;}
 
     bool is_ready();
@@ -249,6 +259,11 @@ protected:
      * Will always be called under lock of ready_mutex
      */
     virtual bool has_ready_entities() const = 0;
+
+    /**
+     * Will always be called under lock of ready_mutex
+     */
+    virtual void clear_ready_entities_intern() = 0;
 
     /**
      * Executes the given function to add an entity
