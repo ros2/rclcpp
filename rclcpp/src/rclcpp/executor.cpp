@@ -575,13 +575,9 @@ Executor::execute_subscription(const rclcpp::SubscriptionBase::SharedPtr & subsc
             subscription->get_topic_name(),
             [&]()
             {
-              std::shared_ptr<std::mutex> loan_mutex = subscription->get_loaned_message_mutex();
-              std::lock_guard<std::mutex> lock(*loan_mutex);
-              rcl_ret_t ret = rcl_take_loaned_message(
-                subscription->get_subscription_handle().get(),
+              rcl_ret_t ret = subscription->take_loaned_message(
                 &loaned_msg,
-                &message_info.get_rmw_message_info(),
-                nullptr);
+                &message_info.get_rmw_message_info());
               TRACETOOLS_TRACEPOINT(rclcpp_take, static_cast<const void *>(loaned_msg));
               if (RCL_RET_SUBSCRIPTION_TAKE_FAILED == ret) {
                 return false;

@@ -96,6 +96,7 @@ SubscriptionBase::SubscriptionBase(
 
 SubscriptionBase::~SubscriptionBase()
 {
+  this->clear_on_new_message_callback();
   if (!use_intra_process_) {
     return;
   }
@@ -577,6 +578,19 @@ SubscriptionBase::take_dynamic_message(
 {
   throw std::runtime_error("Unimplemented");
   return false;
+}
+
+rcl_ret_t
+SubscriptionBase::take_loaned_message(
+  void ** loaned_message,
+  rmw_message_info_t * message_info_out)
+{
+  std::lock_guard<std::mutex> lock(*loaned_message_mutex_);
+  return rcl_take_loaned_message(
+    subscription_handle_.get(),
+    loaned_message,
+    message_info_out,
+    nullptr);
 }
 
 void

@@ -652,11 +652,10 @@ public:
     rclcpp::MessageInfo & message_info_out);
 
   RCLCPP_PUBLIC
-  std::shared_ptr<std::mutex>
-  get_loaned_message_mutex() const
-  {
-    return loaned_message_mutex_;
-  }
+  rcl_ret_t
+  take_loaned_message(
+    void ** loaned_message,
+    rmw_message_info_t * message_info_out);
   // ===============================================================================================
 
 
