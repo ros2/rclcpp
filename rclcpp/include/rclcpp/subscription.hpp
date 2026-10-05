@@ -387,16 +387,31 @@ public:
     void * loaned_message,
     const rclcpp::MessageInfo & message_info) override
   {
+    auto typed_message = static_cast<ROSMessageType *>(loaned_message);
+    
+    auto sub_handle = this->get_subscription_handle();
+    auto loan_mutex = this->loaned_message_mutex_;
+    auto sptr = std::shared_ptr<ROSMessageType>(
+      typed_message, [sub_handle, loan_mutex](ROSMessageType * msg) {
+        if (msg) {
+          std::lock_guard<std::mutex> lock(*loan_mutex);
+          rcl_ret_t ret = rcl_return_loaned_message_from_subscription(
+            sub_handle.get(), static_cast<void *>(msg));
+          if (RCL_RET_OK != ret) {
+            RCLCPP_ERROR(
+              rclcpp::get_logger("rclcpp"),
+              "rcl_return_loaned_message_from_subscription() failed: %s",
+              rcl_get_error_string().str);
+            rcl_reset_error();
+          }
+        }
+      });
+
     if (matches_any_intra_process_publishers(&message_info.get_rmw_message_info().publisher_gid)) {
       // In this case, the message will be delivered via intra process and
       // we should ignore this copy of the message.
       return;
     }
-
-    auto typed_message = static_cast<ROSMessageType *>(loaned_message);
-    // message is loaned, so we have to make sure that the deleter does not deallocate the message
-    auto sptr = std::shared_ptr<ROSMessageType>(
-      typed_message, [](ROSMessageType * msg) {(void) msg;});
 
     std::chrono::time_point<std::chrono::system_clock> now;
     if (subscription_topic_statistics_) {

@@ -599,11 +599,9 @@ Executor::execute_subscription(const rclcpp::SubscriptionBase::SharedPtr & subsc
             subscription->get_topic_name(),
             [&]()
             {
-              rcl_ret_t ret = rcl_take_loaned_message(
-                subscription->get_subscription_handle().get(),
+              rcl_ret_t ret = subscription->take_loaned_message(
                 &loaned_msg,
-                &message_info.get_rmw_message_info(),
-                nullptr);
+                &message_info.get_rmw_message_info());
               TRACETOOLS_TRACEPOINT(rclcpp_take, static_cast<const void *>(loaned_msg));
               if (RCL_RET_SUBSCRIPTION_TAKE_FAILED == ret) {
                 return false;
@@ -613,19 +611,6 @@ Executor::execute_subscription(const rclcpp::SubscriptionBase::SharedPtr & subsc
               return true;
             },
             [&]() {subscription->handle_loaned_message(loaned_msg, message_info);});
-          if (nullptr != loaned_msg) {
-            rcl_ret_t ret = rcl_return_loaned_message_from_subscription(
-              subscription->get_subscription_handle().get(), loaned_msg);
-            if (RCL_RET_OK != ret) {
-              RCLCPP_ERROR(
-                rclcpp::get_logger("rclcpp"),
-                "rcl_return_loaned_message_from_subscription() failed for subscription on topic "
-                "'%s': %s",
-                subscription->get_topic_name(), rcl_get_error_string().str);
-              rcl_reset_error();
-            }
-            loaned_msg = nullptr;
-          }
         } else {
           // This case is taking a copy of the message data from the middleware via
           // inter-process communication.
