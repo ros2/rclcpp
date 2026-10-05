@@ -15,7 +15,6 @@
 #ifndef RCLCPP__SUBSCRIPTION_OPTIONS_HPP_
 #define RCLCPP__SUBSCRIPTION_OPTIONS_HPP_
 
-#include <chrono>
 #include <memory>
 #include <string>
 #include <type_traits>
@@ -29,8 +28,6 @@
 #include "rclcpp/event_handler.hpp"
 #include "rclcpp/qos_overriding_options.hpp"
 #include "rclcpp/subscription_content_filter_options.hpp"
-#include "rclcpp/topic_statistics_state.hpp"
-#include "rclcpp/visibility_control.hpp"
 
 namespace rclcpp
 {
@@ -64,27 +61,6 @@ struct SubscriptionOptionsBase
   /// Optional RMW implementation specific payload to be used during creation of the subscription.
   std::shared_ptr<rclcpp::detail::RMWImplementationSpecificSubscriptionPayload>
   rmw_implementation_payload = nullptr;
-
-  // Options to configure topic statistics collector in the subscription.
-  struct TopicStatisticsOptions
-  {
-    // Enable and disable topic statistics calculation and publication. Defaults to disabled.
-    TopicStatisticsState state = TopicStatisticsState::NodeDefault;
-
-    // Topic to which topic statistics get published when enabled. Defaults to /statistics.
-    std::string publish_topic = "/statistics";
-
-    // Topic statistics publication period in ms. Defaults to one second.
-    // Only values greater than zero are allowed.
-    std::chrono::milliseconds publish_period{std::chrono::seconds(1)};
-
-    // An optional QoS which can provide topic_statistics with a stable QoS separate from
-    // the subscription's current QoS settings which could be unstable.
-    // Explicitly set the enough depth to avoid missing the statistics messages.
-    rclcpp::QoS qos = SystemDefaultsQoS().keep_last(10);
-  };
-
-  TopicStatisticsOptions topic_stats_options;
 
   QosOverridingOptions qos_overriding_options;
 

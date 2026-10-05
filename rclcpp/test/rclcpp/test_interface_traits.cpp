@@ -33,8 +33,7 @@ public:
       "my_node_namespace",
       rclcpp::contexts::get_global_default_context(),
       *options.get_rcl_node_options(),
-      options.use_intra_process_comms(),
-      options.enable_topic_statistics());
+      options.use_intra_process_comms());
   }
 };
 

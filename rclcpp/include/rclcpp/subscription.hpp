@@ -18,7 +18,6 @@
 #include <rmw/error_handling.h>
 #include <rmw/rmw.h>
 
-#include <chrono>
 #include <functional>
 #include <memory>
 #include <string>
@@ -44,7 +43,6 @@
 #include "rclcpp/type_support_decl.hpp"
 #include "rclcpp/visibility_control.hpp"
 #include "rclcpp/waitable.hpp"
-#include "rclcpp/topic_statistics/subscription_topic_statistics.hpp"
 #include "tracetools/tracetools.h"
 
 namespace rclcpp
@@ -87,10 +85,6 @@ public:
   using ROSMessageTypeAllocator = typename ROSMessageTypeAllocatorTraits::allocator_type;
   using ROSMessageTypeDeleter = allocator::Deleter<ROSMessageTypeAllocator, ROSMessageType>;
 
-private:
-  using SubscriptionTopicStatisticsSharedPtr =
-    std::shared_ptr<rclcpp::topic_statistics::SubscriptionTopicStatistics>;
-
 public:
   RCLCPP_SMART_PTR_DEFINITIONS(Subscription)
 
@@ -107,7 +101,6 @@ public:
    * \param[in] callback User defined callback to call when a message is received.
    * \param[in] options Options for the subscription.
    * \param[in] message_memory_strategy The memory strategy to be used for managing message memory.
-   * \param[in] subscription_topic_statistics Optional pointer to a topic statistics subcription.
    * \throws std::invalid_argument if the QoS is uncompatible with intra-process (if one
    *   of the following conditions are true: qos_profile.history == RMW_QOS_POLICY_HISTORY_KEEP_ALL,
    *   qos_profile.depth == 0 or qos_profile.durability != RMW_QOS_POLICY_DURABILITY_VOLATILE).
@@ -120,8 +113,7 @@ public:
     const rclcpp::QoS & qos,
     AnySubscriptionCallback<MessageT, AllocatorT> callback,
     const rclcpp::SubscriptionOptionsWithAllocator<AllocatorT> & options,
-    typename MessageMemoryStrategyT::SharedPtr message_memory_strategy,
-    SubscriptionTopicStatisticsSharedPtr subscription_topic_statistics = nullptr)
+    typename MessageMemoryStrategyT::SharedPtr message_memory_strategy)
   : SubscriptionBase(
       node_base,
       type_support_handle,
@@ -161,18 +153,6 @@ public:
         ROSMessageT,
         AllocatorT>;
 
-      // Build a type-erased stats handler to avoid a circular include chain
-      // via publisher.hpp and callback_group.hpp
-      typename SubscriptionIntraProcessT::StatsHandlerFn stats_handler = nullptr;
-      if (subscription_topic_statistics) {
-        stats_handler =
-          [subscription_topic_statistics](
-          const rmw_message_info_t & info, const rclcpp::Time & time)
-          {
-            subscription_topic_statistics->handle_message(info, time);
-          };
-      }
-
       // First create a SubscriptionIntraProcess which will be given to the intra-process manager.
       auto context = node_base->get_context();
       subscription_intra_process_ = std::make_shared<SubscriptionIntraProcessT>(
@@ -181,8 +161,7 @@ public:
         context,
         this->get_topic_name(),  // important to get like this, as it has the fully-qualified name
         qos_profile,
-        resolve_intra_process_buffer_type(options_.intra_process_buffer_type, callback),
-        std::move(stats_handler));
+        resolve_intra_process_buffer_type(options_.intra_process_buffer_type, callback));
       TRACETOOLS_TRACEPOINT(
         rclcpp_subscription_init,
         static_cast<const void *>(get_subscription_handle().get()),
@@ -194,10 +173,6 @@ public:
       uint64_t intra_process_subscription_id = ipm->template add_subscription<
         ROSMessageType, ROSMessageTypeAllocator>(subscription_intra_process_);
       this->setup_intra_process(intra_process_subscription_id, ipm);
-    }
-
-    if (subscription_topic_statistics != nullptr) {
-      this->subscription_topic_statistics_ = std::move(subscription_topic_statistics);
     }
 
     TRACETOOLS_TRACEPOINT(
@@ -344,21 +319,7 @@ public:
       return;
     }
     auto typed_message = std::static_pointer_cast<ROSMessageType>(message);
-
-    std::chrono::time_point<std::chrono::system_clock> now;
-    if (subscription_topic_statistics_) {
-      // get current time before executing callback to
-      // exclude callback duration from topic statistics result.
-      now = std::chrono::system_clock::now();
-    }
-
     any_callback_.dispatch(typed_message, message_info);
-
-    if (subscription_topic_statistics_) {
-      const auto nanos = std::chrono::time_point_cast<std::chrono::nanoseconds>(now);
-      const auto time = rclcpp::Time(nanos.time_since_epoch().count());
-      subscription_topic_statistics_->handle_message(message_info.get_rmw_message_info(), time);
-    }
   }
 
   void
@@ -366,20 +327,7 @@ public:
     const std::shared_ptr<rclcpp::SerializedMessage> & serialized_message,
     const rclcpp::MessageInfo & message_info) override
   {
-    std::chrono::time_point<std::chrono::system_clock> now;
-    if (subscription_topic_statistics_) {
-      // get current time before executing callback to
-      // exclude callback duration from topic statistics result.
-      now = std::chrono::system_clock::now();
-    }
-
     any_callback_.dispatch(serialized_message, message_info);
-
-    if (subscription_topic_statistics_) {
-      const auto nanos = std::chrono::time_point_cast<std::chrono::nanoseconds>(now);
-      const auto time = rclcpp::Time(nanos.time_since_epoch().count());
-      subscription_topic_statistics_->handle_message(message_info.get_rmw_message_info(), time);
-    }
   }
 
   void
@@ -397,21 +345,7 @@ public:
     // message is loaned, so we have to make sure that the deleter does not deallocate the message
     auto sptr = std::shared_ptr<ROSMessageType>(
       typed_message, [](ROSMessageType * msg) {(void) msg;});
-
-    std::chrono::time_point<std::chrono::system_clock> now;
-    if (subscription_topic_statistics_) {
-      // get current time before executing callback to
-      // exclude callback duration from topic statistics result.
-      now = std::chrono::system_clock::now();
-    }
-
     any_callback_.dispatch(sptr, message_info);
-
-    if (subscription_topic_statistics_) {
-      const auto nanos = std::chrono::time_point_cast<std::chrono::nanoseconds>(now);
-      const auto time = rclcpp::Time(nanos.time_since_epoch().count());
-      subscription_topic_statistics_->handle_message(message_info.get_rmw_message_info(), time);
-    }
   }
 
   /// Return the borrowed message.
@@ -501,9 +435,6 @@ private:
   const rclcpp::SubscriptionOptionsWithAllocator<AllocatorT> options_;
   typename message_memory_strategy::MessageMemoryStrategy<ROSMessageType, AllocatorT>::SharedPtr
     message_memory_strategy_;
-
-  /// Component which computes and publishes topic statistics for this subscriber
-  SubscriptionTopicStatisticsSharedPtr subscription_topic_statistics_{nullptr};
 };
 
 }  // namespace rclcpp
