@@ -15,6 +15,7 @@
 #include "rclcpp/timer.hpp"
 
 #include <chrono>
+#include <stdexcept>
 #include <string>
 #include <memory>
 
@@ -73,6 +74,61 @@ TimerBase::TimerBase(
   }
 }
 
+TimerBase::TimerBase(
+  rclcpp::Clock::SharedPtr clock,
+  rclcpp::Time initial_call_time,
+  std::chrono::nanoseconds period,
+  rclcpp::Context::SharedPtr context,
+  bool autostart)
+: clock_(clock), timer_handle_(nullptr)
+{
+  // An uninitialized clock is rejected below by rcl_timer_init_with_start_time itself; skip
+  // the type comparison here so that pre-existing error path is still what surfaces in that case.
+  if (clock_->get_clock_type() != RCL_CLOCK_UNINITIALIZED &&
+    initial_call_time.get_clock_type() != clock_->get_clock_type())
+  {
+    throw std::runtime_error(
+            "initial_call_time's clock type does not match clock's clock type");
+  }
+
+  if (nullptr == context) {
+    context = rclcpp::contexts::get_global_default_context();
+  }
+
+  auto rcl_context = context->get_rcl_context();
+
+  timer_handle_ = std::shared_ptr<rcl_timer_t>(
+    new rcl_timer_t, [ = ](rcl_timer_t * timer) mutable
+    {
+      {
+        std::lock_guard<std::mutex> clock_guard(clock->get_clock_mutex());
+        if (rcl_timer_fini(timer) != RCL_RET_OK) {
+          RCUTILS_LOG_ERROR_NAMED(
+            "rclcpp",
+            "Failed to clean up rcl timer handle: %s", rcl_get_error_string().str);
+          rcl_reset_error();
+        }
+      }
+      delete timer;
+      // Captured shared pointers by copy, reset to make sure timer is finalized before clock
+      clock.reset();
+      rcl_context.reset();
+    });
+
+  *timer_handle_.get() = rcl_get_zero_initialized_timer();
+
+  rcl_clock_t * clock_handle = clock_->get_clock_handle();
+  {
+    std::lock_guard<std::mutex> clock_guard(clock_->get_clock_mutex());
+    rcl_ret_t ret = rcl_timer_init_with_start_time(
+      timer_handle_.get(), clock_handle, rcl_context.get(), initial_call_time.nanoseconds(),
+      period.count(), nullptr, rcl_get_default_allocator(), autostart);
+    if (ret != RCL_RET_OK) {
+      rclcpp::exceptions::throw_from_rcl_error(ret, "Couldn't initialize rcl timer handle");
+    }
+  }
+}
+
 TimerBase::~TimerBase()
 {
   clear_on_reset_callback();
@@ -108,6 +164,19 @@ TimerBase::reset()
   }
   if (ret != RCL_RET_OK) {
     rclcpp::exceptions::throw_from_rcl_error(ret, "Couldn't reset timer");
+  }
+}
+
+void
+TimerBase::resume()
+{
+  rcl_ret_t ret = RCL_RET_OK;
+  {
+    std::lock_guard<std::recursive_mutex> lock(callback_mutex_);
+    ret = rcl_timer_resume(timer_handle_.get());
+  }
+  if (ret != RCL_RET_OK) {
+    rclcpp::exceptions::throw_from_rcl_error(ret, "Couldn't resume timer");
   }
 }
 
@@ -220,4 +289,39 @@ TimerBase::set_on_reset_callback(rcl_event_callback_t callback, const void * use
 const rclcpp::Clock::SharedPtr & TimerBase::get_clock() const
 {
   return clock_;
+}
+
+namespace
+{
+/// Floor division for a positive divisor (unlike operator/, rounds toward negative infinity).
+int64_t
+floor_div(int64_t dividend, int64_t positive_divisor)
+{
+  int64_t quotient = dividend / positive_divisor;
+  if (dividend % positive_divisor != 0 && dividend < 0) {
+    --quotient;
+  }
+  return quotient;
+}
+}  // namespace
+
+rclcpp::Time
+rclcpp::compute_phase_aligned_time(
+  const rclcpp::Clock & clock,
+  std::chrono::nanoseconds interval,
+  std::chrono::nanoseconds phase)
+{
+  if (interval <= std::chrono::nanoseconds(0)) {
+    throw std::invalid_argument("interval must be greater than zero");
+  }
+  const rclcpp::Time now = clock.now();
+  const int64_t now_ns = now.nanoseconds();
+  const int64_t interval_ns = interval.count();
+  const int64_t phase_ns = phase.count();
+  const int64_t k = floor_div(now_ns - phase_ns, interval_ns);
+  int64_t aligned_ns = k * interval_ns + phase_ns;
+  if (aligned_ns < now_ns) {
+    aligned_ns += interval_ns;
+  }
+  return rclcpp::Time(aligned_ns, now.get_clock_type());
 }
