@@ -127,6 +127,7 @@ class TimerQueue
     rclcpp::Clock::SharedPtr clock;
     bool in_running_list = false;
     std::function<void(const std::function<void()> & executed_cb)> timer_ready_callback;
+    std::weak_ptr<TimerData> self;
   };
 
 public:
@@ -163,6 +164,13 @@ public:
         shrPtr->clear_on_reset_callback();
       }
     }
+
+    // Release all references now, as the queue itself may outlive the libraries
+    // owning e.g. the clocks. Callbacks still executing will not re-arm their
+    // timers, as their timer data is gone.
+    running_timers.clear();
+    all_timers.clear();
+    used_clock_for_timers.reset();
   }
 
   /**
@@ -200,7 +208,7 @@ public:
 
     auto it = std::find_if(
       all_timers.begin(), all_timers.end(),
-      [rcl_ref = timer->get_timer_handle()](const std::unique_ptr<TimerData> & d)
+      [rcl_ref = timer->get_timer_handle()](const std::shared_ptr<TimerData> & d)
       {
         return d->rcl_ref == rcl_ref;
       });
@@ -251,15 +259,18 @@ public:
       return;
     }
 
-    std::unique_ptr<TimerData> data = std::make_unique<TimerData>(TimerData{std::move(handle),
+    std::shared_ptr<TimerData> data = std::make_shared<TimerData>(TimerData{std::move(handle),
           timer,
-          timer->get_clock(), false, timer_ready_callback});
+          timer->get_clock(), false, timer_ready_callback, {}});
+    data->self = data;
 
     timer->set_on_reset_callback(
-      [data_ptr = data.get(), this](size_t) {
+      [weak_data = std::weak_ptr<TimerData>(data), this](size_t) {
         std::scoped_lock l(mutex);
-        if (!remove_if_dropped(data_ptr)) {
-          add_timer_to_running_map(data_ptr);
+        // the timer may have been removed concurrently
+        auto data = weak_data.lock();
+        if (data && !remove_if_dropped(data.get())) {
+          add_timer_to_running_map(data.get());
         }
       });
 
@@ -308,7 +319,7 @@ private:
 
       // timer was deleted
       auto it = std::find_if(
-        all_timers.begin(), all_timers.end(), [timer_data](const std::unique_ptr<TimerData> & e) {
+        all_timers.begin(), all_timers.end(), [timer_data](const std::shared_ptr<TimerData> & e) {
           return timer_data == e.get();
         }
       );
@@ -386,15 +397,15 @@ private:
       }
 
       if (time_until_call <= 0) {
-        auto timer_done_callback = [timer_data = timer_data, this] ()
+        auto timer_done_callback = [weak_data = timer_data->self, this] ()
           {
-            // Note, we have the guarantee, that the shared_ptr to this timer is
-            // valid in case this callback is executed, as the executor holds a
-            // reference to the timer during execution and at the time of this callback.
-            // Therefore timer_data is valid.
-            {
-              std::scoped_lock l(mutex);
-              add_timer_to_running_map(timer_data);
+            // The timer may have been removed from this queue while its callback
+            // was executed, e.g. by removing its node or by a shutdown. all_timers
+            // is the only owner of the timer data and is only modified under the
+            // mutex, so a successful lock under the mutex means it is still queued.
+            std::scoped_lock l(mutex);
+            if (auto data = weak_data.lock()) {
+              add_timer_to_running_map(data.get());
             }
           };
 
@@ -480,7 +491,7 @@ private:
   std::atomic_bool running = true;
   std::atomic_bool thread_terminated = false;
 
-  std::vector<std::unique_ptr<TimerData>> all_timers;
+  std::vector<std::shared_ptr<TimerData>> all_timers;
 
   using TimerMap = std::multimap<std::chrono::nanoseconds, TimerData *>;
   TimerMap running_timers;
