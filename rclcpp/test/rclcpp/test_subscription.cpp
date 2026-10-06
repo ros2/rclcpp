@@ -917,10 +917,9 @@ TEST_F(TestSubscription, queue_size_behavior) {
   rclcpp::executors::SingleThreadedExecutor executor;
   executor.add_node(node_);
   
-  // Spin a bit to ensure discovery
+  // Wait for discovery (no need to spin executor for discovery)
   auto start_time = std::chrono::steady_clock::now();
   while (pub->get_subscription_count() == 0 && (std::chrono::steady_clock::now() - start_time) < 10s) {
-    executor.spin_node_some(node_);
     std::this_thread::sleep_for(10ms);
   }
   ASSERT_GT(pub->get_subscription_count(), 0u);
@@ -939,6 +938,9 @@ TEST_F(TestSubscription, queue_size_behavior) {
     std::this_thread::sleep_for(10ms);
   }
   
-  // We expect to have received exactly `depth` messages.
-  EXPECT_EQ(received_values.size(), depth);
+  // We expect to have received exactly `depth` messages, and they should be the LAST 3 messages.
+  ASSERT_EQ(received_values.size(), depth);
+  EXPECT_EQ(received_values[0], 3);
+  EXPECT_EQ(received_values[1], 4);
+  EXPECT_EQ(received_values[2], 5);
 }
