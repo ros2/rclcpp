@@ -934,7 +934,7 @@ TEST_F(TestSubscription, queue_size_behavior) {
   // Now spin to receive messages
   start_time = std::chrono::steady_clock::now();
   while ((std::chrono::steady_clock::now() - start_time) < 1s) {
-    executor.spin_node_some(node_);
+    executor.spin_some();
     std::this_thread::sleep_for(10ms);
   }
   
