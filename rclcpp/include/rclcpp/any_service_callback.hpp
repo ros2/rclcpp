@@ -96,6 +96,20 @@ public:
       >::value)
     {
       callback_.template emplace<SharedPtrDeferResponseCallbackWithServiceHandle>(callback);
+    } else if constexpr (  // NOLINT
+      rclcpp::function_traits::same_arguments<
+        CallbackT,
+        ConstRefCallback
+      >::value)
+    {
+      callback_.template emplace<ConstRefCallback>(callback);
+    } else if constexpr (  // NOLINT
+      rclcpp::function_traits::same_arguments<
+        CallbackT,
+        ConstRefWithRequestHeaderCallback
+      >::value)
+    {
+      callback_.template emplace<ConstRefWithRequestHeaderCallback>(callback);
     } else {
       // the else clause is not needed, but anyways we should only be doing this instead
       // of all the above workaround ...
@@ -141,6 +155,20 @@ public:
       >::value)
     {
       callback_.template emplace<SharedPtrDeferResponseCallbackWithServiceHandle>(callback);
+    } else if constexpr (  // NOLINT
+      rclcpp::function_traits::same_arguments<
+        CallbackT,
+        ConstRefCallback
+      >::value)
+    {
+      callback_.template emplace<ConstRefCallback>(callback);
+    } else if constexpr (  // NOLINT
+      rclcpp::function_traits::same_arguments<
+        CallbackT,
+        ConstRefWithRequestHeaderCallback
+      >::value)
+    {
+      callback_.template emplace<ConstRefWithRequestHeaderCallback>(callback);
     } else {
       // the else clause is not needed, but anyways we should only be doing this instead
       // of all the above workaround ...
@@ -182,6 +210,18 @@ public:
     } else if (std::holds_alternative<SharedPtrWithRequestHeaderCallback>(callback_)) {
       const auto & cb = std::get<SharedPtrWithRequestHeaderCallback>(callback_);
       cb(request_header, std::move(request), response);
+    } else if (std::holds_alternative<ConstRefCallback>(callback_)) {
+      if (nullptr == request) {
+        throw std::runtime_error("dispatch called with a null request");
+      }
+      const auto & cb = std::get<ConstRefCallback>(callback_);
+      cb(*request, *response);
+    } else if (std::holds_alternative<ConstRefWithRequestHeaderCallback>(callback_)) {
+      if (nullptr == request_header || nullptr == request) {
+        throw std::runtime_error("dispatch called with a null request header or request");
+      }
+      const auto & cb = std::get<ConstRefWithRequestHeaderCallback>(callback_);
+      cb(*request_header, *request, *response);
     }
     TRACETOOLS_TRACEPOINT(callback_end, static_cast<const void *>(this));
     return response;
@@ -227,13 +267,28 @@ private:
       std::shared_ptr<rmw_request_id_t>,
       std::shared_ptr<typename ServiceT::Request>
     )>;
+  // The request and response are received as shared pointers and dereferenced before
+  // calling the user callback, like AnySubscriptionCallback does for `const MessageT &`.
+  using ConstRefCallback = std::function<
+    void (
+      const typename ServiceT::Request &,
+      typename ServiceT::Response &
+    )>;
+  using ConstRefWithRequestHeaderCallback = std::function<
+    void (
+      const rmw_request_id_t &,
+      const typename ServiceT::Request &,
+      typename ServiceT::Response &
+    )>;
 
   std::variant<
     std::monostate,
     SharedPtrCallback,
     SharedPtrWithRequestHeaderCallback,
     SharedPtrDeferResponseCallback,
-    SharedPtrDeferResponseCallbackWithServiceHandle> callback_;
+    SharedPtrDeferResponseCallbackWithServiceHandle,
+    ConstRefCallback,
+    ConstRefWithRequestHeaderCallback> callback_;
 };
 
 }  // namespace rclcpp
