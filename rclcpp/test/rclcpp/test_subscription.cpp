@@ -43,6 +43,7 @@
 #include "../utils/rclcpp_gtest_macros.hpp"
 
 #include "test_msgs/msg/empty.hpp"
+#include "test_msgs/msg/basic_types.hpp"
 
 using namespace std::chrono_literals;
 
@@ -889,4 +890,57 @@ TEST_F(TestSubscription, disable_enable_event_callbacks)
   }
   EXPECT_EQ(deadline_callback_count, 2);
   EXPECT_EQ(liveliness_callback_count, 2);
+}
+
+/*
+   Testing behavior when the queue size of the subscriber is reached.
+   See https://github.com/ros2/rclcpp/issues/421
+ */
+TEST_F(TestSubscription, queue_size_behavior) {
+  initialize();
+  using test_msgs::msg::BasicTypes;
+  
+  constexpr size_t depth = 3;
+  rclcpp::QoS sub_qos(depth);
+  
+  std::vector<int32_t> received_values;
+  auto callback = [&received_values](BasicTypes::ConstSharedPtr msg) {
+    received_values.push_back(msg->int32_value);
+  };
+  
+  auto sub = node_->create_subscription<BasicTypes>("test_queue_size", sub_qos, callback);
+  
+  // Publisher with a larger queue size just to be safe
+  rclcpp::QoS pub_qos(10);
+  auto pub = node_->create_publisher<BasicTypes>("test_queue_size", pub_qos);
+  
+  rclcpp::executors::SingleThreadedExecutor executor;
+  executor.add_node(node_);
+  
+  // Wait for discovery (no need to spin executor for discovery)
+  auto start_time = std::chrono::steady_clock::now();
+  while (pub->get_subscription_count() == 0 && (std::chrono::steady_clock::now() - start_time) < 10s) {
+    std::this_thread::sleep_for(10ms);
+  }
+  ASSERT_GT(pub->get_subscription_count(), 0u);
+  
+  // Publish more messages than the subscriber's queue size
+  for (int32_t i = 1; i <= 5; ++i) {
+    BasicTypes msg;
+    msg.int32_value = i;
+    pub->publish(msg);
+  }
+  
+  // Now spin to receive messages
+  start_time = std::chrono::steady_clock::now();
+  while ((std::chrono::steady_clock::now() - start_time) < 1s) {
+    executor.spin_some();
+    std::this_thread::sleep_for(10ms);
+  }
+  
+  // We expect to have received exactly `depth` messages, and they should be the LAST 3 messages.
+  ASSERT_EQ(received_values.size(), depth);
+  EXPECT_EQ(received_values[0], 3);
+  EXPECT_EQ(received_values[1], 4);
+  EXPECT_EQ(received_values[2], 5);
 }
