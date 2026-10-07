@@ -159,12 +159,6 @@ It also has several test dependencies, which do not affect the resulting quality
 
 `rclcpp` has the following runtime ROS dependencies:
 
-#### `libstatistics_collector`
-
-The `libstatistics_collector` package provides lightweight aggregation utilities to collect statistics and measure message metrics.
-
-It is **Quality Level 1**, see its [Quality Declaration document](https://github.com/ros-tooling/libstatistics_collector/tree/rolling/QUALITY_DECLARATION.md).
-
 #### `rcl`
 
 `rcl` a library to support implementation of language specific ROS 2 Client Libraries.
