@@ -61,5 +61,7 @@
 
   <export>
     <build_type>ament_cmake</build_type>
+    <area>client-libraries, framework</area>
+    <related_scope>core</related_scope>
   </export>
 </package>
