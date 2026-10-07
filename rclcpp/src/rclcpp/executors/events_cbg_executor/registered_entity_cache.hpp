@@ -148,6 +148,14 @@ struct RegisteredEntityCache
 
   ~RegisteredEntityCache()
   {
+    unregister_callbacks();
+
+    // drop events still queued in the scheduler
+    scheduler_cbg_handle.clear_ready_entities();
+  }
+
+  void unregister_callbacks()
+  {
     for (const auto & gc_ref : guard_conditions) {
       gc_ref.guard_condition->set_on_trigger_callback(nullptr);
     }
