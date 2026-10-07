@@ -20,6 +20,7 @@
 
 #include "rcpputils/scope_exit.hpp"
 #include "rclcpp/exceptions/exceptions.hpp"
+#include "rclcpp/logging.hpp"
 #include "rclcpp/node.hpp"
 
 #include "first_in_first_out_scheduler.hpp"
@@ -116,7 +117,18 @@ EventsCBGExecutor::EventsCBGExecutor(
 
 EventsCBGExecutor::~EventsCBGExecutor()
 {
-  shutdown();
+  // shutdown() removes nodes and callback groups, which throws when an entity is no longer
+  // associated with this executor. A destructor is noexcept, so letting that escape would
+  // terminate the process.
+  try {
+    shutdown();
+  } catch (const std::exception & exc) {
+    RCLCPP_ERROR(
+      rclcpp::get_logger("rclcpp"),
+      "unhandled exception in ~EventsCBGExecutor(): %s", exc.what());
+  } catch (...) {
+    RCLCPP_ERROR(rclcpp::get_logger("rclcpp"), "unhandled exception in ~EventsCBGExecutor()");
+  }
 }
 
 void EventsCBGExecutor::shutdown()
