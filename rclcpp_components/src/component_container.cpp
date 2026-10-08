@@ -144,8 +144,11 @@ int main(int argc, char * argv[])
     return 1;
   }
 
-  std::shared_ptr<rclcpp::Executor> exec;
+  // Declare the executor after the manager, so on destruction the executor is
+  // destroyed first. Otherwise, the executor could release component entities
+  // after the manager has unloaded their libraries.
   std::shared_ptr<rclcpp_components::ComponentManager> node;
+  std::shared_ptr<rclcpp::Executor> exec;
 
   // Create the manager once, as its final type. The isolated managers resolve the
   // `thread_num` parameter themselves when a component is loaded (0 == auto).
