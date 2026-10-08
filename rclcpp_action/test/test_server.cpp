@@ -12,7 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <chrono>
+#include <future>
 #include <memory>
+#include <mutex>
+#include <string>
+#include <thread>
+#include <utility>
 #include <vector>
 
 #include "gtest/gtest.h"
@@ -33,6 +39,23 @@ using Fibonacci = test_msgs::action::Fibonacci;
 using CancelResponse = typename Fibonacci::Impl::CancelGoalService::Response;
 using GoalUUID = rclcpp_action::GoalUUID;
 
+namespace
+{
+
+bool clock_mutex_is_available(const rclcpp::Clock::SharedPtr & clock)
+{
+  bool available = false;
+  // Trying a non-recursive mutex on its owning thread is undefined behavior.
+  std::thread probe([&]() {
+      std::unique_lock<std::mutex> lock(clock->get_clock_mutex(), std::try_to_lock);
+      available = lock.owns_lock();
+    });
+  probe.join();
+  return available;
+}
+
+}  // namespace
+
 class TestServer : public ::testing::Test
 {
 protected:
@@ -44,6 +67,23 @@ protected:
   static void TearDownTestCase()
   {
     rclcpp::shutdown();
+  }
+
+  static rclcpp_action::Server<Fibonacci>::SharedPtr
+  create_rejecting_server(
+    const rclcpp::Node::SharedPtr & node, const std::string & name,
+    const rcl_action_server_options_t & options = rcl_action_server_get_default_options())
+  {
+    using GoalHandle = rclcpp_action::ServerGoalHandle<Fibonacci>;
+    return rclcpp_action::create_server<Fibonacci>(
+      node, name,
+      [](const GoalUUID &, std::shared_ptr<const Fibonacci::Goal>) {
+        return rclcpp_action::GoalResponse::REJECT;
+      },
+      [](std::shared_ptr<GoalHandle>) {
+        return rclcpp_action::CancelResponse::REJECT;
+      },
+      [](std::shared_ptr<GoalHandle>) {}, options);
   }
 
   std::shared_ptr<Fibonacci::Impl::SendGoalService::Request>
@@ -133,6 +173,165 @@ TEST_F(TestServer, construction_and_destruction_after_node)
 
     node.reset();
   });
+}
+
+TEST_F(TestServer, construction_and_last_release_lock_clock)
+{
+  auto node = std::make_shared<rclcpp::Node>("clock_lock_node");
+  std::weak_ptr<rclcpp::Clock> weak_clock = node->get_clock();
+  size_t init_calls = 0;
+  size_t fini_calls = 0;
+  auto check_clock_locked = [&]() {
+      auto clock = weak_clock.lock();
+      EXPECT_NE(nullptr, clock);
+      if (clock) {
+        EXPECT_FALSE(clock_mutex_is_available(clock));
+      }
+    };
+  auto mock_init = mocking_utils::patch(
+    "lib:rclcpp_action", rcl_action_server_init,
+    ([&, base = rcl_action_server_init](auto && ... args) {
+      ++init_calls;
+      check_clock_locked();
+      return base(std::forward<decltype(args)>(args)...);
+    }));
+  auto mock_fini = mocking_utils::patch(
+    "lib:rclcpp_action", rcl_action_server_fini,
+    ([&, base = rcl_action_server_fini](auto && ... args) {
+      ++fini_calls;
+      check_clock_locked();
+      return base(std::forward<decltype(args)>(args)...);
+    }));
+
+  auto server = create_rejecting_server(node, "fibonacci");
+  // Clock changes must still reach the action server's expiration timer callback.
+  {
+    auto clock = node->get_clock();
+    std::lock_guard<std::mutex> lock(clock->get_clock_mutex());
+    EXPECT_EQ(RCL_RET_OK, rcl_enable_ros_time_override(clock->get_clock_handle()));
+    EXPECT_TRUE(clock->ros_time_is_active());
+    EXPECT_EQ(RCL_RET_OK, rcl_set_ros_time_override(clock->get_clock_handle(), 1000));
+    EXPECT_EQ(1000, clock->now().nanoseconds());
+    EXPECT_EQ(RCL_RET_OK, rcl_disable_ros_time_override(clock->get_clock_handle()));
+    EXPECT_FALSE(clock->ros_time_is_active());
+  }
+  auto last_server = server;
+  server.reset();
+  node.reset();
+  EXPECT_FALSE(weak_clock.expired());
+  EXPECT_EQ(1u, init_calls);
+  EXPECT_EQ(0u, fini_calls);
+  last_server.reset();
+  EXPECT_EQ(1u, fini_calls);
+  EXPECT_TRUE(weak_clock.expired());
+}
+
+TEST_F(TestServer, construction_failure_locks_clock_during_cleanup)
+{
+  auto node = std::make_shared<rclcpp::Node>("clock_cleanup_node");
+  auto clock = node->get_clock();
+  size_t init_calls = 0;
+  size_t fini_calls = 0;
+  auto mock_init = mocking_utils::patch(
+    "lib:rclcpp_action", rcl_action_server_init,
+    ([&, base = rcl_action_server_init](auto && ... args) {
+      ++init_calls;
+      EXPECT_FALSE(clock_mutex_is_available(clock));
+      return base(std::forward<decltype(args)>(args)...);
+    }));
+  auto mock_fini = mocking_utils::patch(
+    "lib:rclcpp_action", rcl_action_server_fini,
+    ([&, base = rcl_action_server_fini](auto && ... args) {
+      ++fini_calls;
+      EXPECT_FALSE(clock_mutex_is_available(clock));
+      return base(std::forward<decltype(args)>(args)...);
+    }));
+
+  // Exercise rcl_action_server_init's own cleanup and the subsequent C++ deleter.
+  auto options = rcl_action_server_get_default_options();
+  options.result_timeout.nanoseconds = -1;
+  EXPECT_THROW(
+    create_rejecting_server(node, "invalid_timeout", options),
+    rclcpp::exceptions::RCLInvalidArgument);
+  EXPECT_EQ(1u, init_calls);
+  EXPECT_EQ(1u, fini_calls);
+  EXPECT_TRUE(clock_mutex_is_available(clock));
+
+  // Also unwind after successful initialization, with a registered timer callback.
+  auto mock_wait_set = mocking_utils::patch_and_return(
+    "lib:rclcpp_action", rcl_action_server_wait_set_get_num_entities, RCL_RET_ERROR);
+  EXPECT_THROW(
+    create_rejecting_server(node, "invalid_wait_set"), rclcpp::exceptions::RCLError);
+  EXPECT_EQ(2u, init_calls);
+  EXPECT_EQ(2u, fini_calls);
+  EXPECT_TRUE(clock_mutex_is_available(clock));
+}
+
+TEST_F(TestServer, concurrent_servers_share_clock_with_expiration_threads)
+{
+  auto node = std::make_shared<rclcpp::Node>("shared_clock_node");
+  auto clock = node->get_clock();
+  size_t initial_callbacks;
+  {
+    std::lock_guard<std::mutex> lock(clock->get_clock_mutex());
+    initial_callbacks = clock->get_clock_handle()->num_jump_callbacks;
+  }
+  std::promise<void> start;
+  auto ready = start.get_future().share();
+  const auto options = rcl_action_server_get_default_options();
+  std::vector<std::future<void>> workers;
+  for (size_t worker = 0; worker < 4; ++worker) {
+    workers.push_back(std::async(std::launch::async, [node, ready, worker, options]() {
+        ready.wait();
+        for (size_t iteration = 0; iteration < 10; ++iteration) {
+          auto server = create_rejecting_server(
+          node, "fibonacci_" + std::to_string(worker) + "_" + std::to_string(iteration), options);
+          server->set_on_ready_callback([](size_t, int) {});
+        }
+    }));
+  }
+  start.set_value();
+  for (auto & worker : workers) {
+    // CTest's process timeout also bounds cleanup if a regression deadlocks a worker.
+    EXPECT_EQ(std::future_status::ready, worker.wait_for(std::chrono::seconds(30)));
+    EXPECT_NO_THROW(worker.get());
+  }
+  {
+    std::lock_guard<std::mutex> lock(clock->get_clock_mutex());
+    EXPECT_EQ(initial_callbacks, clock->get_clock_handle()->num_jump_callbacks);
+  }
+}
+
+TEST_F(TestServer, expiration_thread_stops_before_clock_finalization)
+{
+  auto node = std::make_shared<rclcpp::Node>("expiration_clock_node");
+  auto clock = node->get_clock();
+  std::weak_ptr<rclcpp::Clock> weak_clock = clock;
+  size_t initial_callbacks;
+  {
+    std::lock_guard<std::mutex> lock(clock->get_clock_mutex());
+    initial_callbacks = clock->get_clock_handle()->num_jump_callbacks;
+  }
+  auto server = create_rejecting_server(node, "fibonacci");
+  server->set_on_ready_callback([](size_t, int) {});
+
+  // Wait for both the timer and expiration worker's jump handlers to be installed.
+  // Stopping the worker must let it acquire the clock mutex to remove its handler.
+  bool worker_waiting = false;
+  const auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds(5);
+  while (!worker_waiting && std::chrono::steady_clock::now() < deadline) {
+    {
+      std::lock_guard<std::mutex> lock(clock->get_clock_mutex());
+      worker_waiting = clock->get_clock_handle()->num_jump_callbacks == initial_callbacks + 2;
+    }
+    std::this_thread::yield();
+  }
+  ASSERT_TRUE(worker_waiting);
+  node.reset();
+  clock.reset();
+  EXPECT_FALSE(weak_clock.expired());
+  server.reset();
+  EXPECT_TRUE(weak_clock.expired());
 }
 
 TEST_F(TestServer, construction_and_destruction_callback_group)
