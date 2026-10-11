@@ -628,9 +628,15 @@ private:
           // Copy the message since we have additional subscriptions to serve
           Deleter deleter = message.get_deleter();
           auto ptr = MessageAllocTraits::allocate(allocator, 1);
+          auto deallocate = [&allocator](MessageT * allocation) {
+              MessageAllocTraits::deallocate(allocator, allocation, 1);
+            };
+          std::unique_ptr<MessageT, decltype(deallocate)> allocation_guard(ptr, deallocate);
           MessageAllocTraits::construct(allocator, ptr, *message);
+          MessageUniquePtr copied_message(ptr, deleter);
+          allocation_guard.release();
 
-          subscription->provide_intra_process_data(MessageUniquePtr(ptr, deleter));
+          subscription->provide_intra_process_data(std::move(copied_message));
         }
 
         continue;
@@ -670,10 +676,15 @@ private:
             Deleter deleter = message.get_deleter();
             allocator::set_allocator_for_deleter(&deleter, &allocator);
             auto ptr = MessageAllocTraits::allocate(allocator, 1);
+            auto deallocate = [&allocator](MessageT * allocation) {
+                MessageAllocTraits::deallocate(allocator, allocation, 1);
+              };
+            std::unique_ptr<MessageT, decltype(deallocate)> allocation_guard(ptr, deallocate);
             MessageAllocTraits::construct(allocator, ptr, *message);
+            MessageUniquePtr copied_message(ptr, deleter);
+            allocation_guard.release();
 
-            ros_message_subscription->provide_intra_process_message(
-              MessageUniquePtr(ptr, deleter));
+            ros_message_subscription->provide_intra_process_message(std::move(copied_message));
           }
         }
       }
