@@ -2,8 +2,8 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+16.0.22 (2026-10-12)
+--------------------
 * [Humble] Updates to not use std::move in some places. (backport `#2353 <https://github.com/ros2/rclcpp/issues/2353>`_) (`#3310 <https://github.com/ros2/rclcpp/issues/3310>`_)
 * Don't let malformed set_parameters requests crash the node (backport `#3256 <https://github.com/ros2/rclcpp/issues/3256>`_) (`#3267 <https://github.com/ros2/rclcpp/issues/3267>`_)
 * Contributors: Miko Parkkinen, mergify[bot]
