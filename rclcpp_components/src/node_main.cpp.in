@@ -72,7 +72,9 @@ int main(int argc, char * argv[])
 
     exec.spin();
 
-    exec.remove_node(node_wrapper.get_node_base_interface());
+    if (node->get_associated_with_executor_atomic().load()) {
+      exec.remove_node(node);
+    }
   }
 
   rclcpp::shutdown();

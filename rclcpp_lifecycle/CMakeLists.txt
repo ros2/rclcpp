@@ -58,7 +58,8 @@ install(DIRECTORY include/
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
   # Give cppcheck hints about macro definitions coming from outside this package
-  set(ament_cmake_cppcheck_ADDITIONAL_INCLUDE_DIRS ${rclcpp_INCLUDE_DIRS})
+  get_target_property(rclcpp_include_dirs rclcpp::rclcpp INTERFACE_INCLUDE_DIRECTORIES)
+  set(ament_cmake_cppcheck_ADDITIONAL_INCLUDE_DIRS ${rclcpp_include_dirs})
   list(APPEND AMENT_LINT_AUTO_EXCLUDE "ament_cmake_cppcheck")
   ament_lint_auto_find_test_dependencies()
 
@@ -184,10 +185,6 @@ if(BUILD_TESTING)
     )
   endif()
 endif()
-
-# Export old-style CMake variables
-ament_export_include_directories("include/${PROJECT_NAME}")
-ament_export_libraries(${PROJECT_NAME})
 
 # Export modern CMake targets
 ament_export_targets(${PROJECT_NAME})
