@@ -265,11 +265,18 @@ ServerBase::ServerBase(
 : pimpl_(new ServerBaseImpl(
       node_clock->get_clock(), node_logging->get_logger().get_child("rclcpp_action")))
 {
-  auto deleter = [node_base](rcl_action_server_t * ptr)
+  rclcpp::Clock::SharedPtr clock = pimpl_->clock_;
+  auto deleter = [node_base, clock](rcl_action_server_t * ptr)
     {
       if (nullptr != ptr) {
         rcl_node_t * rcl_node = node_base->get_rcl_node_handle();
-        rcl_ret_t ret = rcl_action_server_fini(ptr, rcl_node);
+        rcl_ret_t ret;
+        {
+          // rcl_action_server_fini removes a jump callback from the clock,
+          // which must be serialized with other users of the clock.
+          std::lock_guard<std::mutex> clock_guard(clock->get_clock_mutex());
+          ret = rcl_action_server_fini(ptr, rcl_node);
+        }
         if (RCL_RET_OK != ret) {
           RCLCPP_DEBUG(
             rclcpp::get_logger("rclcpp_action"),
@@ -285,8 +292,14 @@ ServerBase::ServerBase(
   rcl_node_t * rcl_node = node_base->get_rcl_node_handle();
   rcl_clock_t * rcl_clock = pimpl_->clock_->get_clock_handle();
 
-  rcl_ret_t ret = rcl_action_server_init(
-    pimpl_->action_server_.get(), rcl_node, rcl_clock, type_support, name.c_str(), &options);
+  rcl_ret_t ret;
+  {
+    // rcl_action_server_init adds a jump callback to the clock,
+    // which must be serialized with other users of the clock.
+    std::lock_guard<std::mutex> clock_guard(pimpl_->clock_->get_clock_mutex());
+    ret = rcl_action_server_init(
+      pimpl_->action_server_.get(), rcl_node, rcl_clock, type_support, name.c_str(), &options);
+  }
 
   if (RCL_RET_OK != ret) {
     rclcpp::exceptions::throw_from_rcl_error(ret);
