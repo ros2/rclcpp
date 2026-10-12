@@ -2,6 +2,11 @@
 Changelog for package rclcpp_components
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Fix isolated component manager shutdown on Humble (`#3282 <https://github.com/ros2/rclcpp/issues/3282>`_)
+* Contributors: CHAIJZ
+
 16.0.21 (2026-09-06)
 --------------------
 
