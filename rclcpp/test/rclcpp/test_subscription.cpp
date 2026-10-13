@@ -908,39 +908,41 @@ TEST_F(TestSubscription, queue_size_behavior) {
 
   std::vector<int32_t> received_values;
   auto callback = [&received_values](BasicTypes::ConstSharedPtr msg) {
-    received_values.push_back(msg->int32_value);
-  };
+      received_values.push_back(msg->int32_value);
+    };
 
   auto sub = node_->create_subscription<BasicTypes>("test_queue_size", sub_qos, callback);
 
   // Publisher with larger queue size and Reliable reliability to match subscriber
   rclcpp::QoS pub_qos = rclcpp::QoS(10).reliable();
   auto pub = node_->create_publisher<BasicTypes>("test_queue_size", pub_qos);
-  
+
   rclcpp::executors::SingleThreadedExecutor executor;
   executor.add_node(node_);
-  
+
   // Wait for discovery (no need to spin executor for discovery)
   auto start_time = std::chrono::steady_clock::now();
-  while (pub->get_subscription_count() == 0 && (std::chrono::steady_clock::now() - start_time) < 10s) {
+  while (pub->get_subscription_count() == 0 &&
+    (std::chrono::steady_clock::now() - start_time) < 10s)
+  {
     std::this_thread::sleep_for(10ms);
   }
   ASSERT_GT(pub->get_subscription_count(), 0u);
-  
+
   // Publish more messages than the subscriber's queue size
   for (int32_t i = 1; i <= 5; ++i) {
     BasicTypes msg;
     msg.int32_value = i;
     pub->publish(msg);
   }
-  
+
   // Now spin to receive messages
   start_time = std::chrono::steady_clock::now();
   while ((std::chrono::steady_clock::now() - start_time) < 1s) {
     executor.spin_some();
     std::this_thread::sleep_for(10ms);
   }
-  
+
   // We expect to have received exactly `depth` messages, and they should be the LAST 3 messages.
   ASSERT_EQ(received_values.size(), depth);
   EXPECT_EQ(received_values[0], 3);
