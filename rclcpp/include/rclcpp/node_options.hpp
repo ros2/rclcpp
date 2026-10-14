@@ -435,6 +435,9 @@ private:
 
   bool enable_rosout_ {true};
 
+  // ABI test: public class defined under include/ grows by value.
+  bool abi_test_flag_ {false};
+
   bool use_intra_process_comms_ {false};
 
   bool start_parameter_services_ {true};
