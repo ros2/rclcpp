@@ -23,8 +23,10 @@ namespace detail
 void
 add_guard_condition_to_rcl_wait_set(
   rcl_wait_set_t & wait_set,
-  const rclcpp::GuardCondition & guard_condition)
+  const rclcpp::GuardCondition & guard_condition,
+  bool abi_test)
 {
+  (void)abi_test;
   const auto & gc = guard_condition.get_rcl_guard_condition();
 
   rcl_ret_t ret = rcl_wait_set_add_guard_condition(&wait_set, &gc, NULL);

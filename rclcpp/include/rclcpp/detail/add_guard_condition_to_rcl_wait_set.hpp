@@ -31,7 +31,8 @@ RCLCPP_PUBLIC
 void
 add_guard_condition_to_rcl_wait_set(
   rcl_wait_set_t & wait_set,
-  const rclcpp::GuardCondition & guard_condition);
+  const rclcpp::GuardCondition & guard_condition,
+  bool abi_test = false);
 
 }  // namespace detail
 }  // namespace rclcpp
