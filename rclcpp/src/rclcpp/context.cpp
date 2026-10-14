@@ -201,6 +201,8 @@ Context::init(
     throw rclcpp::ContextAlreadyInitialized();
   }
   this->clean_up();
+  // allow shutdown() to be called again after re-initialization
+  is_shutting_down_.store(false);
   rcl_context_t * context = new rcl_context_t;
   if (!context) {
     throw std::runtime_error("failed to allocate memory for rcl context");
@@ -319,6 +321,12 @@ Context::shutdown_reason() const
 bool
 Context::shutdown(const std::string & reason)
 {
+  // Prevent double-shutdown: the signal handler thread and the main thread
+  // may both call shutdown() during Ctrl-C.  Use an atomic flag to ensure
+  // only the first call proceeds; subsequent calls return immediately.
+  if (is_shutting_down_.exchange(true)) {
+    return false;
+  }
   // prevent races
   std::lock_guard<std::recursive_mutex> init_lock(init_mutex_);
   // ensure validity
@@ -425,7 +433,7 @@ Context::add_shutdown_callback(
   const ShutdownCallback & callback)
 {
   auto callback_shared_ptr =
-    std::make_shared<ShutdownCallbackHandle::ShutdownCallbackType>(callback);
+    std::make_shared<rclcpp::ShutdownCallbackHandle::ShutdownCallbackType>(callback);
 
   static_assert(
     shutdown_type == ShutdownType::pre_shutdown || shutdown_type == ShutdownType::on_shutdown);
@@ -438,7 +446,7 @@ Context::add_shutdown_callback(
     on_shutdown_callbacks_.emplace_back(callback_shared_ptr);
   }
 
-  ShutdownCallbackHandle callback_handle;
+  rclcpp::ShutdownCallbackHandle callback_handle;
   callback_handle.callback = callback_shared_ptr;
   return callback_handle;
 }

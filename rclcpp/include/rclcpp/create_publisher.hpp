@@ -21,7 +21,6 @@
 
 #include "rclcpp/node_interfaces/get_node_topics_interface.hpp"
 #include "rclcpp/node_interfaces/node_topics_interface.hpp"
-#include "rclcpp/node_options.hpp"
 #include "rclcpp/publisher_factory.hpp"
 #include "rclcpp/publisher_options.hpp"
 #include "rclcpp/qos.hpp"

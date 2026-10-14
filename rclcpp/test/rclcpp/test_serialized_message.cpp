@@ -19,9 +19,9 @@
 #include <string>
 #include <utility>
 
+#include "rclcpp/exceptions.hpp"
 #include "rclcpp/serialization.hpp"
 #include "rclcpp/serialized_message.hpp"
-#include "rclcpp/rclcpp.hpp"
 
 #include "rcpputils/asserts.hpp"
 

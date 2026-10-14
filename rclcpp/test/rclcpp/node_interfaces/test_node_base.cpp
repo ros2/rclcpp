@@ -15,12 +15,14 @@
 #include <gtest/gtest.h>
 
 #include <memory>
+#include <stdexcept>
 #include <string>
 
 #include "rcl/node_options.h"
+#include "rclcpp/exceptions.hpp"
 #include "rclcpp/node.hpp"
 #include "rclcpp/node_interfaces/node_base.hpp"
-#include "rclcpp/rclcpp.hpp"
+#include "rclcpp/utilities.hpp"
 #include "rmw/validate_namespace.h"
 #include "rmw/validate_node_name.h"
 

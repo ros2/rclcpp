@@ -28,6 +28,7 @@
 #include <rclcpp/callback_group.hpp>
 #include <rclcpp/executor.hpp>
 #include <rclcpp/node.hpp>
+#include <rclcpp/utilities.hpp>
 
 std::chrono::milliseconds g_timer_period {1};
 

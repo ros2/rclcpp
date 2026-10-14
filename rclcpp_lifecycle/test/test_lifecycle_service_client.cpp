@@ -28,6 +28,10 @@
 #include <utility>
 #include <vector>
 
+#include <cstdint>
+#include <future>
+#include <stdexcept>
+
 #include "lifecycle_msgs/msg/state.hpp"
 #include "lifecycle_msgs/msg/transition.hpp"
 #include "lifecycle_msgs/msg/transition_description.hpp"
@@ -38,8 +42,14 @@
 
 #include "rcl_lifecycle/rcl_lifecycle.h"
 
+#include "rclcpp/client.hpp"
+#include "rclcpp/event.hpp"
+#include "rclcpp/exceptions.hpp"
+#include "rclcpp/executors/single_threaded_executor.hpp"
+#include "rclcpp/node.hpp"
 #include "rclcpp/node_interfaces/node_graph.hpp"
-#include "rclcpp/rclcpp.hpp"
+#include "rclcpp/parameter.hpp"
+#include "rclcpp/utilities.hpp"
 #include "rclcpp_lifecycle/lifecycle_node.hpp"
 
 #include "rcpputils/scope_exit.hpp"

@@ -18,7 +18,17 @@
 #include <memory>
 #include <string>
 
-#include "rclcpp/rclcpp.hpp"
+#include "rclcpp/client.hpp"
+#include "rclcpp/node.hpp"
+#include "rclcpp/node_interfaces/node_clock_interface.hpp"
+#include "rclcpp/node_interfaces/node_graph_interface.hpp"
+#include "rclcpp/node_interfaces/node_logging_interface.hpp"
+#include "rclcpp/node_interfaces/node_parameters_interface.hpp"
+#include "rclcpp/node_interfaces/node_services_interface.hpp"
+#include "rclcpp/node_interfaces/node_time_source_interface.hpp"
+#include "rclcpp/node_interfaces/node_timers_interface.hpp"
+#include "rclcpp/node_interfaces/node_topics_interface.hpp"
+#include "rclcpp/node_interfaces/node_waitables_interface.hpp"
 
 class NodeWrapper
 {

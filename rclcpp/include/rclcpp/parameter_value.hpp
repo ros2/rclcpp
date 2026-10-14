@@ -24,7 +24,6 @@
 
 #include "rcl_interfaces/msg/parameter_type.hpp"
 #include "rcl_interfaces/msg/parameter_value.hpp"
-#include "rclcpp/exceptions/exceptions.hpp"
 #include "rclcpp/visibility_control.hpp"
 
 namespace rclcpp

@@ -26,16 +26,15 @@
 #include "rcl/event_callback.h"
 #include "rcl/subscription.h"
 
-#include "rmw/impl/cpp/demangle.hpp"
 #include "rmw/rmw.h"
 
 #include "rclcpp/any_subscription_callback.hpp"
-#include "rclcpp/detail/cpp_callback_trampoline.hpp"
 #include "rclcpp/dynamic_typesupport/dynamic_message.hpp"
 #include "rclcpp/dynamic_typesupport/dynamic_message_type.hpp"
 #include "rclcpp/dynamic_typesupport/dynamic_serialization_support.hpp"
 #include "rclcpp/experimental/intra_process_manager.hpp"
 #include "rclcpp/experimental/subscription_intra_process_base.hpp"
+#include "rclcpp/logger.hpp"
 #include "rclcpp/macros.hpp"
 #include "rclcpp/message_info.hpp"
 #include "rclcpp/network_flow_endpoint.hpp"
@@ -386,65 +385,14 @@ public:
    *
    * \param[in] callback functor to be called when a new message is received
    */
+  RCLCPP_PUBLIC
   void
-  set_on_new_message_callback(const std::function<void(size_t)> & callback)
-  {
-    if (!callback) {
-      throw std::invalid_argument(
-              "The callback passed to set_on_new_message_callback "
-              "is not callable.");
-    }
-
-    auto new_callback =
-      [callback, this](size_t number_of_messages) {
-        try {
-          callback(number_of_messages);
-        } catch (const std::exception & exception) {
-          RCLCPP_ERROR_STREAM(
-            node_logger_,
-            "rclcpp::SubscriptionBase@" << this <<
-              " caught " << rmw::impl::cpp::demangle(exception) <<
-              " exception in user-provided callback for the 'on new message' callback: " <<
-              exception.what());
-        } catch (...) {
-          RCLCPP_ERROR_STREAM(
-            node_logger_,
-            "rclcpp::SubscriptionBase@" << this <<
-              " caught unhandled exception in user-provided callback " <<
-              "for the 'on new message' callback");
-        }
-      };
-
-    std::lock_guard<std::recursive_mutex> lock(on_new_message_callback_mutex_);
-
-    // Set it temporarily to the new callback, while we replace the old one.
-    // This two-step setting, prevents a gap where the old std::function has
-    // been replaced but the middleware hasn't been told about the new one yet.
-    set_on_new_message_callback(
-      rclcpp::detail::cpp_callback_trampoline<decltype(new_callback), const void *, size_t>,
-      static_cast<const void *>(&new_callback));
-
-    // Store the std::function to keep it in scope, also overwrites the existing one.
-    on_new_message_callback_ = new_callback;
-
-    // Set it again, now using the permanent storage.
-    set_on_new_message_callback(
-      rclcpp::detail::cpp_callback_trampoline<
-        decltype(on_new_message_callback_), const void *, size_t>,
-      static_cast<const void *>(&on_new_message_callback_));
-  }
+  set_on_new_message_callback(const std::function<void(size_t)> & callback);
 
   /// Unset the callback registered for new messages, if any.
+  RCLCPP_PUBLIC
   void
-  clear_on_new_message_callback()
-  {
-    std::lock_guard<std::recursive_mutex> lock(on_new_message_callback_mutex_);
-
-    if (on_new_message_callback_) {
-      set_on_new_message_callback(nullptr, nullptr);
-      on_new_message_callback_ = nullptr;
-    }
-  }
+  clear_on_new_message_callback();
 
   /// Set a callback to be called when each new intra-process message is received.
   /**
@@ -464,42 +412,14 @@ public:
    *
    * \param[in] callback functor to be called when a new message is received
    */
+  RCLCPP_PUBLIC
   void
-  set_on_new_intra_process_message_callback(const std::function<void(size_t)> & callback)
-  {
-    if (!use_intra_process_) {
-      RCLCPP_WARN(
-        rclcpp::get_logger("rclcpp"),
-        "Calling set_on_new_intra_process_message_callback for subscription with IPC disabled");
-      return;
-    }
-
-    if (!callback) {
-      throw std::invalid_argument(
-              "The callback passed to set_on_new_intra_process_message_callback "
-              "is not callable.");
-    }
-
-    // The on_ready_callback signature has an extra `int` argument used to disambiguate between
-    // possible different entities within a generic waitable.
-    // We hide that detail to users of this method.
-    std::function<void(size_t, int)> new_callback = [callback] (size_t nr, int) {callback(nr);};
-    subscription_intra_process_->set_on_ready_callback(new_callback);
-  }
+  set_on_new_intra_process_message_callback(const std::function<void(size_t)> & callback);
 
   /// Unset the callback registered for new intra-process messages, if any.
+  RCLCPP_PUBLIC
   void
-  clear_on_new_intra_process_message_callback()
-  {
-    if (!use_intra_process_) {
-      RCLCPP_WARN(
-        rclcpp::get_logger("rclcpp"),
-        "Calling clear_on_new_intra_process_message_callback for subscription with IPC disabled");
-      return;
-    }
-
-    subscription_intra_process_->clear_on_ready_callback();
-  }
+  clear_on_new_intra_process_message_callback();
 
   /// Set a callback to be called when each new qos event instance occurs.
   /**
@@ -527,44 +447,16 @@ public:
    * \param[in] callback functor to be called when a new event occurs
    * \param[in] event_type identifier for the qos event we want to attach the callback to
    */
+  RCLCPP_PUBLIC
   void
   set_on_new_qos_event_callback(
     const std::function<void(size_t)> & callback,
-    rcl_subscription_event_type_t event_type)
-  {
-    if (event_handlers_.count(event_type) == 0) {
-      RCLCPP_WARN(
-        rclcpp::get_logger("rclcpp"),
-        "Calling set_on_new_qos_event_callback for non registered subscription event_type");
-      return;
-    }
-
-    if (!callback) {
-      throw std::invalid_argument(
-              "The callback passed to set_on_new_qos_event_callback "
-              "is not callable.");
-    }
-
-    // The on_ready_callback signature has an extra `int` argument used to disambiguate between
-    // possible different entities within a generic waitable.
-    // We hide that detail to users of this method.
-    std::function<void(size_t, int)> new_callback = [callback] (size_t nr, int) {callback(nr);};
-    event_handlers_[event_type]->set_on_ready_callback(new_callback);
-  }
+    rcl_subscription_event_type_t event_type);
 
   /// Unset the callback registered for new qos events, if any.
+  RCLCPP_PUBLIC
   void
-  clear_on_new_qos_event_callback(rcl_subscription_event_type_t event_type)
-  {
-    if (event_handlers_.count(event_type) == 0) {
-      RCLCPP_WARN(
-        rclcpp::get_logger("rclcpp"),
-        "Calling clear_on_new_qos_event_callback for non registered event_type");
-      return;
-    }
-
-    event_handlers_[event_type]->clear_on_ready_callback();
-  }
+  clear_on_new_qos_event_callback(rcl_subscription_event_type_t event_type);
 
   /// Check if content filtered topic feature of the subscription instance is supported.
   /**

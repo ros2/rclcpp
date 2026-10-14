@@ -2,6 +2,25 @@
 Changelog for package rclcpp_components
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+33.1.0 (2026-08-31)
+-------------------
+* cleanup headers (`#3238 <https://github.com/ros2/rclcpp/issues/3238>`_)
+* rclcpp_components: Fix compilation with clang (`#3229 <https://github.com/ros2/rclcpp/issues/3229>`_)
+* Fix race condition when creating isolated component container (`#3223 <https://github.com/ros2/rclcpp/issues/3223>`_)
+* Contributors: Alejandro Hernández Cordero, Michal Sojka, Tony Najjar
+
+33.0.3 (2026-07-28)
+-------------------
+* Deprecate the experimental EventsExecutor (`#3192 <https://github.com/ros2/rclcpp/issues/3192>`_)
+* Check for association with an executor before removing nodes in ComponentManager (`#3190 <https://github.com/ros2/rclcpp/issues/3190>`_)
+* use C++ 20 in default. (`#3187 <https://github.com/ros2/rclcpp/issues/3187>`_)
+* Contributors: Skyler Medeiros, Tomoya Fujita
+
+33.0.2 (2026-07-02)
+-------------------
+* Call rclcpp::shutdown() in the component containers (`#3158 <https://github.com/ros2/rclcpp/issues/3158>`_)
+* Contributors: Hugal31
+
 33.0.1 (2026-05-22)
 -------------------
 

@@ -15,8 +15,12 @@
 #include <benchmark/benchmark.h>
 
 #include <chrono>
+#include <cstdint>
+#include <future>
 #include <memory>
+#include <stdexcept>
 #include <string>
+#include <thread>
 #include <vector>
 
 #include "lifecycle_msgs/msg/state.hpp"
@@ -25,7 +29,10 @@
 #include "lifecycle_msgs/srv/get_available_transitions.hpp"
 #include "lifecycle_msgs/srv/get_state.hpp"
 #include "performance_test_fixture/performance_test_fixture.hpp"
-#include "rclcpp/rclcpp.hpp"
+#include "rclcpp/client.hpp"
+#include "rclcpp/executors/single_threaded_executor.hpp"
+#include "rclcpp/node.hpp"
+#include "rclcpp/utilities.hpp"
 #include "rclcpp_lifecycle/lifecycle_node.hpp"
 
 /**

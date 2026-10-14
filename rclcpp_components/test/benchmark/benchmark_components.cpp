@@ -20,6 +20,12 @@
 #include <string>
 #include <vector>
 
+#include "rclcpp/context.hpp"
+#include "rclcpp/executor_options.hpp"
+#include "rclcpp/executors/single_threaded_executor.hpp"
+#include "rclcpp/init_options.hpp"
+#include "rclcpp/node_options.hpp"
+
 #include "rclcpp_components/component_manager.hpp"
 
 class ComponentTest : public benchmark::Fixture

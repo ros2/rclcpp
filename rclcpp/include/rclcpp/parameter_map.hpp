@@ -15,7 +15,6 @@
 #ifndef RCLCPP__PARAMETER_MAP_HPP_
 #define RCLCPP__PARAMETER_MAP_HPP_
 
-#include <rcl_yaml_param_parser/parser.h>
 #include <rcl_yaml_param_parser/types.h>
 
 #include <string>

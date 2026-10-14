@@ -28,12 +28,19 @@
 
 #include "rcl/graph.h"
 
+#include "rclcpp/event_handler.hpp"
+#include "rclcpp/exceptions.hpp"
 #include "rclcpp/executors/single_threaded_executor.hpp"
 #include "rclcpp/generic_publisher.hpp"
 #include "rclcpp/generic_subscription.hpp"
-#include "rclcpp/rclcpp.hpp"
+#include "rclcpp/node.hpp"
+#include "rclcpp/node_options.hpp"
+#include "rclcpp/publisher_base.hpp"
+#include "rclcpp/qos.hpp"
 #include "rclcpp/serialization.hpp"
 #include "rclcpp/serialized_message.hpp"
+#include "rclcpp/subscription_options.hpp"
+#include "rclcpp/utilities.hpp"
 
 using namespace ::testing;  // NOLINT
 using namespace rclcpp;  // NOLINT

@@ -27,11 +27,13 @@
 
 #include "rcl_action/action_client.h"
 
+#include "rclcpp/clock.hpp"
 #include "rclcpp/macros.hpp"
 #include "rclcpp/node_interfaces/node_base_interface.hpp"
 #include "rclcpp/node_interfaces/node_logging_interface.hpp"
 #include "rclcpp/node_interfaces/node_graph_interface.hpp"
 #include "rclcpp/logger.hpp"
+#include "rclcpp/qos.hpp"
 #include "rclcpp/waitable.hpp"
 
 #include "rclcpp_action/visibility_control.hpp"

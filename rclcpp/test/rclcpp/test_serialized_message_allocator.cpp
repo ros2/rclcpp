@@ -17,7 +17,10 @@
 #include <string>
 #include <memory>
 
-#include "rclcpp/rclcpp.hpp"
+#include "rclcpp/message_memory_strategy.hpp"
+#include "rclcpp/node.hpp"
+#include "rclcpp/subscription_base.hpp"
+#include "rclcpp/utilities.hpp"
 
 #include "rcl/types.h"
 

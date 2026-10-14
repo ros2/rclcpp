@@ -23,10 +23,15 @@
 #include <utility>
 
 #include "rclcpp/exceptions.hpp"
-#include "rclcpp/rclcpp.hpp"
+#include "rclcpp/executors/single_threaded_executor.hpp"
+#include "rclcpp/message_info.hpp"
+#include "rclcpp/node.hpp"
+#include "rclcpp/node_options.hpp"
+#include "rclcpp/type_adapter.hpp"
+#include "rclcpp/utilities.hpp"
 
 #include "rclcpp/msg/string.hpp"
-#include "statistics_msgs/msg/statistic_data_point.hpp"
+#include "std_msgs/msg/float64.hpp"
 
 static const int g_max_loops = 200;
 static const std::chrono::milliseconds g_sleep_per_loop(10);
@@ -73,18 +78,17 @@ struct TypeAdapter<std::string, rclcpp::msg::String>
 };
 
 template<>
-struct TypeAdapter<double, statistics_msgs::msg::StatisticDataPoint>
+struct TypeAdapter<double, std_msgs::msg::Float64>
 {
   using is_specialized = std::true_type;
   using custom_type = double;
-  using ros_message_type = statistics_msgs::msg::StatisticDataPoint;
+  using ros_message_type = std_msgs::msg::Float64;
 
   static void
   convert_to_ros_message(
     const custom_type & source,
     ros_message_type & destination)
   {
-    destination.data_type = 0;
     destination.data = source;
   }
 
@@ -541,7 +545,7 @@ TEST_F(
   test_intra_process_within_one_node,
   type_adapted_messages_ros_message_ref_pub_received_by_intra_process_subscription)
 {
-  using DoubleTypeAdapter = rclcpp::TypeAdapter<double, statistics_msgs::msg::StatisticDataPoint>;
+  using DoubleTypeAdapter = rclcpp::TypeAdapter<double, std_msgs::msg::Float64>;
   const double message_data = 0.894;
   const std::string topic_name = "topic_name";
 
@@ -562,7 +566,7 @@ TEST_F(
       };
     auto sub = node->create_subscription<DoubleTypeAdapter>(topic_name, 1, callback);
 
-    statistics_msgs::msg::StatisticDataPoint msg;
+    std_msgs::msg::Float64 msg;
     msg.data = message_data;
     pub->publish(msg);
 
@@ -582,7 +586,7 @@ TEST_F(
       };
     auto sub = node->create_subscription<DoubleTypeAdapter>(topic_name, 1, callback);
 
-    statistics_msgs::msg::StatisticDataPoint msg;
+    std_msgs::msg::Float64 msg;
     msg.data = message_data;
     pub->publish(msg);
 
@@ -602,7 +606,7 @@ TEST_F(
       };
     auto sub = node->create_subscription<DoubleTypeAdapter>(topic_name, 1, callback);
 
-    statistics_msgs::msg::StatisticDataPoint msg;
+    std_msgs::msg::Float64 msg;
     msg.data = message_data;
     pub->publish(msg);
 
@@ -623,7 +627,7 @@ TEST_F(
       };
     auto sub = node->create_subscription<DoubleTypeAdapter>(topic_name, 1, callback);
 
-    statistics_msgs::msg::StatisticDataPoint msg;
+    std_msgs::msg::Float64 msg;
     msg.data = message_data;
     pub->publish(msg);
 
@@ -643,7 +647,7 @@ TEST_F(
       };
     auto sub = node->create_subscription<DoubleTypeAdapter>(topic_name, 1, callback);
 
-    statistics_msgs::msg::StatisticDataPoint msg;
+    std_msgs::msg::Float64 msg;
     msg.data = message_data;
     pub->publish(msg);
 
@@ -664,7 +668,7 @@ TEST_F(
       };
     auto sub = node->create_subscription<DoubleTypeAdapter>(topic_name, 1, callback);
 
-    statistics_msgs::msg::StatisticDataPoint msg;
+    std_msgs::msg::Float64 msg;
     msg.data = message_data;
     pub->publish(msg);
 
@@ -684,7 +688,7 @@ TEST_F(
       };
     auto sub = node->create_subscription<DoubleTypeAdapter>(topic_name, 1, callback);
 
-    statistics_msgs::msg::StatisticDataPoint msg;
+    std_msgs::msg::Float64 msg;
     msg.data = message_data;
     pub->publish(msg);
 
@@ -706,7 +710,7 @@ TEST_F(
       };
     auto sub = node->create_subscription<DoubleTypeAdapter>(topic_name, 1, callback);
 
-    statistics_msgs::msg::StatisticDataPoint msg;
+    std_msgs::msg::Float64 msg;
     msg.data = message_data;
     pub->publish(msg);
 
@@ -726,7 +730,7 @@ TEST_F(
       };
     auto sub = node->create_subscription<DoubleTypeAdapter>(topic_name, 1, callback);
 
-    statistics_msgs::msg::StatisticDataPoint msg;
+    std_msgs::msg::Float64 msg;
     msg.data = message_data;
     pub->publish(msg);
 
@@ -748,7 +752,7 @@ TEST_F(
       };
     auto sub = node->create_subscription<DoubleTypeAdapter>(topic_name, 1, callback);
 
-    statistics_msgs::msg::StatisticDataPoint msg;
+    std_msgs::msg::Float64 msg;
     msg.data = message_data;
     pub->publish(msg);
 
@@ -762,7 +766,7 @@ TEST_F(
   test_intra_process_within_one_node,
   type_adapted_messages_unique_ptr_ros_message_pub_received_by_intra_process_subscription)
 {
-  using DoubleTypeAdapter = rclcpp::TypeAdapter<double, statistics_msgs::msg::StatisticDataPoint>;
+  using DoubleTypeAdapter = rclcpp::TypeAdapter<double, std_msgs::msg::Float64>;
   const double message_data = 0.7508;
   const std::string topic_name = "topic_name";
 
@@ -773,7 +777,7 @@ TEST_F(
   auto pub = node->create_publisher<DoubleTypeAdapter>(topic_name, 1);
 
   { // create_publisher with TypeAdapt struct, create_subscription with TypeAdapt struct,
-    // callback const std::string &, publish with unique statistics_msgs::msg::StatisticDataPoint
+    // callback const std::string &, publish with unique std_msgs::msg::Float64
     bool is_received = false;
     auto callback =
       [message_data, &is_received](
@@ -783,7 +787,7 @@ TEST_F(
       };
     auto sub = node->create_subscription<DoubleTypeAdapter>(topic_name, 1, callback);
 
-    auto pu_msg = std::make_unique<statistics_msgs::msg::StatisticDataPoint>();
+    auto pu_msg = std::make_unique<std_msgs::msg::Float64>();
     pu_msg->data = message_data;
     pub->publish(std::move(pu_msg));
 
@@ -793,7 +797,7 @@ TEST_F(
   }
   { // create_publisher with TypeAdapt struct, create_subscription with TypeAdapt struct,
     // callback const std::string & with message info, publish with unique
-    // statistics_msgs::msg::StatisticDataPoint
+    // std_msgs::msg::Float64
     bool is_received = false;
     auto callback =
       [message_data, &is_received](
@@ -804,7 +808,7 @@ TEST_F(
       };
     auto sub = node->create_subscription<DoubleTypeAdapter>(topic_name, 1, callback);
 
-    auto pu_msg = std::make_unique<statistics_msgs::msg::StatisticDataPoint>();
+    auto pu_msg = std::make_unique<std_msgs::msg::Float64>();
     pu_msg->data = message_data;
     pub->publish(std::move(pu_msg));
 
@@ -815,7 +819,7 @@ TEST_F(
 
   { // create_publisher with TypeAdapt struct, create_subscription with TypeAdapt struct,
     // callback std::unique_ptr<std::string>, publish with unique
-    // statistics_msgs::msg::StatisticDataPoint
+    // std_msgs::msg::Float64
     bool is_received = false;
     auto callback =
       [message_data, &is_received](
@@ -825,7 +829,7 @@ TEST_F(
       };
     auto sub = node->create_subscription<DoubleTypeAdapter>(topic_name, 1, callback);
 
-    auto pu_msg = std::make_unique<statistics_msgs::msg::StatisticDataPoint>();
+    auto pu_msg = std::make_unique<std_msgs::msg::Float64>();
     pu_msg->data = message_data;
     pub->publish(std::move(pu_msg));
 
@@ -835,7 +839,7 @@ TEST_F(
   }
   { // create_publisher with TypeAdapt struct, create_subscription with TypeAdapt struct,
     // callback std::unique_ptr<std::string> with message info, publish with unique
-    // statistics_msgs::msg::StatisticDataPoint
+    // std_msgs::msg::Float64
     bool is_received = false;
     auto callback =
       [message_data, &is_received](
@@ -847,7 +851,7 @@ TEST_F(
       };
     auto sub = node->create_subscription<DoubleTypeAdapter>(topic_name, 1, callback);
 
-    auto pu_msg = std::make_unique<statistics_msgs::msg::StatisticDataPoint>();
+    auto pu_msg = std::make_unique<std_msgs::msg::Float64>();
     pu_msg->data = message_data;
     pub->publish(std::move(pu_msg));
 
@@ -858,7 +862,7 @@ TEST_F(
 
   { // create_publisher with TypeAdapt struct, create_subscription with TypeAdapt struct,
     // callback std::shared_ptr<std::string>, publish with unique
-    // statistics_msgs::msg::StatisticDataPoint
+    // std_msgs::msg::Float64
     bool is_received = false;
     auto callback =
       [message_data, &is_received](
@@ -868,7 +872,7 @@ TEST_F(
       };
     auto sub = node->create_subscription<DoubleTypeAdapter>(topic_name, 1, callback);
 
-    auto pu_msg = std::make_unique<statistics_msgs::msg::StatisticDataPoint>();
+    auto pu_msg = std::make_unique<std_msgs::msg::Float64>();
     pu_msg->data = message_data;
     pub->publish(std::move(pu_msg));
 
@@ -878,7 +882,7 @@ TEST_F(
   }
   { // create_publisher with TypeAdapt struct, create_subscription with TypeAdapt struct,
     // callback std::shared_ptr<std::string> with message info, publish with unique
-    // statistics_msgs::msg::StatisticDataPoint
+    // std_msgs::msg::Float64
     bool is_received = false;
     auto callback =
       [message_data, &is_received](
@@ -890,7 +894,7 @@ TEST_F(
       };
     auto sub = node->create_subscription<DoubleTypeAdapter>(topic_name, 1, callback);
 
-    auto pu_msg = std::make_unique<statistics_msgs::msg::StatisticDataPoint>();
+    auto pu_msg = std::make_unique<std_msgs::msg::Float64>();
     pu_msg->data = message_data;
     pub->publish(std::move(pu_msg));
 
@@ -901,7 +905,7 @@ TEST_F(
 
   { // create_publisher with TypeAdapt struct, create_subscription with TypeAdapt struct,
     // callback std::shared_ptr<const std::string>, publish with unique
-    // statistics_msgs::msg::StatisticDataPoint
+    // std_msgs::msg::Float64
     bool is_received = false;
     auto callback =
       [message_data, &is_received](
@@ -911,7 +915,7 @@ TEST_F(
       };
     auto sub = node->create_subscription<DoubleTypeAdapter>(topic_name, 1, callback);
 
-    auto pu_msg = std::make_unique<statistics_msgs::msg::StatisticDataPoint>();
+    auto pu_msg = std::make_unique<std_msgs::msg::Float64>();
     pu_msg->data = message_data;
     pub->publish(std::move(pu_msg));
 
@@ -921,7 +925,7 @@ TEST_F(
   }
   { // create_publisher with TypeAdapt struct, create_subscription with TypeAdapt struct,
     // callback std::shared_ptr<const std::string> with message info, publish with unique
-    // statistics_msgs::msg::StatisticDataPoint
+    // std_msgs::msg::Float64
     bool is_received = false;
     auto callback =
       [message_data, &is_received](
@@ -933,7 +937,7 @@ TEST_F(
       };
     auto sub = node->create_subscription<DoubleTypeAdapter>(topic_name, 1, callback);
 
-    auto pu_msg = std::make_unique<statistics_msgs::msg::StatisticDataPoint>();
+    auto pu_msg = std::make_unique<std_msgs::msg::Float64>();
     pu_msg->data = message_data;
     pub->publish(std::move(pu_msg));
 
@@ -944,7 +948,7 @@ TEST_F(
 
   { // create_publisher with TypeAdapt struct, create_subscription with TypeAdapt struct,
     // callback const std::shared_ptr<const std::string> &, publish with unique
-    // statistics_msgs::msg::StatisticDataPoint
+    // std_msgs::msg::Float64
     bool is_received = false;
     auto callback =
       [message_data, &is_received](
@@ -954,7 +958,7 @@ TEST_F(
       };
     auto sub = node->create_subscription<DoubleTypeAdapter>(topic_name, 1, callback);
 
-    auto pu_msg = std::make_unique<statistics_msgs::msg::StatisticDataPoint>();
+    auto pu_msg = std::make_unique<std_msgs::msg::Float64>();
     pu_msg->data = message_data;
     pub->publish(std::move(pu_msg));
 
@@ -964,7 +968,7 @@ TEST_F(
   }
   { // create_publisher with TypeAdapt struct, create_subscription with TypeAdapt struct,
     // callback const std::shared_ptr<const std::string> & with message info, publish with unique
-    // statistics_msgs::msg::StatisticDataPoint
+    // std_msgs::msg::Float64
     bool is_received = false;
     auto callback =
       [message_data, &is_received](
@@ -976,7 +980,7 @@ TEST_F(
       };
     auto sub = node->create_subscription<DoubleTypeAdapter>(topic_name, 1, callback);
 
-    auto pu_msg = std::make_unique<statistics_msgs::msg::StatisticDataPoint>();
+    auto pu_msg = std::make_unique<std_msgs::msg::Float64>();
     pu_msg->data = message_data;
     pub->publish(std::move(pu_msg));
 

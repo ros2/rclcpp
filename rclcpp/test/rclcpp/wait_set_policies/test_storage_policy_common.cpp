@@ -14,12 +14,22 @@
 
 #include <gtest/gtest.h>
 
+#include <chrono>
+#include <functional>
 #include <memory>
+#include <stdexcept>
+#include <vector>
 
-#include "rclcpp/rclcpp.hpp"
-#include "rclcpp/wait_set.hpp"
 #include "../../mocking_utils/patch.hpp"
 #include "../../utils/rclcpp_gtest_macros.hpp"
+#include "rclcpp/exceptions.hpp"
+#include "rclcpp/guard_condition.hpp"
+#include "rclcpp/node.hpp"
+#include "rclcpp/subscription_wait_set_mask.hpp"
+#include "rclcpp/timer.hpp"
+#include "rclcpp/utilities.hpp"
+#include "rclcpp/wait_set.hpp"
+#include "rclcpp/waitable.hpp"
 
 #include "test_msgs/msg/empty.hpp"
 #include "test_msgs/srv/empty.hpp"

@@ -22,8 +22,6 @@
 
 #include "rcpputils/shared_library.hpp"
 #include "rosidl_runtime_cpp/action_type_support_decl.hpp"
-#include "rosidl_runtime_cpp/message_type_support_decl.hpp"
-#include "rosidl_runtime_cpp/service_type_support_decl.hpp"
 
 #include "rclcpp/visibility_control.hpp"
 

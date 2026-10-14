@@ -15,13 +15,20 @@
 #include <gtest/gtest.h>
 
 #include <chrono>
-#include <string>
+#include <cmath>
 #include <memory>
+#include <mutex>
+#include <string>
 
+#include "rclcpp/callback_group.hpp"
+#include "rclcpp/clock.hpp"
 #include "rclcpp/exceptions.hpp"
-#include "rclcpp/node.hpp"
-#include "rclcpp/rclcpp.hpp"
+#include "rclcpp/executor_options.hpp"
 #include "rclcpp/executors.hpp"
+#include "rclcpp/executors/multi_threaded_executor.hpp"
+#include "rclcpp/node.hpp"
+#include "rclcpp/time.hpp"
+#include "rclcpp/utilities.hpp"
 
 using namespace std::chrono_literals;
 

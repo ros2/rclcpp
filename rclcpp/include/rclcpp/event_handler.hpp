@@ -25,7 +25,6 @@
 
 #include "rcl/error_handling.h"
 #include "rcl/event_callback.h"
-#include "rmw/impl/cpp/demangle.hpp"
 #include "rmw/incompatible_qos_events_statuses.h"
 #include "rmw/events_statuses/incompatible_type.h"
 
@@ -34,7 +33,6 @@
 #include "rclcpp/detail/cpp_callback_trampoline.hpp"
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp/function_traits.hpp"
-#include "rclcpp/logging.hpp"
 #include "rclcpp/waitable.hpp"
 
 namespace rclcpp
@@ -170,73 +168,18 @@ public:
    *
    * \param[in] callback functor to be called when a new event occurs
    */
+  RCLCPP_PUBLIC
   void
-  set_on_ready_callback(std::function<void(size_t, int)> callback) override
-  {
-    if (!callback) {
-      throw std::invalid_argument(
-              "The callback passed to set_on_ready_callback "
-              "is not callable.");
-    }
-
-    // Note: we bind the int identifier argument to this waitable's entity types
-    auto new_callback =
-      [callback, this](size_t number_of_events) {
-        try {
-          callback(number_of_events, static_cast<int>(EntityType::Event));
-        } catch (const std::exception & exception) {
-          RCLCPP_ERROR_STREAM(
-            // TODO(wjwwood): get this class access to the node logger it is associated with
-            rclcpp::get_logger("rclcpp"),
-            "rclcpp::EventHandlerBase@" << this <<
-              " caught " << rmw::impl::cpp::demangle(exception) <<
-              " exception in user-provided callback for the 'on ready' callback: " <<
-              exception.what());
-        } catch (...) {
-          RCLCPP_ERROR_STREAM(
-            rclcpp::get_logger("rclcpp"),
-            "rclcpp::EventHandlerBase@" << this <<
-              " caught unhandled exception in user-provided callback " <<
-              "for the 'on ready' callback");
-        }
-      };
-
-    std::lock_guard<std::recursive_mutex> lock(on_new_event_callback_mutex_);
-
-    // Set it temporarily to the new callback, while we replace the old one.
-    // This two-step setting, prevents a gap where the old std::function has
-    // been replaced but the middleware hasn't been told about the new one yet.
-    set_on_new_event_callback(
-      rclcpp::detail::cpp_callback_trampoline<decltype(new_callback), const void *, size_t>,
-      static_cast<const void *>(&new_callback));
-
-    // Store the std::function to keep it in scope, also overwrites the existing one.
-    on_new_event_callback_ = new_callback;
-
-    // Set it again, now using the permanent storage.
-    set_on_new_event_callback(
-      rclcpp::detail::cpp_callback_trampoline<
-        decltype(on_new_event_callback_), const void *, size_t>,
-      static_cast<const void *>(&on_new_event_callback_));
-  }
+  set_on_ready_callback(std::function<void(size_t, int)> callback) override;
 
   /// Unset the callback registered for new events, if any.
+  RCLCPP_PUBLIC
   void
-  clear_on_ready_callback() override
-  {
-    std::lock_guard<std::recursive_mutex> lock(on_new_event_callback_mutex_);
-    if (on_new_event_callback_) {
-      set_on_new_event_callback(nullptr, nullptr);
-      on_new_event_callback_ = nullptr;
-    }
-  }
+  clear_on_ready_callback() override;
 
   RCLCPP_PUBLIC
   std::vector<std::shared_ptr<rclcpp::TimerBase>>
-  get_timers() const override
-  {
-    return {};
-  }
+  get_timers() const override;
 
 protected:
   RCLCPP_PUBLIC

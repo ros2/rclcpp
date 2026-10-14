@@ -14,6 +14,8 @@
 
 #include "rclcpp/executor_options.hpp"
 
+#include "rclcpp/contexts/default_context.hpp"
+
 using rclcpp::ExecutorOptions;
 
 namespace rclcpp

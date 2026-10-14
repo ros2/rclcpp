@@ -28,7 +28,11 @@
 
 #include "class_loader/class_loader.hpp"
 
+#include "rclcpp/executor.hpp"
+#include "rclcpp/logger.hpp"
 #include "rclcpp/node_options.hpp"
+#include "rclcpp/parameter.hpp"
+#include "rclcpp/parameter_value.hpp"
 #include "rclcpp/qos.hpp"
 
 #include "rclcpp_components/node_factory.hpp"
@@ -83,7 +87,10 @@ ComponentManager::~ComponentManager()
     RCLCPP_DEBUG(get_logger(), "Removing components from executor");
     if (auto exec = executor_.lock()) {
       for (auto & wrapper : node_wrappers_) {
-        exec->remove_node(wrapper.second.get_node_base_interface());
+        auto node_interface = wrapper.second.get_node_base_interface();
+        if (node_interface->get_associated_with_executor_atomic().load()) {
+          exec->remove_node(node_interface);
+        }
       }
     }
   }
@@ -217,12 +224,6 @@ ComponentManager::create_node_options(const std::shared_ptr<LoadNode::Request> r
             "Extra component argument 'use_intra_process_comms' must be a boolean");
       }
       options.use_intra_process_comms(extra_argument.get_value<bool>());
-    } else if (extra_argument.get_name() == "enable_topic_statistics") {
-      if (extra_argument.get_type() != rclcpp::ParameterType::PARAMETER_BOOL) {
-        throw ComponentManagerException(
-            "Extra component argument 'enable_topic_statistics' must be a boolean");
-      }
-      options.enable_topic_statistics(extra_argument.get_value<bool>());
     } else if (extra_argument.get_name() == "start_parameter_services") {
       if (extra_argument.get_type() != rclcpp::ParameterType::PARAMETER_BOOL) {
         throw ComponentManagerException(

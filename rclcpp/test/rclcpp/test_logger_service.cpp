@@ -17,12 +17,17 @@
 #include <chrono>
 #include <memory>
 #include <string>
+#include <thread>
+#include <utility>
 #include <vector>
 
-#include "rclcpp/rclcpp.hpp"
-#include "rclcpp/node.hpp"
 #include "rcl_interfaces/srv/get_logger_levels.hpp"
 #include "rcl_interfaces/srv/set_logger_levels.hpp"
+#include "rclcpp/executors.hpp"
+#include "rclcpp/future_return_code.hpp"
+#include "rclcpp/node.hpp"
+#include "rclcpp/node_options.hpp"
+#include "rclcpp/utilities.hpp"
 
 using namespace std::chrono_literals;
 

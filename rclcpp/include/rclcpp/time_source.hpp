@@ -25,7 +25,6 @@
 #include "rcl_interfaces/msg/parameter_event.hpp"
 
 #include "rclcpp/node.hpp"
-#include "rclcpp/executors.hpp"
 #include "rclcpp/node_interfaces/node_parameters_interface.hpp"
 
 

@@ -15,7 +15,6 @@
 #ifndef RCLCPP__SERIALIZATION_HPP_
 #define RCLCPP__SERIALIZATION_HPP_
 
-#include <memory>
 #include <stdexcept>
 #include <string>
 

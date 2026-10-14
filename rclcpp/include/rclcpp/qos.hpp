@@ -18,9 +18,7 @@
 #include <string>
 
 #include "rclcpp/duration.hpp"
-#include "rclcpp/exceptions.hpp"
 #include "rclcpp/visibility_control.hpp"
-#include "rcl/logging_rosout.h"
 #include "rmw/incompatible_qos_events_statuses.h"
 #include "rmw/qos_profiles.h"
 #include "rmw/types.h"

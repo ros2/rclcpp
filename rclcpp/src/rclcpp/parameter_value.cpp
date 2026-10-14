@@ -14,8 +14,11 @@
 
 #include "rclcpp/parameter_value.hpp"
 
+#include <sstream>
 #include <string>
 #include <vector>
+
+#include "rclcpp/exceptions/exceptions.hpp"
 
 using rclcpp::ParameterType;
 using rclcpp::ParameterValue;

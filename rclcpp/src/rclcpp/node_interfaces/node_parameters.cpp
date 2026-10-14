@@ -195,6 +195,54 @@ format_range_reason(const std::string & name, const char * range_type)
   return ss.str();
 }
 
+static
+std::string
+format_range_type_reason(
+  const std::string & name,
+  const char * range_type,
+  rclcpp::ParameterType parameter_type)
+{
+  std::ostringstream ss;
+  ss << "Parameter {" << name << "} of type {" << rclcpp::to_string(parameter_type) <<
+    "} cannot use " << range_type << " range constraints.";
+  return ss.str();
+}
+
+RCLCPP_LOCAL
+rcl_interfaces::msg::SetParametersResult
+__check_parameter_type_supports_range(
+  const rcl_interfaces::msg::ParameterDescriptor & descriptor,
+  rclcpp::ParameterType parameter_type)
+{
+  rcl_interfaces::msg::SetParametersResult result;
+  result.successful = true;
+
+  if (parameter_type == rclcpp::PARAMETER_NOT_SET) {
+    return result;
+  }
+
+  if (
+    !descriptor.integer_range.empty() &&
+    parameter_type != rclcpp::PARAMETER_INTEGER &&
+    parameter_type != rclcpp::PARAMETER_INTEGER_ARRAY)
+  {
+    result.successful = false;
+    result.reason = format_range_type_reason(descriptor.name, "integer", parameter_type);
+    return result;
+  }
+
+  if (
+    !descriptor.floating_point_range.empty() &&
+    parameter_type != rclcpp::PARAMETER_DOUBLE &&
+    parameter_type != rclcpp::PARAMETER_DOUBLE_ARRAY)
+  {
+    result.successful = false;
+    result.reason = format_range_type_reason(descriptor.name, "floating point", parameter_type);
+  }
+
+  return result;
+}
+
 RCLCPP_LOCAL
 rcl_interfaces::msg::SetParametersResult
 __check_integer_range(
@@ -260,8 +308,11 @@ __check_parameter_value_in_range(
   const rcl_interfaces::msg::ParameterDescriptor & descriptor,
   const rclcpp::ParameterValue & value)
 {
-  rcl_interfaces::msg::SetParametersResult result;
-  result.successful = true;
+  auto result = __check_parameter_type_supports_range(descriptor, value.get_type());
+  if (!result.successful) {
+    return result;
+  }
+
   if (!descriptor.integer_range.empty() && value.get_type() == rclcpp::PARAMETER_INTEGER) {
     result = __check_integer_range(descriptor, value.get<int64_t>());
     return result;
@@ -508,6 +559,17 @@ __declare_parameter_common(
 
   // If there is no initial value, then skip initialization
   if (initial_value->get_type() == rclcpp::PARAMETER_NOT_SET) {
+    rcl_interfaces::msg::SetParametersResult result;
+    if (!parameter_descriptor.dynamic_typing) {
+      auto descriptor = parameter_descriptor;
+      descriptor.name = name;
+      result = __check_parameter_type_supports_range(
+        descriptor, static_cast<rclcpp::ParameterType>(descriptor.type));
+      if (!result.successful) {
+        return result;
+      }
+    }
+
     // Add declared parameters to storage (without a value)
     parameter_infos[name].descriptor.name = name;
     if (parameter_descriptor.dynamic_typing) {
@@ -516,7 +578,6 @@ __declare_parameter_common(
       parameter_infos[name].descriptor.type = parameter_descriptor.type;
     }
     parameters_out[name] = parameter_infos.at(name);
-    rcl_interfaces::msg::SetParametersResult result;
     result.successful = true;
     return result;
   }

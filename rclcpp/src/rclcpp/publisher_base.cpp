@@ -17,9 +17,11 @@
 #include <rmw/error_handling.h>
 #include <rmw/rmw.h>
 
+#include <functional>
 #include <memory>
 #include <mutex>
 #include <sstream>
+#include <stdexcept>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -433,4 +435,42 @@ size_t PublisherBase::lowest_available_ipm_capacity() const
   }
 
   return ipm->lowest_available_capacity(intra_process_publisher_id_);
+}
+
+void
+PublisherBase::set_on_new_qos_event_callback(
+  const std::function<void(size_t)> & callback,
+  rcl_publisher_event_type_t event_type)
+{
+  if (event_handlers_.count(event_type) == 0) {
+    RCLCPP_WARN(
+      rclcpp::get_logger("rclcpp"),
+      "Calling set_on_new_qos_event_callback for non registered publisher event_type");
+    return;
+  }
+
+  if (!callback) {
+    throw std::invalid_argument(
+            "The callback passed to set_on_new_qos_event_callback "
+            "is not callable.");
+  }
+
+  // The on_ready_callback signature has an extra `int` argument used to disambiguate between
+  // possible different entities within a generic waitable.
+  // We hide that detail to users of this method.
+  std::function<void(size_t, int)> new_callback = [callback] (size_t nr, int) {callback(nr);};
+  event_handlers_[event_type]->set_on_ready_callback(new_callback);
+}
+
+void
+PublisherBase::clear_on_new_qos_event_callback(rcl_publisher_event_type_t event_type)
+{
+  if (event_handlers_.count(event_type) == 0) {
+    RCLCPP_WARN(
+      rclcpp::get_logger("rclcpp"),
+      "Calling clear_on_new_qos_event_callback for non registered event_type");
+    return;
+  }
+
+  event_handlers_[event_type]->clear_on_ready_callback();
 }

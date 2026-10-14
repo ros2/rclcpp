@@ -20,7 +20,6 @@
 #include <functional>
 #include <optional>
 #include <memory>
-#include <sstream>
 #include <thread>
 #include <type_traits>
 #include <utility>
@@ -29,7 +28,6 @@
 #include "rclcpp/context.hpp"
 #include "rclcpp/function_traits.hpp"
 #include "rclcpp/macros.hpp"
-#include "rclcpp/rate.hpp"
 #include "rclcpp/utilities.hpp"
 #include "rclcpp/visibility_control.hpp"
 #include "tracetools/tracetools.h"
@@ -38,7 +36,6 @@
 #include "rcl/error_handling.h"
 #include "rcl/timer.h"
 
-#include "rmw/error_handling.h"
 #include "rmw/rmw.h"
 
 namespace rclcpp

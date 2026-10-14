@@ -18,7 +18,10 @@
 
 #include "performance_test_fixture/performance_test_fixture.hpp"
 
-#include "rclcpp/rclcpp.hpp"
+#include "rclcpp/node.hpp"
+#include "rclcpp/parameter.hpp"
+#include "rclcpp/parameter_value.hpp"
+#include "rclcpp/utilities.hpp"
 
 class NodeParametersInterfaceTest : public performance_test_fixture::PerformanceTest
 {

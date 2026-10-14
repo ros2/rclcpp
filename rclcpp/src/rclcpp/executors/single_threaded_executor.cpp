@@ -16,6 +16,7 @@
 
 #include "rclcpp/executors/single_threaded_executor.hpp"
 #include "rclcpp/any_executable.hpp"
+#include "rclcpp/utilities.hpp"
 
 using rclcpp::executors::SingleThreadedExecutor;
 
@@ -30,13 +31,19 @@ SingleThreadedExecutor::spin()
   if (spinning.exchange(true)) {
     throw std::runtime_error("spin() called while already spinning");
   }
-  RCPPUTILS_SCOPE_EXIT(wait_result_.reset();this->spinning.store(false););
+  RCPPUTILS_SCOPE_EXIT(
+    wait_result_.reset();
+    this->spinning.store(false);
+    this->cancel_requested_.store(false););
+  if (cancel_requested_.load()) {
+    return;
+  }
 
   // Clear any previous result and rebuild the waitset
   this->wait_result_.reset();
   this->entities_need_rebuild_ = true;
 
-  while (rclcpp::ok(this->context_) && spinning.load()) {
+  while (rclcpp::ok(this->context_) && !cancel_requested_.load()) {
     rclcpp::AnyExecutable any_executable;
     if (get_next_executable(any_executable)) {
       execute_any_executable(any_executable);

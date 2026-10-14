@@ -14,12 +14,16 @@
 
 #include <gtest/gtest.h>
 
-#include <string>
+#include <chrono>
 #include <memory>
+#include <string>
 #include <utility>
 
+#include "rclcpp/create_client.hpp"
 #include "rclcpp/exceptions.hpp"
-#include "rclcpp/rclcpp.hpp"
+#include "rclcpp/node.hpp"
+#include "rclcpp/qos.hpp"
+#include "rclcpp/utilities.hpp"
 
 #include "rcl_interfaces/srv/list_parameters.hpp"
 

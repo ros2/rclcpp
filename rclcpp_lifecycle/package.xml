@@ -2,20 +2,21 @@
 <?xml-model href="http://download.ros.org/schema/package_format2.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="2">
   <name>rclcpp_lifecycle</name>
-  <version>33.0.1</version>
+  <version>33.1.0</version>
   <description>Package containing a prototype for lifecycle implementation</description>
 
   <maintainer email="ivanpauno@ekumenlabs.com">Ivan Paunovic</maintainer>
   <maintainer email="michel@ekumenlabs.com">Michel Hidalgo</maintainer>
   <maintainer email="william@openrobotics.org">William Woodall</maintainer>
 
-  <license>Apache License 2.0</license>
+  <license>Apache-2.0</license>
 
   <author email="jacob@openrobotics.org">Jacob Perron</author>
   <author email="karsten@openrobotics.org">Karsten Knese</author>
 
   <buildtool_depend>ament_cmake_ros</buildtool_depend>
 
+  <build_depend>ament_cmake_ros_core</build_depend>
   <build_depend>lifecycle_msgs</build_depend>
   <build_depend>rcl</build_depend>
   <build_depend>rclcpp</build_depend>

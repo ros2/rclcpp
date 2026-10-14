@@ -27,7 +27,6 @@
 #include "rclcpp/experimental/executors/events_executor/events_queue.hpp"
 #include "rclcpp/experimental/executors/events_executor/simple_events_queue.hpp"
 #include "rclcpp/experimental/timers_manager.hpp"
-#include "rclcpp/node.hpp"
 
 namespace rclcpp
 {
@@ -57,7 +56,11 @@ namespace executors
  * executor.spin();
  * executor.remove_node(node);
  */
-class EventsExecutor : public rclcpp::Executor
+class
+[[deprecated(
+    "rclcpp::experimental::executors::EventsExecutor is deprecated and will be removed in "
+    "m-turtle. use rclcpp::executors::EventsCBGExecutor in single-threaded mode instead")]]
+EventsExecutor : public rclcpp::Executor
 {
 public:
   RCLCPP_SMART_PTR_DEFINITIONS(EventsExecutor)

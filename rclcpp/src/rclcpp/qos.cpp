@@ -16,6 +16,7 @@
 
 #include <string>
 
+#include "rclcpp/exceptions.hpp"
 #include "rclcpp/logging.hpp"
 
 #include "rmw/error_handling.h"

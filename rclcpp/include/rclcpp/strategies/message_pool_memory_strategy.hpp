@@ -25,7 +25,6 @@
 #include "rosidl_runtime_cpp/traits.hpp"
 
 #include "rclcpp/logger.hpp"
-#include "rclcpp/logging.hpp"
 #include "rclcpp/macros.hpp"
 #include "rclcpp/message_memory_strategy.hpp"
 #include "rclcpp/visibility_control.hpp"

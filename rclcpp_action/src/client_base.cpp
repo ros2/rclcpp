@@ -24,6 +24,7 @@
 #include "rcl_action/wait.h"
 #include "rclcpp/node_interfaces/node_base_interface.hpp"
 #include "rclcpp/node_interfaces/node_logging_interface.hpp"
+#include "rclcpp/utilities.hpp"
 
 #include "rclcpp_action/client_base.hpp"
 
@@ -181,6 +182,7 @@ public:
   std::map<int64_t, ResponseCallback> pending_cancel_responses;
   std::recursive_mutex cancel_requests_mutex;
 
+  std::mutex goal_id_rng_mutex;
   std::independent_bits_engine<
     std::mt19937, 8, unsigned int> random_bytes_generator;
 };
@@ -480,6 +482,7 @@ GoalUUID
 ClientBase::generate_goal_id()
 {
   GoalUUID goal_id;
+  std::lock_guard<std::mutex> lock(pimpl_->goal_id_rng_mutex);
   // TODO(hidmic): Do something better than this for UUID generation.
   // std::generate(
   //   goal_id.uuid.begin(), goal_id.uuid.end(),

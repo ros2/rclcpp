@@ -14,13 +14,20 @@
 
 #include <map>
 #include <memory>
+#include <stdexcept>
 #include <string>
 
 #include "gmock/gmock.h"
 
-#include "rclcpp/rclcpp.hpp"
-#include "rclcpp/qos_overriding_options.hpp"
 #include "rclcpp/detail/qos_parameters.hpp"
+#include "rclcpp/exceptions.hpp"
+#include "rclcpp/node.hpp"
+#include "rclcpp/node_options.hpp"
+#include "rclcpp/parameter.hpp"
+#include "rclcpp/parameter_value.hpp"
+#include "rclcpp/qos.hpp"
+#include "rclcpp/qos_overriding_options.hpp"
+#include "rclcpp/utilities.hpp"
 
 TEST(TestQosParameters, declare) {
   rclcpp::init(0, nullptr);

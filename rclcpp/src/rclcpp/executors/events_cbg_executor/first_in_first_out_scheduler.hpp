@@ -32,8 +32,10 @@ namespace cbg_executor
 struct FirstInFirstOutCallbackGroupHandle final : public CBGScheduler::CallbackGroupHandle
 {
 public:
-  explicit FirstInFirstOutCallbackGroupHandle(CBGScheduler & scheduler)
-  : CallbackGroupHandle(scheduler) {}
+  explicit FirstInFirstOutCallbackGroupHandle(CBGScheduler & scheduler, CallbackGroupType type)
+  : CallbackGroupHandle(scheduler, type)
+  {
+  }
 
   std::function<void(size_t)> get_ready_callback_for_entity(
     const rclcpp::SubscriptionBase::WeakPtr & entity) final;
@@ -66,11 +68,11 @@ class FirstInFirstOutScheduler : public CBGScheduler
 public:
   using CBGScheduler::CBGScheduler;
 
+private:
   ExecutableEntityWithInfo get_next_ready_entity_intern() final;
   ExecutableEntityWithInfo get_next_ready_entity_intern(
     GlobalEventIdProvider::MonotonicId max_id) final;
 
-private:
   std::unique_ptr<CallbackGroupHandle> get_handle_for_callback_group(
     const rclcpp::CallbackGroup::SharedPtr & callback_group) final;
 

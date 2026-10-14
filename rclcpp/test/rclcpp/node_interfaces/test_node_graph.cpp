@@ -14,8 +14,10 @@
 
 #include <gtest/gtest.h>
 
+#include <chrono>
 #include <functional>
 #include <memory>
+#include <stdexcept>
 #include <string>
 #include <utility>
 #include <vector>
@@ -23,10 +25,14 @@
 #include "rcl/graph.h"
 #include "rcl/node_options.h"
 #include "rcl/remap.h"
+#include "rclcpp/event.hpp"
+#include "rclcpp/exceptions.hpp"
 #include "rclcpp/node.hpp"
 #include "rclcpp/node_interfaces/node_base.hpp"
 #include "rclcpp/node_interfaces/node_graph.hpp"
-#include "rclcpp/rclcpp.hpp"
+#include "rclcpp/node_interfaces/node_graph_interface.hpp"
+#include "rclcpp/qos.hpp"
+#include "rclcpp/utilities.hpp"
 #include "rcutils/strdup.h"
 #include "test_msgs/msg/empty.h"
 #include "test_msgs/msg/empty.hpp"

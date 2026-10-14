@@ -14,9 +14,14 @@
 
 #include <gtest/gtest.h>
 
-#include "rclcpp/executors/executor_notify_waitable.hpp"
-#include "rclcpp/rclcpp.hpp"
+#include <memory>
+#include <stdexcept>
+
+#include "rclcpp/callback_group.hpp"
 #include "rclcpp/executors/executor_entities_collector.hpp"
+#include "rclcpp/executors/executor_notify_waitable.hpp"
+#include "rclcpp/node.hpp"
+#include "rclcpp/utilities.hpp"
 
 #include "../../utils/rclcpp_gtest_macros.hpp"
 

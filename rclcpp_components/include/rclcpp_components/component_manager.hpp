@@ -55,8 +55,10 @@
 #include "composition_interfaces/srv/list_nodes.hpp"
 
 #include "rclcpp/executor.hpp"
+#include "rclcpp/executors/multi_threaded_executor.hpp"
+#include "rclcpp/node.hpp"
 #include "rclcpp/node_options.hpp"
-#include "rclcpp/rclcpp.hpp"
+#include "rclcpp/service.hpp"
 
 #include "rclcpp_components/node_factory.hpp"
 #include "rclcpp_components/node_instance_wrapper.hpp"

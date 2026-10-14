@@ -16,8 +16,12 @@
 #include <memory>
 #include <utility>
 
+#include <functional>
+
+#include "rclcpp/exceptions.hpp"
 #include "rclcpp/loaned_message.hpp"
-#include "rclcpp/rclcpp.hpp"
+#include "rclcpp/node.hpp"
+#include "rclcpp/utilities.hpp"
 
 #include "test_msgs/msg/basic_types.hpp"
 

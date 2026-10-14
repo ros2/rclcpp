@@ -22,6 +22,9 @@
 #include <vector>
 #include <utility>
 
+#include <algorithm>
+#include <functional>
+
 #include "lifecycle_msgs/msg/state.hpp"
 #include "lifecycle_msgs/msg/transition.hpp"
 
@@ -29,7 +32,14 @@
 #include "rcl_interfaces/srv/get_logger_levels.hpp"
 #include "rcl_interfaces/srv/set_logger_levels.hpp"
 
-#include "rclcpp/rclcpp.hpp"
+#include "rclcpp/callback_group.hpp"
+#include "rclcpp/event.hpp"
+#include "rclcpp/exceptions.hpp"
+#include "rclcpp/node.hpp"
+#include "rclcpp/node_options.hpp"
+#include "rclcpp/parameter.hpp"
+#include "rclcpp/parameter_value.hpp"
+#include "rclcpp/utilities.hpp"
 #include "rclcpp_lifecycle/lifecycle_node.hpp"
 
 #include "./mocking_utils/patch.hpp"

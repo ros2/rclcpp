@@ -24,14 +24,26 @@
 #include <thread>
 #include <vector>
 
+#include "rclcpp/create_subscription.hpp"
+#include "rclcpp/event_handler.hpp"
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp/executors/single_threaded_executor.hpp"
-#include "rclcpp/rclcpp.hpp"
+#include "rclcpp/intra_process_setting.hpp"
+#include "rclcpp/message_info.hpp"
+#include "rclcpp/node.hpp"
+#include "rclcpp/node_options.hpp"
+#include "rclcpp/publisher_options.hpp"
+#include "rclcpp/qos.hpp"
+#include "rclcpp/serialized_message.hpp"
+#include "rclcpp/subscription_base.hpp"
+#include "rclcpp/subscription_options.hpp"
+#include "rclcpp/utilities.hpp"
 
 #include "../mocking_utils/patch.hpp"
 #include "../utils/rclcpp_gtest_macros.hpp"
 
 #include "test_msgs/msg/empty.hpp"
+#include "test_msgs/msg/basic_types.hpp"
 
 using namespace std::chrono_literals;
 
@@ -870,4 +882,62 @@ TEST_F(TestSubscription, disable_enable_event_callbacks)
   }
   EXPECT_EQ(deadline_callback_count, 2);
   EXPECT_EQ(liveliness_callback_count, 2);
+}
+
+/*
+   Testing behavior when the queue size of the subscriber is reached.
+   See https://github.com/ros2/rclcpp/issues/421
+ */
+TEST_F(TestSubscription, queue_size_behavior) {
+  initialize();
+  using test_msgs::msg::BasicTypes;
+
+  constexpr size_t depth = 3;
+  // Explicitly use Reliable reliability to ensure deterministic behavior across all RMW
+  // implementations. With Best Effort, samples could be lost or arrive out of order,
+  // making the assertions non-deterministic.
+  rclcpp::QoS sub_qos = rclcpp::QoS(depth).reliable();
+
+  std::vector<int32_t> received_values;
+  auto callback = [&received_values](BasicTypes::ConstSharedPtr msg) {
+      received_values.push_back(msg->int32_value);
+    };
+
+  auto sub = node_->create_subscription<BasicTypes>("test_queue_size", sub_qos, callback);
+
+  // Publisher with larger queue size and Reliable reliability to match subscriber
+  rclcpp::QoS pub_qos = rclcpp::QoS(10).reliable();
+  auto pub = node_->create_publisher<BasicTypes>("test_queue_size", pub_qos);
+
+  rclcpp::executors::SingleThreadedExecutor executor;
+  executor.add_node(node_);
+
+  // Wait for discovery (no need to spin executor for discovery)
+  auto start_time = std::chrono::steady_clock::now();
+  while (pub->get_subscription_count() == 0 &&
+    (std::chrono::steady_clock::now() - start_time) < 10s)
+  {
+    std::this_thread::sleep_for(10ms);
+  }
+  ASSERT_GT(pub->get_subscription_count(), 0u);
+
+  // Publish more messages than the subscriber's queue size
+  for (int32_t i = 1; i <= 5; ++i) {
+    BasicTypes msg;
+    msg.int32_value = i;
+    pub->publish(msg);
+  }
+
+  // Now spin to receive messages
+  start_time = std::chrono::steady_clock::now();
+  while ((std::chrono::steady_clock::now() - start_time) < 1s) {
+    executor.spin_some();
+    std::this_thread::sleep_for(10ms);
+  }
+
+  // We expect to have received exactly `depth` messages, and they should be the LAST 3 messages.
+  ASSERT_EQ(received_values.size(), depth);
+  EXPECT_EQ(received_values[0], 3);
+  EXPECT_EQ(received_values[1], 4);
+  EXPECT_EQ(received_values[2], 5);
 }

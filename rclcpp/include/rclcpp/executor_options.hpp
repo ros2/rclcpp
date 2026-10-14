@@ -18,7 +18,6 @@
 #include <memory>
 
 #include "rclcpp/context.hpp"
-#include "rclcpp/contexts/default_context.hpp"
 #include "rclcpp/visibility_control.hpp"
 
 namespace rclcpp

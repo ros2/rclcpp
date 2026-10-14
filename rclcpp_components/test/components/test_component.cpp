@@ -12,7 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "rclcpp/rclcpp.hpp"
+#include "rclcpp/node.hpp"
+#include "rclcpp/node_interfaces/node_base_interface.hpp"
+#include "rclcpp/node_options.hpp"
 
 namespace test_rclcpp_components
 {

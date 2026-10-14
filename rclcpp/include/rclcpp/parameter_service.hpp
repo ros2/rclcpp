@@ -24,7 +24,6 @@
 #include "rcl_interfaces/srv/list_parameters.hpp"
 #include "rcl_interfaces/srv/set_parameters.hpp"
 #include "rcl_interfaces/srv/set_parameters_atomically.hpp"
-#include "rclcpp/executors.hpp"
 #include "rclcpp/macros.hpp"
 #include "rclcpp/node.hpp"
 #include "rclcpp/parameter.hpp"

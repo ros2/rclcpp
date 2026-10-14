@@ -14,8 +14,9 @@
 
 #include <memory>
 
-#include "rclcpp/rclcpp.hpp"
+#include "rclcpp/node.hpp"
 #include "rclcpp/node_interfaces/get_node_topics_interface.hpp"
+#include "rclcpp/node_interfaces/node_topics_interface.hpp"
 
 int main(void)
 {

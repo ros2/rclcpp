@@ -2,16 +2,12 @@ cmake_minimum_required(VERSION 3.20)
 
 project(rclcpp_lifecycle)
 
-# Default to C++17
-if(NOT CMAKE_CXX_STANDARD)
-  set(CMAKE_CXX_STANDARD 17)
-  set(CMAKE_CXX_STANDARD_REQUIRED ON)
-endif()
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic -Wnon-virtual-dtor -Woverloaded-virtual)
 endif()
 
 find_package(ament_cmake_ros REQUIRED)
+find_package(ament_cmake_ros_core REQUIRED)
 find_package(lifecycle_msgs REQUIRED)
 find_package(rcl REQUIRED)
 find_package(rclcpp REQUIRED)
@@ -41,6 +37,9 @@ target_link_libraries(${PROJECT_NAME}
   rcl_lifecycle::rcl_lifecycle
   rcutils::rcutils
   rosidl_typesupport_cpp::rosidl_typesupport_cpp
+  # Note we link public on purpose, as we want to export
+  # the used C++ version as minimum to all consuming packages
+  ament_cmake_ros_core::ament_ros_defaults
 )
 
 # Causes the visibility macros to use dllexport rather than dllimport,
@@ -59,7 +58,8 @@ install(DIRECTORY include/
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
   # Give cppcheck hints about macro definitions coming from outside this package
-  set(ament_cmake_cppcheck_ADDITIONAL_INCLUDE_DIRS ${rclcpp_INCLUDE_DIRS})
+  get_target_property(rclcpp_include_dirs rclcpp::rclcpp INTERFACE_INCLUDE_DIRECTORIES)
+  set(ament_cmake_cppcheck_ADDITIONAL_INCLUDE_DIRS ${rclcpp_include_dirs})
   list(APPEND AMENT_LINT_AUTO_EXCLUDE "ament_cmake_cppcheck")
   ament_lint_auto_find_test_dependencies()
 
@@ -109,6 +109,27 @@ if(BUILD_TESTING)
   ament_add_gtest(test_lifecycle_publisher test/test_lifecycle_publisher.cpp)
   if(TARGET test_lifecycle_publisher)
     target_link_libraries(test_lifecycle_publisher ${PROJECT_NAME} rcl_lifecycle::rcl_lifecycle rclcpp::rclcpp test_msgs::test_msgs)
+  endif()
+  ament_add_gtest(
+    test_lifecycle_generic_subscription
+    test/test_lifecycle_generic_subscription.cpp)
+  if(TARGET test_lifecycle_generic_subscription)
+    target_link_libraries(
+      test_lifecycle_generic_subscription
+      ${PROJECT_NAME}
+      rclcpp::rclcpp
+      test_msgs::test_msgs)
+  endif()
+  ament_add_ros_isolated_gtest(
+    test_lifecycle_wait_for_message
+    test/test_lifecycle_wait_for_message.cpp
+    TIMEOUT 120)
+  if(TARGET test_lifecycle_wait_for_message)
+    target_link_libraries(
+      test_lifecycle_wait_for_message
+      ${PROJECT_NAME}
+      rclcpp::rclcpp
+      test_msgs::test_msgs)
   endif()
   ament_add_gtest(test_lifecycle_service_client test/test_lifecycle_service_client.cpp TIMEOUT 120)
   ament_add_test_label(test_lifecycle_service_client mimick)
@@ -164,10 +185,6 @@ if(BUILD_TESTING)
     )
   endif()
 endif()
-
-# Export old-style CMake variables
-ament_export_include_directories("include/${PROJECT_NAME}")
-ament_export_libraries(${PROJECT_NAME})
 
 # Export modern CMake targets
 ament_export_targets(${PROJECT_NAME})

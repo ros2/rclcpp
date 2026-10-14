@@ -17,13 +17,13 @@
 
 #include <cassert>
 #include <functional>
-#include <iostream>
 #include <memory>
 #include <stdexcept>
 #include <utility>
 
 #include "rcl/wait.h"
 
+#include "rclcpp/logging.hpp"
 #include "rclcpp/macros.hpp"
 #include "rclcpp/wait_result_kind.hpp"
 
@@ -138,7 +138,16 @@ public:
   ~WaitResult()
   {
     if (wait_set_pointer_) {
-      wait_set_pointer_->wait_result_release();
+      // wait_result_release() throws if the wait set is no longer holding this result.
+      // A destructor is noexcept, so letting that escape would terminate the process.
+      try {
+        wait_set_pointer_->wait_result_release();
+      } catch (const std::exception & exc) {
+        RCLCPP_ERROR(
+          rclcpp::get_logger("rclcpp"), "unhandled exception in ~WaitResult(): %s", exc.what());
+      } catch (...) {
+        RCLCPP_ERROR(rclcpp::get_logger("rclcpp"), "unhandled exception in ~WaitResult()");
+      }
     }
   }
 

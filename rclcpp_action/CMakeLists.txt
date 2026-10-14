@@ -3,6 +3,7 @@ cmake_minimum_required(VERSION 3.20)
 project(rclcpp_action)
 
 find_package(ament_cmake_ros REQUIRED)
+find_package(ament_cmake_ros_core REQUIRED)
 find_package(action_msgs REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rcl REQUIRED)
@@ -10,11 +11,6 @@ find_package(rcl_action REQUIRED)
 find_package(rcpputils REQUIRED)
 find_package(rosidl_runtime_c REQUIRED)
 
-# Default to C++17
-if(NOT CMAKE_CXX_STANDARD)
-  set(CMAKE_CXX_STANDARD 17)
-  set(CMAKE_CXX_STANDARD_REQUIRED ON)
-endif()
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(
     -Wall -Wextra -Wpedantic -Wnon-virtual-dtor -Woverloaded-virtual
@@ -27,6 +23,7 @@ add_library(${PROJECT_NAME}
   src/create_generic_client.cpp
   src/generic_client.cpp
   src/generic_client_goal_handle.cpp
+  src/graph.cpp
   src/qos.cpp
   src/server.cpp
   src/server_goal_handle.cpp
@@ -42,6 +39,9 @@ target_link_libraries(${PROJECT_NAME} PUBLIC
   rcl_action::rcl_action
   rclcpp::rclcpp
   rosidl_runtime_c::rosidl_runtime_c
+  # Note we link public on purpose, as we want to export
+  # the used C++ version as minimum to all consuming packages
+  ament_cmake_ros_core::ament_ros_defaults
 )
 target_link_libraries(${PROJECT_NAME} PRIVATE
   rcpputils::rcpputils
@@ -64,10 +64,6 @@ install(
   RUNTIME DESTINATION bin
 )
 
-# Export old-style CMake variables
-ament_export_include_directories("include/${PROJECT_NAME}")
-ament_export_libraries(${PROJECT_NAME})
-
 # Export modern CMake targets
 ament_export_targets(${PROJECT_NAME})
 
@@ -77,7 +73,8 @@ if(BUILD_TESTING)
   find_package(ament_cmake_gtest REQUIRED)
   find_package(ament_lint_auto REQUIRED)
   # Give cppcheck hints about macro definitions coming from outside this package
-  set(ament_cmake_cppcheck_ADDITIONAL_INCLUDE_DIRS ${rclcpp_INCLUDE_DIRS})
+  get_target_property(rclcpp_include_dirs rclcpp::rclcpp INTERFACE_INCLUDE_DIRECTORIES)
+  set(ament_cmake_cppcheck_ADDITIONAL_INCLUDE_DIRS ${rclcpp_include_dirs})
   ament_lint_auto_find_test_dependencies()
 
   add_subdirectory(test/benchmark)
@@ -106,6 +103,17 @@ if(BUILD_TESTING)
       rcl_action::rcl_action
       rclcpp::rclcpp
       rcutils::rcutils
+      test_msgs::test_msgs
+    )
+  endif()
+
+  ament_add_gtest(test_graph test/test_graph.cpp TIMEOUT 180)
+  if(TARGET test_graph)
+    target_link_libraries(test_graph
+      ${PROJECT_NAME}
+      rcl::rcl
+      rcl_action::rcl_action
+      rclcpp::rclcpp
       test_msgs::test_msgs
     )
   endif()

@@ -15,12 +15,9 @@
 #ifndef RCLCPP__EXECUTOR_HPP_
 #define RCLCPP__EXECUTOR_HPP_
 
-#include <algorithm>
 #include <cassert>
 #include <chrono>
 #include <cstdlib>
-#include <iostream>
-#include <list>
 #include <map>
 #include <memory>
 #include <mutex>
@@ -40,7 +37,6 @@
 #include "rclcpp/executors/executor_entities_collector.hpp"
 #include "rclcpp/future_return_code.hpp"
 #include "rclcpp/node_interfaces/node_base_interface.hpp"
-#include "rclcpp/utilities.hpp"
 #include "rclcpp/visibility_control.hpp"
 #include "rclcpp/wait_set.hpp"
 
@@ -564,8 +560,19 @@ protected:
   virtual void
   handle_updated_entities(bool notify);
 
-  /// Spinning state, used to prevent multi threaded calls to spin and to cancel blocking spins.
+  /// Spinning state, used to prevent multi threaded calls to spin.
+  /**
+   * This flag is only set and cleared by the spin functions themselves, so it
+   * stays true until a spin actually returns, even after cancel() was called.
+   */
   std::atomic_bool spinning;
+
+  /// Tracks a pending cancel request that has not yet been consumed by a spin.
+  /**
+   * Set by cancel() and cleared when the spin it cancels (or, if none is in
+   * progress, the next spin) returns. The spin loops react to this flag only.
+   */
+  std::atomic_bool cancel_requested_;
 
   /// Guard condition for signaling the rmw layer to wake up for special events.
   std::shared_ptr<rclcpp::GuardCondition> interrupt_guard_condition_;
