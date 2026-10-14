@@ -382,6 +382,10 @@ EventsCBGExecutor::run(
       continue;
     }
 
+    if(ready_entity.moreEntitiesReady) {
+      scheduler->unblock_one_worker_thread();
+    }
+
     try {
       ready_entity.entity->execute_function();
     } catch (const std::exception & e) {

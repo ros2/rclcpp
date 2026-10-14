@@ -263,14 +263,14 @@ private:
    */
   ExecutableEntityWithInfo get_next_ready_entity()
   {
-    {
-      std::lock_guard l(ready_callback_groups_mutex);
-      if(needs_sync) {
-        needs_sync = false;
-        return ExecutableEntityWithInfo{.entity =
-            ExecutableEntity{.execute_function = sync_function, .callback_handle = nullptr},
-          .moreEntitiesReady = false};
-      }
+    std::lock_guard l(ready_callback_groups_mutex);
+    worker_checking_for_work = false;
+
+    if(needs_sync) {
+      needs_sync = false;
+      return ExecutableEntityWithInfo{.entity =
+          ExecutableEntity{.execute_function = sync_function, .callback_handle = nullptr},
+        .moreEntitiesReady = false};
     }
 
     return get_next_ready_entity_intern();
@@ -279,19 +279,22 @@ private:
   ExecutableEntityWithInfo get_next_ready_entity(
     GlobalEventIdProvider::MonotonicId max_id)
   {
-    {
-      std::lock_guard l(ready_callback_groups_mutex);
-      if(needs_sync) {
-        needs_sync = false;
-        return ExecutableEntityWithInfo{.entity =
-            ExecutableEntity{.execute_function = sync_function, .callback_handle = nullptr},
-          .moreEntitiesReady = false};
-      }
+    std::lock_guard l(ready_callback_groups_mutex);
+    worker_checking_for_work = false;
+
+    if(needs_sync) {
+      needs_sync = false;
+      return ExecutableEntityWithInfo{.entity =
+          ExecutableEntity{.execute_function = sync_function, .callback_handle = nullptr},
+        .moreEntitiesReady = false};
     }
 
     return get_next_ready_entity_intern(max_id);
   }
 
+  /**
+   * Will be called while holding the ready_callback_groups_mutex lock
+   */
   virtual ExecutableEntityWithInfo get_next_ready_entity_intern() = 0;
   virtual ExecutableEntityWithInfo get_next_ready_entity_intern(
     GlobalEventIdProvider::MonotonicId max_id) = 0;
@@ -338,6 +341,10 @@ private:
   {
     {
       std::lock_guard lk(ready_callback_groups_mutex);
+      if(worker_checking_for_work) {
+        return;
+      }
+      worker_checking_for_work = true;
       release_worker_once = true;
     }
     work_ready_conditional.notify_one();
@@ -385,6 +392,7 @@ protected:
 
   bool release_workers = false;
   bool release_worker_once = false;
+  bool worker_checking_for_work = false;
 
   std::condition_variable work_ready_conditional;
 
