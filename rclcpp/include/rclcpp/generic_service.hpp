@@ -80,6 +80,13 @@ public:
       >::value)
     {
       callback_.template emplace<SharedPtrDeferResponseCallbackWithServiceHandle>(callback);
+    } else if constexpr (  // NOLINT
+      rclcpp::function_traits::same_arguments<
+        CallbackT,
+        SharedPtrWithServiceHandleCallback
+      >::value)
+    {
+      callback_.template emplace<SharedPtrWithServiceHandleCallback>(callback);
     } else {
       // the else clause is not needed, but anyways we should only be doing this instead
       // of all the above workaround ...
@@ -125,6 +132,13 @@ public:
       >::value)
     {
       callback_.template emplace<SharedPtrDeferResponseCallbackWithServiceHandle>(callback);
+    } else if constexpr (  // NOLINT
+      rclcpp::function_traits::same_arguments<
+        CallbackT,
+        SharedPtrWithServiceHandleCallback
+      >::value)
+    {
+      callback_.template emplace<SharedPtrWithServiceHandleCallback>(callback);
     } else {
       // the else clause is not needed, but anyways we should only be doing this instead
       // of all the above workaround ...
@@ -163,6 +177,9 @@ public:
     } else if (std::holds_alternative<SharedPtrWithRequestHeaderCallback>(callback_)) {
       const auto & cb = std::get<SharedPtrWithRequestHeaderCallback>(callback_);
       cb(request_header, std::move(request), response);
+    } else if (std::holds_alternative<SharedPtrWithServiceHandleCallback>(callback_)) {
+      const auto & cb = std::get<SharedPtrWithServiceHandleCallback>(callback_);
+      cb(service_handle, std::move(request), response);
     }
     TRACETOOLS_TRACEPOINT(callback_end, static_cast<const void *>(this));
     return response;
@@ -204,13 +221,21 @@ private:
       std::shared_ptr<rmw_request_id_t>,
       SharedRequest
     )>;
+  // ABI test: a public class gains a std::variant alternative (grows by value).
+  using SharedPtrWithServiceHandleCallback = std::function<
+    void (
+      std::shared_ptr<rclcpp::GenericService>,
+      SharedRequest,
+      SharedResponse
+    )>;
 
   std::variant<
     std::monostate,
     SharedPtrCallback,
     SharedPtrWithRequestHeaderCallback,
     SharedPtrDeferResponseCallback,
-    SharedPtrDeferResponseCallbackWithServiceHandle> callback_;
+    SharedPtrDeferResponseCallbackWithServiceHandle,
+    SharedPtrWithServiceHandleCallback> callback_;
 };
 
 class GenericService
