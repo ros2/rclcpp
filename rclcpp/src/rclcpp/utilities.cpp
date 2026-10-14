@@ -27,6 +27,7 @@
 #include "rcl/error_handling.h"
 #include "rcl/rcl.h"
 
+// ABI test: trivial change; the pull request declares Depends-On: ros2/rcl#1335.
 namespace rclcpp
 {
 
