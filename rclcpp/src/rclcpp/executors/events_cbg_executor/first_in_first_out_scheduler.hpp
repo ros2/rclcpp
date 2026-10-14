@@ -68,11 +68,11 @@ class FirstInFirstOutScheduler : public CBGScheduler
 public:
   using CBGScheduler::CBGScheduler;
 
+private:
   ExecutableEntityWithInfo get_next_ready_entity_intern() final;
   ExecutableEntityWithInfo get_next_ready_entity_intern(
     GlobalEventIdProvider::MonotonicId max_id) final;
 
-private:
   std::unique_ptr<CallbackGroupHandle> get_handle_for_callback_group(
     const rclcpp::CallbackGroup::SharedPtr & callback_group) final;
 
