@@ -642,8 +642,9 @@ ServerBase::execute_result_request_received(
 }
 
 size_t
-ServerBase::get_number_of_goal_handles()
+ServerBase::get_number_of_goal_handles(bool abi_test)
 {
+  (void)abi_test;
   std::lock_guard<std::recursive_mutex> lock(pimpl_->unordered_map_mutex_);
   return pimpl_->goal_handles_.size();
 }

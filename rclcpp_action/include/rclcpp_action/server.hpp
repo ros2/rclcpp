@@ -207,7 +207,7 @@ public:
 
   RCLCPP_ACTION_PUBLIC
   size_t
-  get_number_of_goal_handles();
+  get_number_of_goal_handles(bool abi_test = false);
 
 protected:
   RCLCPP_ACTION_PUBLIC
