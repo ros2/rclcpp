@@ -31,4 +31,4 @@ jobs:
       pull-requests: write   # sticky comment + label
       issues: write          # label
       actions: read          # download the abi run's report artifacts
-    uses: fujitatomoya/ros2-abi-action/.github/workflows/report.yml@main
+    uses: fujitatomoya/ros2-abi-action/.github/workflows/report.yml@v1
