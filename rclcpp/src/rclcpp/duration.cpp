@@ -363,4 +363,10 @@ operator-(const builtin_interfaces::msg::Time & lhs, const rclcpp::Duration & rh
   return convert_rcl_time_to_sec_nanos(rcl_time);
 }
 
+bool
+Duration::is_zero() const
+{
+  return rcl_duration_.nanoseconds == 0;
+}
+
 }  // namespace rclcpp
