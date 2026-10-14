@@ -493,6 +493,15 @@ if(TARGET test_executors_timer_cancel_behavior)
 endif()
 
 ament_add_ros_isolated_gtest(
+  test_executors_time_jump
+  executors/test_executors_time_jump.cpp
+  APPEND_LIBRARY_DIRS "${append_library_dirs}"
+  TIMEOUT 180)
+if(TARGET test_executors_time_jump)
+  target_link_libraries(test_executors_time_jump ${PROJECT_NAME} rosgraph_msgs::rosgraph_msgs)
+endif()
+
+ament_add_ros_isolated_gtest(
   test_executors_callback_group_behavior
   executors/test_executors_callback_group_behavior.cpp
   APPEND_LIBRARY_DIRS "${append_library_dirs}"
