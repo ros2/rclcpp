@@ -36,6 +36,13 @@ struct Worker
   std::mutex mutex;
   std::condition_variable condition_variable;
   std::atomic<bool> wakeup = false;
+  // ABI test: private (src/) pimpl type gains a data member and a method.
+  std::atomic<uint64_t> abi_test_block_count = 0;
+
+  uint64_t abi_test_blocks() const
+  {
+    return abi_test_block_count.load();
+  }
 
   void prepare_block()
   {
@@ -44,6 +51,7 @@ struct Worker
 
   void block()
   {
+    ++abi_test_block_count;
     std::unique_lock lk(mutex);
     condition_variable.wait(lk, [this]() -> bool {
         return wakeup;
@@ -163,6 +171,14 @@ struct WorkerQueue
 class CBGScheduler
 {
 public:
+  // ABI test: private (src/) pimpl type gains a data member and a method.
+  size_t abi_test_counter_ = 0;
+
+  size_t abi_test_count() const
+  {
+    return abi_test_counter_;
+  }
+
   struct WaitableWithEventType
   {
     rclcpp::Waitable::WeakPtr waitable;
