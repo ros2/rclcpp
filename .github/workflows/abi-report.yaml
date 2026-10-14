@@ -1,6 +1,6 @@
 # Publishes the result of the "abi" workflow (abi.yaml) on the pull request:
-# one sticky comment with the per-library ABI verdicts and the
-# "ABI compatible" / "ABI break" label.
+# one sticky comment with the per-library ABI verdicts, the
+# "ABI compatible" / "ABI break" label, and the backport candidate labels.
 #
 # This is a separate workflow because abi.yaml builds and diffs the pull
 # request's own code. For pull requests from forks GitHub therefore runs it
@@ -11,7 +11,7 @@
 # report artifacts the abi run uploaded and posts what they say.
 #
 # The pass/fail check on the pull request still comes from abi.yaml; this
-# workflow only adds the comment and the label. It only starts firing once it
+# workflow only adds the comment and the labels. It only starts firing once it
 # exists on the default branch, and a first-time contributor's abi run still
 # needs a maintainer's approval before anything is published.
 #
@@ -32,3 +32,98 @@ jobs:
       issues: write          # label
       actions: read          # download the abi run's report artifacts
     uses: fujitatomoya/ros2-abi-action/.github/workflows/report.yml@v1
+
+  # Backport candidate labels (https://github.com/ros2/rclcpp/issues/2555).
+  #
+  # Bug fixes should reach the supported released distributions, and the main
+  # reason they are missed is that nobody can tell at a glance whether a change
+  # is ABI compatible. Once the report job has published the verdict, this job
+  # adds one "backport-<distro>" label per distribution downstream of the PR's
+  # target branch when every library is ABI compatible, and removes them when
+  # it is not. The labels are a hint for maintainers, not a decision: the
+  # backport itself is still started by hand (@Mergifyio backport <distro>),
+  # and the backport PR gets its own strict ABI check on the release branch.
+  #
+  # A label a maintainer removed by hand is not added again on later pushes,
+  # so "this is a feature, do not backport" sticks.
+  #
+  # This runs from the workflow_run token of this repository, so pull requests
+  # from forks are labelled too.
+  backport-label:
+    needs: report
+    # The report job leaves both outputs empty when it published nothing (no
+    # verdict artifacts, or the PR already moved past the checked commit).
+    if: needs.report.outputs.verdict != '' && needs.report.outputs.pr-number != ''
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write   # labels
+      issues: write          # labels
+    env:
+      VERDICT: ${{ needs.report.outputs.verdict }}
+      PR_NUMBER: ${{ needs.report.outputs.pr-number }}
+      # Distributions newest first; a PR targeting one of them is a backport
+      # candidate for every distribution listed after it. Keep in sync with
+      # the branches in abi.yaml.
+      DISTROS: rolling lyrical kilted jazzy humble
+      LABEL_PREFIX: backport-
+    steps:
+      # No checkout: nothing from the pull request is executed here.
+      - name: Reconcile backport labels
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const prNumber = Number(process.env.PR_NUMBER);
+            const verdict = process.env.VERDICT;
+            const distros = process.env.DISTROS.trim().split(/\s+/);
+            const prefix = process.env.LABEL_PREFIX;
+            const compatible = (verdict === 'compatible' || verdict === 'additions-only');
+
+            const { data: pr } = await github.rest.pulls.get({ owner, repo, pull_number: prNumber });
+            const base = pr.base.ref;
+            const idx = distros.indexOf(base);
+            if (idx < 0) {
+              core.notice(`#${prNumber} targets ${base}, which is not a distribution branch; no backport labels.`);
+              return;
+            }
+            const downstream = distros.slice(idx + 1).map((d) => prefix + d);
+            if (downstream.length === 0) {
+              core.notice(`#${prNumber} targets ${base}, the oldest supported distribution; nothing to backport to.`);
+              return;
+            }
+
+            const present = new Set(pr.labels.map((l) => l.name));
+            const all = distros.map((d) => prefix + d);
+
+            if (!compatible) {
+              // Mirror the "ABI compatible" label: gone on incompatible / error.
+              for (const name of all.filter((n) => present.has(n))) {
+                await github.rest.issues.removeLabel({ owner, repo, issue_number: prNumber, name });
+                core.info(`Removed label: ${name} (verdict: ${verdict})`);
+              }
+              return;
+            }
+
+            // Labels a person removed stay removed. Labels this workflow adds
+            // and removes show up as github-actions[bot] in the timeline.
+            const events = await github.paginate(github.rest.issues.listEventsForTimeline, {
+              owner, repo, issue_number: prNumber, per_page: 100,
+            });
+            const removedByHand = new Set(
+              events
+                .filter((e) => e.event === 'unlabeled' && e.actor && e.actor.login !== 'github-actions[bot]')
+                .map((e) => e.label && e.label.name),
+            );
+
+            const toAdd = downstream.filter((n) => !present.has(n) && !removedByHand.has(n));
+            for (const n of downstream.filter((n) => removedByHand.has(n) && !present.has(n))) {
+              core.info(`Skipped label: ${n} (removed by a maintainer)`);
+            }
+            if (toAdd.length) {
+              // Missing labels are created on the fly by this endpoint.
+              await github.rest.issues.addLabels({ owner, repo, issue_number: prNumber, labels: toAdd });
+              core.info(`Added labels: ${toAdd.join(', ')} (verdict: ${verdict}, base: ${base})`);
+            } else {
+              core.info(`Backport labels already up to date on #${prNumber}.`);
+            }
