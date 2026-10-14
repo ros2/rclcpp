@@ -74,6 +74,11 @@ public:
   virtual ~Executor();
 
   /// Do work periodically as it becomes available to us. Blocking call, may block indefinitely.
+  /// ABI test: new virtual inserted ahead of spin() to shift the vtable.
+  RCLCPP_PUBLIC
+  virtual bool
+  abi_test_is_spinning() const;
+
   // It is up to the implementation of Executor to implement spin.
   virtual void
   spin() = 0;

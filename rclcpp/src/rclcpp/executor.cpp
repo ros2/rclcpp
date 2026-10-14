@@ -958,3 +958,9 @@ Executor::is_spinning()
 {
   return spinning;
 }
+
+bool
+rclcpp::Executor::abi_test_is_spinning() const
+{
+  return spinning.load();
+}
