@@ -30,10 +30,6 @@ namespace type_support
 
 RCLCPP_PUBLIC
 const rosidl_message_type_support_t *
-get_intra_process_message_msg_type_support();
-
-RCLCPP_PUBLIC
-const rosidl_message_type_support_t *
 get_parameter_event_msg_type_support();
 
 RCLCPP_PUBLIC
