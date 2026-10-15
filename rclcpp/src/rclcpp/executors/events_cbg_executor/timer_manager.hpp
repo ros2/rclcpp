@@ -465,7 +465,6 @@ private:
         });
       }
     }
-    thread_terminated = true;
   }
 
   rcl_clock_type_t timer_type;
@@ -478,7 +477,6 @@ private:
   std::mutex mutex;
 
   std::atomic_bool running = true;
-  std::atomic_bool thread_terminated = false;
 
   std::vector<std::unique_ptr<TimerData>> all_timers;
 

@@ -237,8 +237,6 @@ public:
 
     CallbackGroupType get_type() {return type;}
 
-    bool is_ready();
-
     // true if this cbg is inside the scheduler's queue
     bool in_queue = false;
 
