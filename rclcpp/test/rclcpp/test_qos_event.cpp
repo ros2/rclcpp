@@ -643,7 +643,9 @@ TEST_F(TestQosEvent, test_pub_matched_event_by_option_event_callback)
 
   {
     auto sub = node->create_subscription<test_msgs::msg::Empty>(topic_name, 10, message_callback);
-    ex.spin_until_future_complete(prom.get_future(), timeout);
+    ASSERT_EQ(
+      rclcpp::FutureReturnCode::SUCCESS,
+      ex.spin_until_future_complete(prom.get_future(), timeout));
     prom = {};
 
     // destroy a connected subscription
@@ -652,7 +654,9 @@ TEST_F(TestQosEvent, test_pub_matched_event_by_option_event_callback)
     matched_expected_result.current_count = 0;
     matched_expected_result.current_count_change = -1;
   }
-  ex.spin_until_future_complete(prom.get_future(), timeout);
+  ASSERT_EQ(
+    rclcpp::FutureReturnCode::SUCCESS,
+    ex.spin_until_future_complete(prom.get_future(), timeout));
 }
 
 TEST_F(TestQosEvent, test_sub_matched_event_by_option_event_callback)
@@ -684,7 +688,9 @@ TEST_F(TestQosEvent, test_sub_matched_event_by_option_event_callback)
   const auto timeout = std::chrono::seconds(10);
   {
     auto pub1 = node->create_publisher<test_msgs::msg::Empty>(topic_name, 10);
-    ex.spin_until_future_complete(prom.get_future(), timeout);
+    ASSERT_EQ(
+      rclcpp::FutureReturnCode::SUCCESS,
+      ex.spin_until_future_complete(prom.get_future(), timeout));
     prom = {};
 
     // destroy a connected publisher
@@ -693,7 +699,9 @@ TEST_F(TestQosEvent, test_sub_matched_event_by_option_event_callback)
     matched_expected_result.current_count = 0;
     matched_expected_result.current_count_change = -1;
   }
-  ex.spin_until_future_complete(prom.get_future(), timeout);
+  ASSERT_EQ(
+    rclcpp::FutureReturnCode::SUCCESS,
+    ex.spin_until_future_complete(prom.get_future(), timeout));
 }
 
 /*
