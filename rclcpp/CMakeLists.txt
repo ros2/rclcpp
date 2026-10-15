@@ -19,7 +19,6 @@ find_package(rosgraph_msgs REQUIRED)
 find_package(rosidl_dynamic_typesupport REQUIRED)
 find_package(rosidl_runtime_c REQUIRED)
 find_package(rosidl_runtime_cpp REQUIRED)
-find_package(rosidl_typesupport_c REQUIRED)
 find_package(rosidl_typesupport_cpp REQUIRED)
 find_package(tracetools REQUIRED)
 
