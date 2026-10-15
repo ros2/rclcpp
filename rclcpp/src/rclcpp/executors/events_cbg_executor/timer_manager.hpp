@@ -120,14 +120,22 @@ public:
  */
 class TimerQueue
 {
-  struct TimerData
+  struct TimerData : std::enable_shared_from_this<TimerData>
   {
+    TimerData(
+      std::shared_ptr<const rcl_timer_t> rcl_ref,
+      std::weak_ptr<rclcpp::TimerBase> timer_ref,
+      rclcpp::Clock::SharedPtr clock,
+      std::function<void(const std::function<void()> & executed_cb)> timer_ready_callback)
+    : rcl_ref(std::move(rcl_ref)), timer_ref(std::move(timer_ref)), clock(std::move(clock)),
+      timer_ready_callback(std::move(timer_ready_callback))
+    {}
+
     std::shared_ptr<const rcl_timer_t> rcl_ref;
     std::weak_ptr<rclcpp::TimerBase> timer_ref;
     rclcpp::Clock::SharedPtr clock;
     bool in_running_list = false;
     std::function<void(const std::function<void()> & executed_cb)> timer_ready_callback;
-    std::weak_ptr<TimerData> self;
   };
 
 public:
@@ -259,13 +267,11 @@ public:
       return;
     }
 
-    std::shared_ptr<TimerData> data = std::make_shared<TimerData>(TimerData{std::move(handle),
-          timer,
-          timer->get_clock(), false, timer_ready_callback, {}});
-    data->self = data;
+    std::shared_ptr<TimerData> data = std::make_shared<TimerData>(
+      std::move(handle), timer, timer->get_clock(), timer_ready_callback);
 
     timer->set_on_reset_callback(
-      [weak_data = std::weak_ptr<TimerData>(data), this](size_t) {
+      [weak_data = data->weak_from_this(), this](size_t) {
         std::scoped_lock l(mutex);
         // the timer may have been removed concurrently
         auto data = weak_data.lock();
@@ -397,7 +403,7 @@ private:
       }
 
       if (time_until_call <= 0) {
-        auto timer_done_callback = [weak_data = timer_data->self, this] ()
+        auto timer_done_callback = [weak_data = timer_data->weak_from_this(), this] ()
           {
             // The timer may have been removed from this queue while its callback
             // was executed, e.g. by removing its node or by a shutdown. all_timers
