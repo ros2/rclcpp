@@ -48,7 +48,6 @@ public:
 
   rcl_clock_t rcl_clock_;
   rcl_allocator_t allocator_;
-  bool stop_sleeping_ = false;
   bool shutdown_ = false;
   std::condition_variable cv_;
   std::mutex wait_mutex_;
@@ -119,24 +118,22 @@ Clock::sleep_until(
     const std::chrono::steady_clock::time_point chrono_until =
       chrono_entry + std::chrono::nanoseconds(delta_t.nanoseconds());
 
-    // loop over spurious wakeups but notice shutdown or stop of sleep
+    // loop over spurious wakeups but notice shutdown
     std::unique_lock lock(impl_->wait_mutex_);
-    while (now() < until && !impl_->stop_sleeping_ && !impl_->shutdown_ && context->is_valid()) {
+    while (now() < until && !impl_->shutdown_ && context->is_valid()) {
       impl_->cv_.wait_until(lock, chrono_until);
     }
-    impl_->stop_sleeping_ = false;
   } else if (this_clock_type == RCL_SYSTEM_TIME) {
     auto system_time = std::chrono::system_clock::time_point(
       // Cast because system clock resolution is too big for nanoseconds on some systems
       std::chrono::duration_cast<std::chrono::system_clock::duration>(
         std::chrono::nanoseconds(until.nanoseconds())));
 
-    // loop over spurious wakeups but notice shutdown or stop of sleep
+    // loop over spurious wakeups but notice shutdown
     std::unique_lock lock(impl_->wait_mutex_);
-    while (now() < until && !impl_->stop_sleeping_ && !impl_->shutdown_ && context->is_valid()) {
+    while (now() < until && !impl_->shutdown_ && context->is_valid()) {
       impl_->cv_.wait_until(lock, system_time);
     }
-    impl_->stop_sleeping_ = false;
   } else if (this_clock_type == RCL_ROS_TIME) {
     // Install jump handler for any amount of time change, for two purposes:
     // - if ROS time is active, check if time reached on each new clock sample
@@ -163,25 +160,23 @@ Clock::sleep_until(
         std::chrono::duration_cast<std::chrono::system_clock::duration>(
           std::chrono::nanoseconds(until.nanoseconds())));
 
-      // loop over spurious wakeups but notice shutdown, stop of sleep or time source change
+      // loop over spurious wakeups but notice shutdown or time source change
       std::unique_lock lock(impl_->wait_mutex_);
-      while (now() < until && !impl_->stop_sleeping_ && !impl_->shutdown_ && context->is_valid() &&
+      while (now() < until && !impl_->shutdown_ && context->is_valid() &&
         !time_source_changed)
       {
         impl_->cv_.wait_until(lock, system_time);
       }
-      impl_->stop_sleeping_ = false;
     } else {
       // RCL_ROS_TIME with ros_time_is_active.
       // Just wait without "until" because installed
       // jump callbacks wake the cv on every new sample.
       std::unique_lock lock(impl_->wait_mutex_);
-      while (now() < until && !impl_->stop_sleeping_ && !impl_->shutdown_ && context->is_valid() &&
+      while (now() < until && !impl_->shutdown_ && context->is_valid() &&
         !time_source_changed)
       {
         impl_->cv_.wait(lock);
       }
-      impl_->stop_sleeping_ = false;
     }
   }
 
