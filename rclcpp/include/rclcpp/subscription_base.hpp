@@ -577,6 +577,10 @@ protected:
 
   rclcpp::node_interfaces::NodeBaseInterface * const node_base_;
 
+  // TODO(methylDragon): Remove if we don't need this
+  // rclcpp::node_interfaces::NodeGraphInterface * const node_graph_;
+  // rclcpp::node_interfaces::NodeServicesInterface * const node_services_;
+
   std::shared_ptr<rcl_node_t> node_handle_;
 
   std::recursive_mutex on_new_message_callback_mutex_;
