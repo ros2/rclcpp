@@ -14,9 +14,15 @@
 
 #include <gtest/gtest.h>
 
+#include <atomic>
+#include <memory>
 #include <stdexcept>
 #include <string>
+#include <thread>
 
+#include "rcl/time.h"
+
+#include "rclcpp/clock.hpp"
 #include "rclcpp/rate.hpp"
 #include "rclcpp/utilities.hpp"
 
@@ -117,6 +123,44 @@ TEST_F(TestRate, wall_rate_basics) {
   auto five = std::chrono::steady_clock::now();
   delta = five - four;
   EXPECT_GT(epsilon, delta);
+}
+
+TEST_F(TestRate, resync_after_backward_time_jump) {
+  using namespace std::chrono_literals;
+  auto clock = std::make_shared<rclcpp::Clock>(RCL_ROS_TIME);
+  rcl_clock_t * clock_handle = clock->get_clock_handle();
+  ASSERT_EQ(RCL_RET_OK, rcl_enable_ros_time_override(clock_handle));
+  ASSERT_EQ(RCL_RET_OK, rcl_set_ros_time_override(clock_handle, RCL_S_TO_NS(100)));
+
+  rclcpp::Rate rate(rclcpp::Duration(1s), clock);
+
+  // Jump back in time, then advance ROS time by 10 ms every 1 ms of wall time.
+  std::atomic<rcl_time_point_value_t> ros_time{RCL_S_TO_NS(50)};
+  ASSERT_EQ(RCL_RET_OK, rcl_set_ros_time_override(clock_handle, ros_time));
+  std::atomic<bool> done{false};
+  std::thread ticker([&]() {
+      while (!done) {
+        std::this_thread::sleep_for(1ms);
+        ros_time += RCL_MS_TO_NS(10);
+        EXPECT_EQ(RCL_RET_OK, rcl_set_ros_time_override(clock_handle, ros_time));
+      }
+    });
+
+  ASSERT_TRUE(rate.sleep());
+  const auto first_wakeup = clock->now();
+
+  // Simulate work that takes half a period.
+  while (clock->now() < first_wakeup + rclcpp::Duration(500ms)) {
+    std::this_thread::sleep_for(1ms);
+  }
+
+  // The next wakeup is one period after the previous one, not one period after now.
+  ASSERT_TRUE(rate.sleep());
+  const auto second_wakeup = clock->now();
+  done = true;
+  ticker.join();
+
+  EXPECT_LT((second_wakeup - first_wakeup).nanoseconds(), RCL_MS_TO_NS(1250));
 }
 
 TEST_F(TestRate, from_double) {
