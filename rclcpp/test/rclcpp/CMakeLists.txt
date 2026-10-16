@@ -548,6 +548,13 @@ if(TARGET test_events_cbg_executor_shutdown)
   target_link_libraries(test_events_cbg_executor_shutdown ${PROJECT_NAME})
 endif()
 
+ament_add_ros_isolated_gtest(test_events_cbg_executor_timer_removal
+  executors/test_events_cbg_executor_timer_removal.cpp
+  APPEND_LIBRARY_DIRS "${append_library_dirs}")
+if(TARGET test_events_cbg_executor_timer_removal)
+  target_link_libraries(test_events_cbg_executor_timer_removal ${PROJECT_NAME})
+endif()
+
 ament_add_ros_isolated_gtest(test_entities_collector executors/test_entities_collector.cpp
   APPEND_LIBRARY_DIRS "${append_library_dirs}" TIMEOUT 120)
 if(TARGET test_entities_collector)
