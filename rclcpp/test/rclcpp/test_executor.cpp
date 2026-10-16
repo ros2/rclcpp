@@ -27,6 +27,7 @@
 
 #include "rclcpp/callback_group.hpp"
 #include "rclcpp/client.hpp"
+#include "rclcpp/contexts/default_context.hpp"
 #include "rclcpp/create_subscription.hpp"
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp/executor.hpp"
@@ -61,6 +62,21 @@ public:
   void spin_nanoseconds(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node)
   {
     spin_node_once_nanoseconds(node, std::chrono::milliseconds(100));
+  }
+};
+
+// Derived executor that uses the constructor which does not initialize the
+// base class functionality.
+class MinimalExecutor : public rclcpp::Executor
+{
+public:
+  MinimalExecutor()
+  : rclcpp::Executor(rclcpp::contexts::get_global_default_context())
+  {
+  }
+
+  void spin() override
+  {
   }
 };
 
@@ -115,6 +131,14 @@ TEST_F(TestExecutor, add_remove_node_thread_safe) {
   } while (future_status == std::future_status::timeout);
   EXPECT_EQ(future_status, std::future_status::ready);
   future.get();
+}
+
+TEST_F(TestExecutor, destroy_executor_without_base_functionality) {
+  EXPECT_NO_THROW(
+  {
+    auto executor = std::make_unique<MinimalExecutor>();
+    executor.reset();
+  });
 }
 
 TEST_F(TestExecutor, constructor_bad_guard_condition_init) {

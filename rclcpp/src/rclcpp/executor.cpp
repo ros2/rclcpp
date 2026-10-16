@@ -97,8 +97,12 @@ Executor::~Executor()
 {
   std::lock_guard<std::mutex> guard(mutex_);
 
-  notify_waitable_->remove_guard_condition(interrupt_guard_condition_);
-  notify_waitable_->remove_guard_condition(shutdown_guard_condition_);
+  // notify_waitable_ is null when a derived executor used the constructor that
+  // does not initialize the base functionality.
+  if (notify_waitable_) {
+    notify_waitable_->remove_guard_condition(interrupt_guard_condition_);
+    notify_waitable_->remove_guard_condition(shutdown_guard_condition_);
+  }
   current_collection_.timers.update(
     {}, {},
     [this](auto timer) {wait_set_.remove_timer(std::move(timer));});
@@ -125,8 +129,8 @@ Executor::~Executor()
     {}, {},
     [this](auto waitable) {wait_set_.remove_waitable(std::move(waitable));});
 
-  // Remove shutdown callback handle registered to Context
-  if (!context_->remove_on_shutdown_callback(shutdown_callback_handle_)) {
+  // Remove shutdown callback handle registered to Context, if one was registered
+  if (notify_waitable_ && !context_->remove_on_shutdown_callback(shutdown_callback_handle_)) {
     RCUTILS_LOG_ERROR_NAMED(
       "rclcpp",
       "failed to remove registered on_shutdown callback");
