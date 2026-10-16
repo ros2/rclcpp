@@ -19,11 +19,8 @@
 #include <limits>
 #include <memory>
 #include <string>
-<<<<<<< HEAD
-=======
 #include <thread>
 #include <vector>
->>>>>>> 15bc2eb (Don't let exceptions escape destructors (#3278))
 
 #include "rcl/error_handling.h"
 #include "rcl/time.h"
