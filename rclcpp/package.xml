@@ -62,7 +62,7 @@
 
   <export>
     <build_type>ament_cmake</build_type>
-    <area>client-libraries, framework</area>
-    <related_scope>core</related_scope>
+    <ros2_documentation_area>client-libraries, framework</ros2_documentation_area>
+    <ros2_documentation_related_scope>core</ros2_documentation_related_scope>
   </export>
 </package>
