@@ -163,9 +163,13 @@ CBGScheduler::ExecutableEntityWithInfo FirstInFirstOutScheduler::get_next_ready_
     std::optional<FirstInFirstOutScheduler::ExecutableEntity> ret =
       ready_cbg->get_next_ready_entity();
 
-    if (ready_cbg->get_type() == CallbackGroupType::Reentrant && ready_cbg->has_ready_entities()) {
-      ready_callback_groups.push_back(ready_cbg);
-      ready_cbg->in_queue = true;
+    if (ready_cbg->get_type() == CallbackGroupType::Reentrant) {
+      std::lock_guard lock(ready_cbg->get_ready_mutex());
+
+      if (ready_cbg->has_ready_entities()) {
+        ready_callback_groups.push_back(ready_cbg);
+        ready_cbg->in_queue = true;
+      }
     }
 
     if(ret) {
@@ -193,11 +197,13 @@ CBGScheduler::ExecutableEntityWithInfo FirstInFirstOutScheduler::get_next_ready_
       ready_callback_groups.erase(it);
       ready_cbg->in_queue = false;
 
-      if (
-        ready_cbg->get_type() == CallbackGroupType::Reentrant && ready_cbg->has_ready_entities())
-      {
-        ready_callback_groups.push_back(ready_cbg);
-        ready_cbg->in_queue = true;
+      if (ready_cbg->get_type() == CallbackGroupType::Reentrant) {
+        std::lock_guard lock(ready_cbg->get_ready_mutex());
+
+        if (ready_cbg->has_ready_entities()) {
+          ready_callback_groups.push_back(ready_cbg);
+          ready_cbg->in_queue = true;
+        }
       }
       return CBGScheduler::ExecutableEntityWithInfo{
         .entity = std::move(ret), .moreEntitiesReady = !ready_callback_groups.empty()};
