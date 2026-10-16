@@ -288,6 +288,12 @@ ament_add_ros_isolated_gtest(test_parameter_map test_parameter_map.cpp)
 if(TARGET test_parameter_map)
   target_link_libraries(test_parameter_map ${PROJECT_NAME} rcl::rcl rcl_yaml_param_parser::rcl_yaml_param_parser rcutils::rcutils)
 endif()
+ament_add_ros_isolated_gtest(
+  test_intra_process_copy_exception test_intra_process_copy_exception.cpp)
+if(TARGET test_intra_process_copy_exception)
+  target_link_libraries(test_intra_process_copy_exception ${PROJECT_NAME} std_msgs::std_msgs)
+endif()
+
 ament_add_ros_isolated_gtest(test_publisher test_publisher.cpp TIMEOUT 120)
 ament_add_test_label(test_publisher mimick)
 if(TARGET test_publisher)
