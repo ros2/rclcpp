@@ -109,3 +109,54 @@ TEST_F(TestMultiThreadedExecutor, timer_over_take) {
   executor.add_node(node);
   executor.spin();
 }
+
+/*
+   Test that no tasks are starved
+ */
+TEST_F(TestMultiThreadedExecutor, starvation) {
+  rclcpp::executors::MultiThreadedExecutor executor(rclcpp::ExecutorOptions(),
+                                                    2u);
+
+  std::shared_ptr<rclcpp::Node> node =
+      std::make_shared<rclcpp::Node>("test_multi_threaded_executor_starvation");
+
+  std::atomic_int timer_one_count{0};
+  std::atomic_int timer_two_count{0};
+
+  rclcpp::TimerBase::SharedPtr timer_one;
+  rclcpp::TimerBase::SharedPtr timer_two;
+
+  auto timer_one_callback = [&timer_one_count, &timer_two_count]() {
+    std::this_thread::sleep_for(100ms);
+
+    timer_one_count++;
+
+    auto diff = std::abs(timer_one_count - timer_two_count);
+
+    std::cout << "Difference in counts: " << diff << std::endl;
+
+    if (timer_one_count > 10 || timer_two_count > 10) {
+      rclcpp::shutdown();
+      ASSERT_LE(diff, 1);
+    }
+  };
+
+  auto timer_two_callback = [&timer_one_count, &timer_two_count]() {
+    std::this_thread::sleep_for(100ms);
+
+    timer_two_count++;
+
+    auto diff = std::abs(timer_one_count - timer_two_count);
+
+    if (timer_one_count > 10 || timer_two_count > 10) {
+      rclcpp::shutdown();
+      ASSERT_LE(diff, 1);
+    }
+  };
+
+  timer_one = node->create_wall_timer(10ms, timer_one_callback);
+  timer_two = node->create_wall_timer(10ms, timer_two_callback);
+
+  executor.add_node(node);
+  executor.spin();
+}
