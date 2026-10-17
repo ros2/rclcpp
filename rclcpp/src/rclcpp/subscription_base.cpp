@@ -57,8 +57,7 @@ SubscriptionBase::SubscriptionBase(
   intra_process_subscription_id_(0),
   event_callbacks_(event_callbacks),
   type_support_(type_support_handle),
-  delivered_message_kind_(delivered_message_kind),
-  loaned_message_mutex_(std::make_shared<std::mutex>())
+  delivered_message_kind_(delivered_message_kind)
 {
   auto custom_deletor = [node_handle = this->node_handle_](rcl_subscription_t * rcl_subs)
     {
@@ -100,7 +99,18 @@ SubscriptionBase::SubscriptionBase(
 
 SubscriptionBase::~SubscriptionBase()
 {
-  this->clear_on_new_message_callback();
+  try {
+    this->clear_on_new_message_callback();
+  } catch (const std::exception & exc) {
+    RCLCPP_ERROR(
+      rclcpp::get_logger("rclcpp"),
+      "Failed to clear on new message callback in destructor: %s",
+      exc.what());
+  } catch (...) {
+    RCLCPP_ERROR(
+      rclcpp::get_logger("rclcpp"),
+      "Failed to clear on new message callback in destructor");
+  }
   if (!use_intra_process_) {
     return;
   }
@@ -582,19 +592,6 @@ SubscriptionBase::take_dynamic_message(
 {
   throw std::runtime_error("Unimplemented");
   return false;
-}
-
-rcl_ret_t
-SubscriptionBase::take_loaned_message(
-  void ** loaned_message,
-  rmw_message_info_t * message_info_out)
-{
-  std::lock_guard<std::mutex> lock(*loaned_message_mutex_);
-  return rcl_take_loaned_message(
-    subscription_handle_.get(),
-    loaned_message,
-    message_info_out,
-    nullptr);
 }
 
 void

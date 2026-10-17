@@ -363,8 +363,6 @@ TEST_F(TestSubscription, rcl_subscription_get_publisher_count_error) {
   EXPECT_THROW(sub->get_publisher_count(), rclcpp::exceptions::RCLError);
 }
 
-
-
 /*
    Testing on_new_message callbacks.
  */
