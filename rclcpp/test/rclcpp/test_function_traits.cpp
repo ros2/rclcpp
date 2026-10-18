@@ -734,3 +734,65 @@ TEST_F(TestMember, bind_member_functor) {
     std::string>::value,
     "Functor accepts an int, a float and a string as arguments");
 }
+
+// NOLINTNEXTLINE(readability/casting)
+int func_one_int_noexcept(int) noexcept
+{
+  return 1;
+}
+
+struct ObjectMemberNoexcept
+{
+  // NOLINTNEXTLINE(readability/casting)
+  void callback_one_int(int) noexcept {}
+  void callback_one_int_const(int) const noexcept {}
+};
+
+/*
+   Regression test for https://github.com/ros2/rclcpp/issues/2654: noexcept is part of the
+   function type since C++17, so noexcept callables need their own specializations.
+*/
+TEST(TestFunctionTraits, noexcept_callables) {
+  static_assert(
+    rclcpp::function_traits::check_arguments<decltype(func_one_int_noexcept), int>::value,
+    "noexcept free function accepts an int");
+
+  static_assert(
+    rclcpp::function_traits::check_arguments<decltype(&func_one_int_noexcept), int>::value,
+    "noexcept function pointer accepts an int");
+
+  // NOLINTNEXTLINE(readability/casting)
+  auto lambda_one_int_noexcept = [](int) noexcept {};
+  static_assert(
+    rclcpp::function_traits::check_arguments<decltype(lambda_one_int_noexcept), int>::value,
+    "noexcept lambda accepts an int");
+
+  ObjectMemberNoexcept object_member;
+
+  auto bind_one_int = std::bind(
+    &ObjectMemberNoexcept::callback_one_int, &object_member, std::placeholders::_1);
+  (void)bind_one_int;  // to quiet clang
+  static_assert(
+    rclcpp::function_traits::check_arguments<decltype(bind_one_int), int>::value,
+    "std::bind of a noexcept method accepts an int");
+
+  auto bind_one_int_const = std::bind(
+    &ObjectMemberNoexcept::callback_one_int_const, &object_member, std::placeholders::_1);
+  (void)bind_one_int_const;  // to quiet clang
+  static_assert(
+    rclcpp::function_traits::check_arguments<decltype(bind_one_int_const), int>::value,
+    "std::bind of a const noexcept method accepts an int");
+
+  auto bind_free_noexcept = std::bind(func_one_int_noexcept, std::placeholders::_1);
+  (void)bind_free_noexcept;  // to quiet clang
+  static_assert(
+    rclcpp::function_traits::check_arguments<decltype(bind_free_noexcept), int>::value,
+    "std::bind of a noexcept free function accepts an int");
+
+  static_assert(
+    std::is_same<
+      int,
+      rclcpp::function_traits::function_traits<
+        decltype(func_one_int_noexcept)>::return_type
+    >::value, "noexcept free function returns an int");
+}

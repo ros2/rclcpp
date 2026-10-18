@@ -259,6 +259,7 @@ protected:
    * Te be called in termination case. E.g. destructor of shutdown callback.
    * Stops the scheduler and cleans up the internal data structures.
    */
+  RCLCPP_PUBLIC
   void shutdown();
 
   std::unique_ptr<cbg_executor::CBGScheduler> scheduler;
