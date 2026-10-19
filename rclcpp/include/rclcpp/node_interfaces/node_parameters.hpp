@@ -257,7 +257,6 @@ private:
 
   std::string combined_name_;
 
-  node_interfaces::NodeLoggingInterface::SharedPtr node_logging_;
   node_interfaces::NodeClockInterface::SharedPtr node_clock_;
 };
 

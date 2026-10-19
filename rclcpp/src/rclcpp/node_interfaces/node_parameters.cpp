@@ -79,9 +79,10 @@ NodeParameters::NodeParameters(
   bool automatically_declare_parameters_from_overrides)
 : allow_undeclared_(allow_undeclared_parameters),
   events_publisher_(nullptr),
-  node_logging_(node_logging),
   node_clock_(node_clock)
 {
+  // node_logging is unused; the parameter is kept for API compatibility.
+  (void)node_logging;
   using MessageT = rcl_interfaces::msg::ParameterEvent;
   using PublisherT = rclcpp::Publisher<MessageT>;
   using AllocatorT = std::allocator<void>;
