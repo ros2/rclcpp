@@ -27,6 +27,7 @@
 #include "rclcpp/node.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include "rcpputils/scope_exit.hpp"
+#include "rcpputils/shared_library.hpp"
 #include "test_msgs/action/fibonacci.hpp"
 
 #include "rcl_action/action_server.h"
@@ -177,6 +178,14 @@ TEST_F(TestServer, construction_and_destruction_after_node)
 
 TEST_F(TestServer, construction_and_last_release_lock_clock)
 {
+  // A function address can refer to the executable's PLT entry in a non-PIE build.
+  // Mimick also patches that entry, so resolve the real functions from the library.
+  rcpputils::SharedLibrary rcl_action_library(
+    rcpputils::get_platform_library_name("rcl_action"));
+  const auto original_init = reinterpret_cast<decltype(& rcl_action_server_init)>(
+    rcl_action_library.get_symbol("rcl_action_server_init"));
+  const auto original_fini = reinterpret_cast<decltype(& rcl_action_server_fini)>(
+    rcl_action_library.get_symbol("rcl_action_server_fini"));
   auto node = std::make_shared<rclcpp::Node>("clock_lock_node");
   std::weak_ptr<rclcpp::Clock> weak_clock = node->get_clock();
   size_t init_calls = 0;
@@ -190,14 +199,14 @@ TEST_F(TestServer, construction_and_last_release_lock_clock)
     };
   auto mock_init = mocking_utils::patch(
     "lib:rclcpp_action", rcl_action_server_init,
-    ([&, base = rcl_action_server_init](auto && ... args) {
+    ([&, base = original_init](auto && ... args) {
       ++init_calls;
       check_clock_locked();
       return base(std::forward<decltype(args)>(args)...);
     }));
   auto mock_fini = mocking_utils::patch(
     "lib:rclcpp_action", rcl_action_server_fini,
-    ([&, base = rcl_action_server_fini](auto && ... args) {
+    ([&, base = original_fini](auto && ... args) {
       ++fini_calls;
       check_clock_locked();
       return base(std::forward<decltype(args)>(args)...);
@@ -228,20 +237,26 @@ TEST_F(TestServer, construction_and_last_release_lock_clock)
 
 TEST_F(TestServer, construction_failure_locks_clock_during_cleanup)
 {
+  rcpputils::SharedLibrary rcl_action_library(
+    rcpputils::get_platform_library_name("rcl_action"));
+  const auto original_init = reinterpret_cast<decltype(& rcl_action_server_init)>(
+    rcl_action_library.get_symbol("rcl_action_server_init"));
+  const auto original_fini = reinterpret_cast<decltype(& rcl_action_server_fini)>(
+    rcl_action_library.get_symbol("rcl_action_server_fini"));
   auto node = std::make_shared<rclcpp::Node>("clock_cleanup_node");
   auto clock = node->get_clock();
   size_t init_calls = 0;
   size_t fini_calls = 0;
   auto mock_init = mocking_utils::patch(
     "lib:rclcpp_action", rcl_action_server_init,
-    ([&, base = rcl_action_server_init](auto && ... args) {
+    ([&, base = original_init](auto && ... args) {
       ++init_calls;
       EXPECT_FALSE(clock_mutex_is_available(clock));
       return base(std::forward<decltype(args)>(args)...);
     }));
   auto mock_fini = mocking_utils::patch(
     "lib:rclcpp_action", rcl_action_server_fini,
-    ([&, base = rcl_action_server_fini](auto && ... args) {
+    ([&, base = original_fini](auto && ... args) {
       ++fini_calls;
       EXPECT_FALSE(clock_mutex_is_available(clock));
       return base(std::forward<decltype(args)>(args)...);
