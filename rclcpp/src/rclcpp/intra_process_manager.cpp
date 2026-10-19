@@ -236,9 +236,9 @@ IntraProcessManager::can_communicate(
 size_t
 IntraProcessManager::lowest_available_capacity(const uint64_t intra_process_publisher_id) const
 {
-  std::shared_lock<std::shared_timed_mutex> lock(mutex_);
-
   size_t capacity = std::numeric_limits<size_t>::max();
+
+  std::shared_lock<std::shared_timed_mutex> lock(mutex_);
 
   auto publisher_it = pub_to_subs_.find(intra_process_publisher_id);
   if (publisher_it == pub_to_subs_.end()) {
