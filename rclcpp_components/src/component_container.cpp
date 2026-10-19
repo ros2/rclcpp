@@ -22,8 +22,12 @@ int main(int argc, char * argv[])
 {
   /// Component container with a single-threaded executor.
   rclcpp::init(argc, argv);
+  std::shared_ptr<rclcpp_components::ComponentManager> node;
+  // Declare the executor after the manager, so on destruction the executor is
+  // destroyed first. Otherwise, the executor could release component entities
+  // after the manager has unloaded their libraries.
   auto exec = std::make_shared<rclcpp::executors::SingleThreadedExecutor>();
-  auto node = std::make_shared<rclcpp_components::ComponentManager>(exec);
+  node = std::make_shared<rclcpp_components::ComponentManager>(exec);
   exec->add_node(node);
   exec->spin();
 }
