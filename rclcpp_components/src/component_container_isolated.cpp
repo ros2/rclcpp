@@ -33,8 +33,11 @@ int main(int argc, char * argv[])
     }
   }
   // create executor and component manager
-  auto exec = std::make_shared<rclcpp::executors::SingleThreadedExecutor>();
   rclcpp::Node::SharedPtr node;
+  // Declare the executor after the manager, so on destruction the executor is
+  // destroyed first. Otherwise, the executor could release component entities
+  // after the manager has unloaded their libraries.
+  auto exec = std::make_shared<rclcpp::executors::SingleThreadedExecutor>();
   if (use_multi_threaded_executor) {
     using ComponentManagerIsolated =
       rclcpp_components::ComponentManagerIsolated<rclcpp::executors::MultiThreadedExecutor>;
