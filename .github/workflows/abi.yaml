@@ -53,7 +53,7 @@ jobs:
     # workflow holds the write permissions.
     permissions:
       contents: read
-    uses: fujitatomoya/ros2-abi-action/.github/workflows/check.yml@main
+    uses: fujitatomoya/ros2-abi-action/.github/workflows/check.yml@v1
     with:
       # Colcon package names to build (whitespace-separated); no single package
       # depends on all the others, so list every package in this repository.
