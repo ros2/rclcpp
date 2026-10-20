@@ -24,12 +24,13 @@
 #   6. surfaces the verdict as a pass/fail check and uploads one report bundle
 #      (abidiff report + verdict.json) per library.
 #
-# The sticky PR comment and the "ABI compatible" / "ABI break" labels are NOT
-# posted from here (publish: workflow-run). Most rclcpp pull requests come from
-# forks, and on pull_request events from a fork GitHub gives this workflow a
-# read-only token regardless of the permissions requested below, so any write
-# to the PR would fail. abi-report.yaml runs on workflow_run once this workflow
-# completes and publishes the comment and labels with a token that may write.
+# The sticky PR comment, the "ABI compatible" / "ABI break" labels and the
+# "backport-<distro>" candidate labels are NOT posted from here
+# (publish: workflow-run). Most rclcpp pull requests come from forks, and on
+# pull_request events from a fork GitHub gives this workflow a read-only token
+# regardless of the permissions requested below, so any write to the PR would
+# fail. abi-report.yaml runs on workflow_run once this workflow completes and
+# publishes the comment and labels with a token that may write.
 #
 # Paired changes in other repositories (e.g. an rcl PR this PR depends on) are
 # declared by the PR author in the PR description and applied to the PR side
