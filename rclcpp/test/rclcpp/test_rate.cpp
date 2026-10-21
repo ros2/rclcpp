@@ -16,6 +16,7 @@
 
 #include <atomic>
 #include <memory>
+#include <mutex>
 #include <stdexcept>
 #include <string>
 #include <thread>
@@ -142,6 +143,9 @@ TEST_F(TestRate, resync_after_backward_time_jump) {
       while (!done) {
         std::this_thread::sleep_for(1ms);
         ros_time += RCL_MS_TO_NS(10);
+        // Like TimeSource, hold the clock mutex: setting the time runs the jump
+        // callbacks, which Rate::sleep() adds and removes concurrently.
+        std::lock_guard<std::mutex> clock_guard(clock->get_clock_mutex());
         EXPECT_EQ(RCL_RET_OK, rcl_set_ros_time_override(clock_handle, ros_time));
       }
     });
