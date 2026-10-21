@@ -414,3 +414,26 @@ TEST_F(TestService, server_qos_depth) {
 
   EXPECT_EQ(server_cb_count_, server_qos_profile.depth());
 }
+
+TEST_F(TestService, const_ref_callback) {
+  uint64_t server_cb_count = 0;
+  auto server_callback = [&server_cb_count](
+    const test_msgs::srv::Empty::Request &,
+    test_msgs::srv::Empty::Response &) {server_cb_count++;};
+
+  auto server = node->create_service<test_msgs::srv::Empty>(
+    "test_const_ref_callback", std::move(server_callback));
+  auto client = node->create_client<test_msgs::srv::Empty>("test_const_ref_callback");
+
+  auto request = std::make_shared<test_msgs::srv::Empty::Request>();
+  auto future = client->async_send_request(request);
+
+  rclcpp::executors::SingleThreadedExecutor executor;
+  executor.add_node(node);
+  EXPECT_EQ(
+    executor.spin_until_future_complete(future, 10s),
+    rclcpp::FutureReturnCode::SUCCESS);
+
+  EXPECT_EQ(server_cb_count, 1u);
+  EXPECT_NE(nullptr, future.get());
+}

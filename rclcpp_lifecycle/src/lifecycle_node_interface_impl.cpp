@@ -245,7 +245,7 @@ LifecycleNode::LifecycleNodeInterfaceImpl::on_change_state(
     }
   }
 
-  node_interfaces::LifecycleNodeInterface::CallbackReturn cb_return_code;
+  auto cb_return_code = node_interfaces::LifecycleNodeInterface::CallbackReturn::FAILURE;
   auto ret = change_state(transition_id, cb_return_code);
   (void) ret;
   // TODO(karsten1987): Lifecycle msgs have to be extended to keep both returns

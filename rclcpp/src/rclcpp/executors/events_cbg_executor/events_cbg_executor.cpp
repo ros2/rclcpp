@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #include <chrono>
+#include <exception>
 #include <functional>
 #include <memory>
 #include <set>
@@ -20,6 +21,7 @@
 
 #include "rcpputils/scope_exit.hpp"
 #include "rclcpp/exceptions/exceptions.hpp"
+#include "rclcpp/logging.hpp"
 #include "rclcpp/node.hpp"
 
 #include "first_in_first_out_scheduler.hpp"
@@ -117,11 +119,15 @@ EventsCBGExecutor::EventsCBGExecutor(
 EventsCBGExecutor::~EventsCBGExecutor()
 {
   shutdown();
+
+  // released only here, as callbacks still executing during shutdown()
+  // re-arm their timers through the timer_manager after they return
+  timer_manager.reset();
 }
 
 void EventsCBGExecutor::shutdown()
 {
-  if(!timer_manager) {
+  if(in_shutdown) {
     // already shut down
     return;
   }
@@ -139,6 +145,9 @@ void EventsCBGExecutor::shutdown()
     scheduler->release_all_worker_threads();
   }
 
+  // remove_all_nodes_and_callback_groups() does not throw, so the teardown below always runs.
+  // The member destructors depend on that: each callback_groups entry references
+  // *timer_manager, so the entries must be cleared before timer_manager is reset.
   remove_all_nodes_and_callback_groups();
 
   {
@@ -153,14 +162,25 @@ void EventsCBGExecutor::shutdown()
       "failed to remove registered on_shutdown callback");
     rcl_reset_error();
   }
-
-  // now we may release the memory of the timer_manager,
-  // as we know no thread is working on it any more
-  timer_manager.reset();
 }
 
 void EventsCBGExecutor::remove_all_nodes_and_callback_groups()
 {
+  // Removing an entity throws when it is no longer associated with this executor, which
+  // happens when it was removed through another executor. This runs on shutdown, where the
+  // error can only be reported, and one stale entity must not keep the others associated with
+  // an executor that is going away.
+  const auto attempt = [](auto && remove) {
+      try {
+        remove();
+      } catch (const std::exception & exc) {
+        RCLCPP_ERROR(
+          rclcpp::get_logger("rclcpp"), "failed to remove entity on shutdown: %s", exc.what());
+      } catch (...) {
+        RCLCPP_ERROR(rclcpp::get_logger("rclcpp"), "failed to remove entity on shutdown");
+      }
+    };
+
   std::vector<node_interfaces::NodeBaseInterface::WeakPtr> added_nodes_cpy;
   {
     std::lock_guard lock{added_nodes_mutex_};
@@ -170,7 +190,7 @@ void EventsCBGExecutor::remove_all_nodes_and_callback_groups()
   for (const node_interfaces::NodeBaseInterface::WeakPtr & node_weak_ptr : added_nodes_cpy) {
     const node_interfaces::NodeBaseInterface::SharedPtr & node_ptr = node_weak_ptr.lock();
     if (node_ptr) {
-      remove_node(node_ptr, false);
+      attempt([this, &node_ptr]() {remove_node(node_ptr, false);});
     }
   }
 
@@ -183,7 +203,7 @@ void EventsCBGExecutor::remove_all_nodes_and_callback_groups()
   for (const auto & weak_ptr : added_cbgs_cpy) {
     auto shr_ptr = weak_ptr.lock();
     if (shr_ptr) {
-      remove_callback_group(shr_ptr, false);
+      attempt([this, &shr_ptr]() {remove_callback_group(shr_ptr, false);});
     }
   }
 }
@@ -239,6 +259,10 @@ void EventsCBGExecutor::trigger_callback_group_sync()
 
 void EventsCBGExecutor::sync_callback_groups()
 {
+  if (!needs_callback_group_resync.load(std::memory_order_acquire)) {
+    return;
+  }
+
   if (!needs_callback_group_resync.exchange(false) ) {
     return;
   }
@@ -342,17 +366,19 @@ EventsCBGExecutor::run(size_t this_thread_number, bool block_initially)
 {
   (void) this_thread_number;
 
+  cbg_executor::Worker worker;
+
   while (rclcpp::ok(this->context_) && !cancel_requested_.load() ) {
     if(block_initially) {
       block_initially = false;
-      scheduler->block_worker_thread();
+      scheduler->block_worker_thread(&worker);
     }
 
     sync_callback_groups();
 
     auto ready_entity = scheduler->get_next_ready_entity();
     if(!ready_entity.entity) {
-      scheduler->block_worker_thread();
+      scheduler->block_worker_thread(&worker);
       continue;
     }
 
@@ -362,6 +388,7 @@ EventsCBGExecutor::run(size_t this_thread_number, bool block_initially)
 
     ready_entity.entity->execute_function();
 
+    scheduler->suppress_thread_wakeup();
     scheduler->mark_entity_as_executed(*ready_entity.entity);
   }
 }
@@ -372,13 +399,14 @@ EventsCBGExecutor::run(
   const std::function<void(const std::exception & e)> & exception_handler)
 {
   (void) this_thread_number;
+  cbg_executor::Worker worker;
 
   while (rclcpp::ok(this->context_) && !cancel_requested_.load() ) {
     sync_callback_groups();
 
     auto ready_entity = scheduler->get_next_ready_entity();
     if(!ready_entity.entity) {
-      scheduler->block_worker_thread();
+      scheduler->block_worker_thread(&worker);
       continue;
     }
 
@@ -392,6 +420,7 @@ EventsCBGExecutor::run(
       exception_handler(e);
     }
 
+    scheduler->suppress_thread_wakeup();
     scheduler->mark_entity_as_executed(*ready_entity.entity);
   }
 }
@@ -414,7 +443,11 @@ void EventsCBGExecutor::spin_once_internal(std::chrono::nanoseconds timeout)
       timeout = std::chrono::hours(10000);
     }
 
-    scheduler->block_worker_thread_for(timeout);
+    cbg_executor::Worker worker;
+
+    // block_worker_thread_for removes the worker from the queue again
+    // before returning, so the stack allocated worker is safe to use here
+    scheduler->block_worker_thread_for(&worker, timeout);
 
     ready_entity = scheduler->get_next_ready_entity();
 

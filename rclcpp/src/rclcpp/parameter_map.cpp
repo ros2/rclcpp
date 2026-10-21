@@ -176,7 +176,6 @@ std::vector<rclcpp::Parameter>
 rclcpp::parameters_from_map(const ParameterMap & parameter_map, const char * node_fqn)
 {
   std::vector<rclcpp::Parameter> parameters;
-  std::string node_name_old;
   for (auto & [node_name, node_parameters] : parameter_map) {
     if (node_fqn && !is_node_name_matched(node_name, node_fqn)) {
       // No need to parse the items because the user just care about node_fqn
