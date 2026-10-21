@@ -316,6 +316,39 @@ TEST_F(TestSubscription, rcl_subscription_fini_error) {
     node_->create_subscription<test_msgs::msg::Empty>("topic", 10, callback).reset());
 }
 
+TEST_F(TestSubscription, on_new_message_callback_cleared_before_fini) {
+  initialize(rclcpp::NodeOptions().use_intra_process_comms(false));
+  using test_msgs::msg::Empty;
+
+  bool callback_registered = false;
+  auto mock = mocking_utils::patch(
+    "lib:rclcpp", rcl_subscription_set_on_new_message_callback,
+    [&callback_registered](
+      const rcl_subscription_t *, rcl_event_callback_t callback, const void * user_data)
+    {
+      (void)user_data;
+      callback_registered = callback != nullptr;
+      return RCL_RET_OK;
+    });
+
+  auto sub = node_->create_subscription<Empty>(
+    "topic", 10, [](Empty::ConstSharedPtr) {});
+  sub->set_on_new_message_callback([](size_t) {});
+  ASSERT_TRUE(callback_registered);
+
+  auto fini_mock = mocking_utils::patch(
+    "lib:rclcpp", rcl_subscription_fini,
+    [&callback_registered](rcl_subscription_t *, rcl_node_t *)
+    {
+      EXPECT_FALSE(callback_registered);
+      return RCL_RET_OK;
+    });
+
+  sub.reset();
+
+  EXPECT_FALSE(callback_registered);
+}
+
 TEST_F(TestSubscription, rcl_subscription_get_actual_qos_error) {
   initialize();
   auto callback = [](std::shared_ptr<const test_msgs::msg::Empty>) {};

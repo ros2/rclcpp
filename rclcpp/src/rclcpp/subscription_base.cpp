@@ -99,6 +99,23 @@ SubscriptionBase::SubscriptionBase(
 
 SubscriptionBase::~SubscriptionBase()
 {
+  // The middleware may be invoking this callback from one of its own threads.
+  // Unregister it before rcl_subscription_fini tears down the RMW subscription.
+  try {
+    clear_on_new_message_callback();
+  } catch (const std::exception & exception) {
+    RCLCPP_ERROR_STREAM(
+      node_logger_,
+      "rclcpp::SubscriptionBase@" << this <<
+        " failed to clear the on new message callback during destruction: " <<
+        exception.what());
+  } catch (...) {
+    RCLCPP_ERROR_STREAM(
+      node_logger_,
+      "rclcpp::SubscriptionBase@" << this <<
+        " failed to clear the on new message callback during destruction");
+  }
+
   if (!use_intra_process_) {
     return;
   }
