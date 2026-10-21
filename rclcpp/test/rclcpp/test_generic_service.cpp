@@ -26,6 +26,7 @@
 #include <utility>
 
 #include "rclcpp/client.hpp"
+#include "rclcpp/create_generic_service.hpp"
 #include "rclcpp/duration.hpp"
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp/executors.hpp"
@@ -129,6 +130,18 @@ TEST_F(TestGenericService, construction_and_destruction) {
         "test_generic_service", "test_msgs/srv/NotExist", callback);
     }, rclcpp::exceptions::InvalidServiceTypeError);
   }
+}
+
+TEST_F(TestGenericService, create_generic_service_with_node) {
+  auto callback = [](
+    rclcpp::GenericService::SharedRequest,
+    rclcpp::GenericService::SharedResponse) {};
+  auto generic_service = rclcpp::create_generic_service(
+    node, "test_generic_service", "test_msgs/srv/Empty", callback,
+    rclcpp::ServicesQoS(), nullptr);
+  ASSERT_NE(nullptr, generic_service);
+  EXPECT_NE(nullptr, generic_service->get_service_handle());
+  EXPECT_STREQ("/ns/test_generic_service", generic_service->get_service_name());
 }
 
 /*

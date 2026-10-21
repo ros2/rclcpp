@@ -95,7 +95,7 @@ create_generic_service(
     rclcpp::node_interfaces::get_node_services_interface(node),
     service_name,
     service_type,
-    std::forward<CallbackT>(callback), qos.get_rmw_qos_profile(), group);
+    std::forward<CallbackT>(callback), qos, group);
 }
 }  // namespace rclcpp
 
