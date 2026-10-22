@@ -116,6 +116,7 @@ if(BUILD_TESTING)
       mimick
       rcl_action::rcl_action
       rclcpp::rclcpp
+      rcpputils::rcpputils
       ${test_msgs_TARGETS}
     )
   endif()
