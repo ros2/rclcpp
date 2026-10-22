@@ -516,15 +516,9 @@ Executor::execute_any_executable(AnyExecutable & any_exec)
     any_exec.callback_group));
 
   if (any_exec.timer) {
-    TRACETOOLS_TRACEPOINT(
-      rclcpp_executor_execute,
-      static_cast<const void *>(any_exec.timer->get_timer_handle().get()));
     execute_timer(any_exec.timer, any_exec.data);
   }
   if (any_exec.subscription) {
-    TRACETOOLS_TRACEPOINT(
-      rclcpp_executor_execute,
-      static_cast<const void *>(any_exec.subscription->get_subscription_handle().get()));
     execute_subscription(any_exec.subscription);
   }
   if (any_exec.service) {
@@ -582,6 +576,10 @@ take_and_do_error_handling(
 void
 Executor::execute_subscription(const rclcpp::SubscriptionBase::SharedPtr & subscription)
 {
+  TRACETOOLS_TRACEPOINT(
+    rclcpp_executor_execute,
+    static_cast<const void *>(subscription->get_subscription_handle().get()));
+
   using rclcpp::dynamic_typesupport::DynamicMessage;
 
   rclcpp::MessageInfo message_info;
@@ -674,6 +672,9 @@ Executor::execute_timer(
   const rclcpp::TimerBase::SharedPtr & timer,
   const std::shared_ptr<void> & data_ptr)
 {
+  TRACETOOLS_TRACEPOINT(
+    rclcpp_executor_execute,
+    static_cast<const void *>(timer->get_timer_handle().get()));
   timer->execute_callback(data_ptr);
 }
 
