@@ -115,9 +115,11 @@ GenericService::create_request()
   request_members_->init_function(request, rosidl_runtime_cpp::MessageInitialization::ZERO);
   return std::shared_ptr<void>(
     request,
-    [this](void * p)
+    // Don't capture this: the object can outlive the service. ts_lib keeps the
+    // type support library loaded until fini_function runs.
+    [members = request_members_, ts_lib = ts_lib_](void * p)
     {
-      request_members_->fini_function(p);
+      members->fini_function(p);
       delete[] reinterpret_cast<uint8_t *>(p);
     });
 }
@@ -129,9 +131,11 @@ GenericService::create_response()
   response_members_->init_function(response, rosidl_runtime_cpp::MessageInitialization::ZERO);
   return std::shared_ptr<void>(
     response,
-    [this](void * p)
+    // Don't capture this: the object can outlive the service. ts_lib keeps the
+    // type support library loaded until fini_function runs.
+    [members = response_members_, ts_lib = ts_lib_](void * p)
     {
-      response_members_->fini_function(p);
+      members->fini_function(p);
       delete[] reinterpret_cast<uint8_t *>(p);
     });
 }

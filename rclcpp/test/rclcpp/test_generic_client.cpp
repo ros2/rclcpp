@@ -117,6 +117,17 @@ TEST_F(TestGenericClient, construction_and_destruction) {
   }
 }
 
+TEST_F(TestGenericClient, response_outlives_client) {
+  std::shared_ptr<void> response;
+  {
+    auto client = node->create_generic_client("test_service", "test_msgs/srv/BasicTypes");
+    response = client->create_response();
+    ASSERT_NE(nullptr, response);
+  }
+  // The deleter must not use the destroyed client.
+  EXPECT_NO_THROW(response.reset());
+}
+
 TEST_F(TestGenericClient, construction_with_free_function) {
   {
     auto client = rclcpp::create_generic_client(
