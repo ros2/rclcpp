@@ -17,6 +17,7 @@
 
 #include <cstring>
 #include <memory>
+#include <utility>
 
 #include "rcl/allocator.h"
 
@@ -56,6 +57,20 @@ inline constexpr bool has_get_rcl_allocator_v =
 
 template<typename T, typename Alloc>
 using AllocRebind = typename std::allocator_traits<Alloc>::template rebind_traits<T>;
+
+template<typename Traits, typename ... Args>
+typename Traits::pointer
+allocate_and_construct(typename Traits::allocator_type & allocator, Args &&... args)
+{
+  auto ptr = Traits::allocate(allocator, 1);
+  try {
+    Traits::construct(allocator, ptr, std::forward<Args>(args)...);
+  } catch (...) {
+    Traits::deallocate(allocator, ptr, 1);
+    throw;
+  }
+  return ptr;
+}
 
 template<typename Alloc>
 [[deprecated("Conversion of C++ allocators to C style is not valid, as the size on deallocate"
