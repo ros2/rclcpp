@@ -70,8 +70,7 @@ GenericSubscription::handle_message(
           "handle_message is not implemented for GenericSubscription");
 }
 
-void
-GenericSubscription::handle_serialized_message(
+void GenericSubscription::handle_serialized_message(
   const std::shared_ptr<rclcpp::SerializedMessage> & message,
   const rclcpp::MessageInfo & message_info)
 {
