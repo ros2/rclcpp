@@ -414,6 +414,7 @@ protected:
   * that explicitly does not want to use the default implementation provided
   * by this class.
   */
+  RCLCPP_PUBLIC
   explicit Executor(const std::shared_ptr<rclcpp::Context> & context);
 
   /// Add a node to executor, execute the next available unit of work, and remove the node.

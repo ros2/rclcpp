@@ -60,6 +60,7 @@ bool wait_for_message(
         strong_gc->trigger();
       }
     });
+  RCPPUTILS_SCOPE_EXIT(context->remove_on_shutdown_callback(shutdown_callback_handle); );
 
   rclcpp::WaitSet wait_set({}, {}, {}, {}, {}, {}, context);
   wait_set.add_subscription(subscription);

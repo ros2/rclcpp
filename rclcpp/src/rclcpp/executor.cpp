@@ -97,8 +97,12 @@ Executor::~Executor()
 {
   std::lock_guard<std::mutex> guard(mutex_);
 
-  notify_waitable_->remove_guard_condition(interrupt_guard_condition_);
-  notify_waitable_->remove_guard_condition(shutdown_guard_condition_);
+  // notify_waitable_ is null when a derived executor used the constructor that
+  // does not initialize the base functionality.
+  if (notify_waitable_) {
+    notify_waitable_->remove_guard_condition(interrupt_guard_condition_);
+    notify_waitable_->remove_guard_condition(shutdown_guard_condition_);
+  }
   current_collection_.timers.update(
     {}, {},
     [this](auto timer) {wait_set_.remove_timer(std::move(timer));});
@@ -125,8 +129,8 @@ Executor::~Executor()
     {}, {},
     [this](auto waitable) {wait_set_.remove_waitable(std::move(waitable));});
 
-  // Remove shutdown callback handle registered to Context
-  if (!context_->remove_on_shutdown_callback(shutdown_callback_handle_)) {
+  // Remove shutdown callback handle registered to Context, if one was registered
+  if (notify_waitable_ && !context_->remove_on_shutdown_callback(shutdown_callback_handle_)) {
     RCUTILS_LOG_ERROR_NAMED(
       "rclcpp",
       "failed to remove registered on_shutdown callback");
@@ -512,15 +516,9 @@ Executor::execute_any_executable(AnyExecutable & any_exec)
     any_exec.callback_group));
 
   if (any_exec.timer) {
-    TRACETOOLS_TRACEPOINT(
-      rclcpp_executor_execute,
-      static_cast<const void *>(any_exec.timer->get_timer_handle().get()));
     execute_timer(any_exec.timer, any_exec.data);
   }
   if (any_exec.subscription) {
-    TRACETOOLS_TRACEPOINT(
-      rclcpp_executor_execute,
-      static_cast<const void *>(any_exec.subscription->get_subscription_handle().get()));
     execute_subscription(any_exec.subscription);
   }
   if (any_exec.service) {
@@ -578,6 +576,10 @@ take_and_do_error_handling(
 void
 Executor::execute_subscription(const rclcpp::SubscriptionBase::SharedPtr & subscription)
 {
+  TRACETOOLS_TRACEPOINT(
+    rclcpp_executor_execute,
+    static_cast<const void *>(subscription->get_subscription_handle().get()));
+
   using rclcpp::dynamic_typesupport::DynamicMessage;
 
   rclcpp::MessageInfo message_info;
@@ -613,19 +615,6 @@ Executor::execute_subscription(const rclcpp::SubscriptionBase::SharedPtr & subsc
               return true;
             },
             [&]() {subscription->handle_loaned_message(loaned_msg, message_info);});
-          if (nullptr != loaned_msg) {
-            rcl_ret_t ret = rcl_return_loaned_message_from_subscription(
-              subscription->get_subscription_handle().get(), loaned_msg);
-            if (RCL_RET_OK != ret) {
-              RCLCPP_ERROR(
-                rclcpp::get_logger("rclcpp"),
-                "rcl_return_loaned_message_from_subscription() failed for subscription on topic "
-                "'%s': %s",
-                subscription->get_topic_name(), rcl_get_error_string().str);
-              rcl_reset_error();
-            }
-            loaned_msg = nullptr;
-          }
         } else {
           // This case is taking a copy of the message data from the middleware via
           // inter-process communication.
@@ -635,11 +624,6 @@ Executor::execute_subscription(const rclcpp::SubscriptionBase::SharedPtr & subsc
             subscription->get_topic_name(),
             [&]() {return subscription->take_type_erased(message.get(), message_info);},
             [&]() {subscription->handle_message(message, message_info);});
-          // TODO(clalancette): In the case that the user is using the MessageMemoryPool,
-          // and they take a shared_ptr reference to the message in the callback, this can
-          // inadvertently return the message to the pool when the user is still using it.
-          // This is a bug that needs to be fixed in the pool, and we should probably have
-          // a custom deleter for the message that actually does the return_message().
           subscription->return_message(message);
         }
         break;
@@ -683,6 +667,9 @@ Executor::execute_timer(
   const rclcpp::TimerBase::SharedPtr & timer,
   const std::shared_ptr<void> & data_ptr)
 {
+  TRACETOOLS_TRACEPOINT(
+    rclcpp_executor_execute,
+    static_cast<const void *>(timer->get_timer_handle().get()));
   timer->execute_callback(data_ptr);
 }
 

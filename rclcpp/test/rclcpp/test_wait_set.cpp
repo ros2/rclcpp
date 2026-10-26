@@ -27,9 +27,11 @@
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp/guard_condition.hpp"
 #include "rclcpp/node.hpp"
+#include "rclcpp/node_options.hpp"
 #include "rclcpp/publisher_options.hpp"
 #include "rclcpp/service.hpp"
 #include "rclcpp/subscription_options.hpp"
+#include "rclcpp/subscription_wait_set_mask.hpp"
 #include "rclcpp/timer.hpp"
 #include "rclcpp/utilities.hpp"
 #include "rclcpp/wait_result.hpp"
@@ -286,6 +288,112 @@ TEST_F(TestWaitSet, add_guard_condition_to_two_different_wait_set) {
   }
 }
 
+
+TEST_F(TestWaitSet, failed_removal_preserves_entity_ownership) {
+  rclcpp::WaitSet owner;
+  rclcpp::WaitSet other;
+  auto node = std::make_shared<rclcpp::Node>("failed_removal_preserves_entity_ownership");
+
+  auto guard_condition = std::make_shared<rclcpp::GuardCondition>();
+  owner.add_guard_condition(guard_condition);
+  EXPECT_THROW(other.remove_guard_condition(guard_condition), std::runtime_error);
+  EXPECT_THROW(other.add_guard_condition(guard_condition), std::runtime_error);
+  guard_condition->trigger();
+  EXPECT_EQ(rclcpp::WaitResultKind::Ready, owner.wait(std::chrono::seconds(0)).kind());
+  EXPECT_NO_THROW(owner.remove_guard_condition(guard_condition));
+  EXPECT_THROW(owner.remove_guard_condition(guard_condition), std::runtime_error);
+  EXPECT_NO_THROW(other.add_guard_condition(guard_condition));
+  EXPECT_NO_THROW(other.remove_guard_condition(guard_condition));
+  EXPECT_THROW(other.remove_guard_condition(nullptr), std::invalid_argument);
+
+  auto do_nothing = [](std::shared_ptr<const test_msgs::msg::BasicTypes>) {};
+  auto sub = node->create_subscription<test_msgs::msg::BasicTypes>("~/test", 1, do_nothing);
+  owner.add_subscription(sub, {true, false, false});
+  EXPECT_THROW(other.remove_subscription(sub, {true, false, false}), std::runtime_error);
+  EXPECT_THROW(other.add_subscription(sub, {true, false, false}), std::runtime_error);
+  EXPECT_NO_THROW(owner.remove_subscription(sub, {true, false, false}));
+  EXPECT_THROW(owner.remove_subscription(sub, {true, false, false}), std::runtime_error);
+  EXPECT_NO_THROW(other.add_subscription(sub, {true, false, false}));
+  EXPECT_NO_THROW(other.remove_subscription(sub, {true, false, false}));
+  EXPECT_THROW(other.remove_subscription(nullptr, {true, false, false}), std::invalid_argument);
+
+  auto timer = node->create_wall_timer(std::chrono::seconds(1), []() {});
+  owner.add_timer(timer);
+  EXPECT_THROW(other.remove_timer(timer), std::runtime_error);
+  EXPECT_THROW(other.add_timer(timer), std::runtime_error);
+  EXPECT_NO_THROW(owner.remove_timer(timer));
+  EXPECT_THROW(owner.remove_timer(timer), std::runtime_error);
+  EXPECT_NO_THROW(other.add_timer(timer));
+  EXPECT_NO_THROW(other.remove_timer(timer));
+  EXPECT_THROW(other.remove_timer(nullptr), std::invalid_argument);
+
+  auto client = node->create_client<rcl_interfaces::srv::ListParameters>("~/test");
+  owner.add_client(client);
+  EXPECT_THROW(other.remove_client(client), std::runtime_error);
+  EXPECT_THROW(other.add_client(client), std::runtime_error);
+  EXPECT_NO_THROW(owner.remove_client(client));
+  EXPECT_THROW(owner.remove_client(client), std::runtime_error);
+  EXPECT_NO_THROW(other.add_client(client));
+  EXPECT_NO_THROW(other.remove_client(client));
+  EXPECT_THROW(other.remove_client(nullptr), std::invalid_argument);
+
+  auto srv_do_nothing = [](
+    const std::shared_ptr<rcl_interfaces::srv::ListParameters::Request>,
+    std::shared_ptr<rcl_interfaces::srv::ListParameters::Response>) {};
+  auto service =
+    node->create_service<rcl_interfaces::srv::ListParameters>("~/test", srv_do_nothing);
+  owner.add_service(service);
+  EXPECT_THROW(other.remove_service(service), std::runtime_error);
+  EXPECT_THROW(other.add_service(service), std::runtime_error);
+  EXPECT_NO_THROW(owner.remove_service(service));
+  EXPECT_THROW(owner.remove_service(service), std::runtime_error);
+  EXPECT_NO_THROW(other.add_service(service));
+  EXPECT_NO_THROW(other.remove_service(service));
+  EXPECT_THROW(other.remove_service(nullptr), std::invalid_argument);
+
+  rclcpp::PublisherOptions publisher_options;
+  publisher_options.event_callbacks.deadline_callback = [](rclcpp::QOSDeadlineOfferedInfo &) {};
+  auto pub = node->create_publisher<test_msgs::msg::BasicTypes>("~/test", 1, publisher_options);
+  auto qos_event = pub->get_event_handlers().begin()->second;
+  owner.add_waitable(qos_event, pub);
+  EXPECT_THROW(other.remove_waitable(qos_event), std::runtime_error);
+  EXPECT_THROW(other.add_waitable(qos_event, pub), std::runtime_error);
+  EXPECT_NO_THROW(owner.remove_waitable(qos_event));
+  EXPECT_THROW(owner.remove_waitable(qos_event), std::runtime_error);
+  EXPECT_NO_THROW(other.add_waitable(qos_event, pub));
+  EXPECT_NO_THROW(other.remove_waitable(qos_event));
+  EXPECT_THROW(other.remove_waitable(nullptr), std::invalid_argument);
+}
+
+TEST_F(TestWaitSet, failed_removal_preserves_subscription_waitable_ownership) {
+  auto node = std::make_shared<rclcpp::Node>(
+    "failed_removal_preserves_subscription_waitable_ownership",
+    rclcpp::NodeOptions().use_intra_process_comms(true));
+  rclcpp::SubscriptionOptions options;
+  options.use_default_callbacks = false;
+  options.event_callbacks.deadline_callback = [](auto) {};
+  auto do_nothing = [](std::shared_ptr<const test_msgs::msg::BasicTypes>) {};
+  auto sub =
+    node->create_subscription<test_msgs::msg::BasicTypes>("~/test", 1, do_nothing, options);
+  ASSERT_EQ(1u, sub->get_event_handlers().size());
+  ASSERT_NE(nullptr, sub->get_intra_process_waitable());
+
+  for (const auto & mask : {
+    rclcpp::SubscriptionWaitSetMask{false, true, false},
+    rclcpp::SubscriptionWaitSetMask{false, false, true}})
+  {
+    SCOPED_TRACE(mask.include_events ? "events" : "intra-process waitable");
+    rclcpp::WaitSet owner;
+    rclcpp::WaitSet other;
+    owner.add_subscription(sub, mask);
+    EXPECT_THROW(other.remove_subscription(sub, mask), std::runtime_error);
+    EXPECT_THROW(other.add_subscription(sub, mask), std::runtime_error);
+    EXPECT_NO_THROW(owner.remove_subscription(sub, mask));
+    EXPECT_THROW(owner.remove_subscription(sub, mask), std::runtime_error);
+    EXPECT_NO_THROW(other.add_subscription(sub, mask));
+    EXPECT_NO_THROW(other.remove_subscription(sub, mask));
+  }
+}
 
 /*
  * Testing adding each entity and waiting, and removing each entity and waiting

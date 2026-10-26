@@ -1,15 +1,13 @@
 find_package(ament_cmake_gtest REQUIRED)
 
 find_package(rmw_implementation_cmake REQUIRED)
+find_package(std_msgs REQUIRED)
 
 add_definitions(-DTEST_RESOURCES_DIRECTORY="${TEST_RESOURCES_DIRECTORY}")
 
 rosidl_generate_interfaces(${PROJECT_NAME}_test_msgs
-  ../msg/Header.msg
   ../msg/LargeMessage.msg
-  ../msg/MessageWithHeader.msg
   ../msg/String.msg
-  DEPENDENCIES builtin_interfaces
   LIBRARY_NAME ${PROJECT_NAME}
   SKIP_INSTALL
 )
@@ -323,7 +321,7 @@ if(TARGET test_subscription_publisher_with_same_type_adapter)
   target_link_libraries(test_subscription_publisher_with_same_type_adapter
     ${PROJECT_NAME}
     ${cpp_typesupport_target}
-    statistics_msgs::statistics_msgs
+    std_msgs::std_msgs
   )
 endif()
 
@@ -541,6 +539,19 @@ if(TARGET test_events_cbg_executor_reentrant)
   target_link_libraries(test_events_cbg_executor_reentrant ${PROJECT_NAME}  test_msgs::test_msgs)
 endif()
 
+ament_add_ros_isolated_gtest(test_events_cbg_executor_shutdown executors/test_events_cbg_executor_shutdown.cpp
+  APPEND_LIBRARY_DIRS "${append_library_dirs}")
+if(TARGET test_events_cbg_executor_shutdown)
+  target_link_libraries(test_events_cbg_executor_shutdown ${PROJECT_NAME})
+endif()
+
+ament_add_ros_isolated_gtest(test_events_cbg_executor_timer_removal
+  executors/test_events_cbg_executor_timer_removal.cpp
+  APPEND_LIBRARY_DIRS "${append_library_dirs}")
+if(TARGET test_events_cbg_executor_timer_removal)
+  target_link_libraries(test_events_cbg_executor_timer_removal ${PROJECT_NAME})
+endif()
+
 ament_add_ros_isolated_gtest(test_entities_collector executors/test_entities_collector.cpp
   APPEND_LIBRARY_DIRS "${append_library_dirs}" TIMEOUT 120)
 if(TARGET test_entities_collector)
@@ -578,22 +589,6 @@ if(TARGET test_wait_set)
   target_link_libraries(test_wait_set ${PROJECT_NAME} rcl_interfaces::rcl_interfaces test_msgs::test_msgs)
 endif()
 
-ament_add_ros_isolated_gtest(test_subscription_topic_statistics topic_statistics/test_subscription_topic_statistics.cpp
-  APPEND_LIBRARY_DIRS "${append_library_dirs}"
-)
-if(TARGET test_subscription_topic_statistics)
-  target_link_libraries(test_subscription_topic_statistics
-    ${PROJECT_NAME}
-    libstatistics_collector::libstatistics_collector
-    statistics_msgs::statistics_msgs
-    test_msgs::test_msgs
-  )
-endif()
-
-ament_add_ros_isolated_gtest(test_subscription_options test_subscription_options.cpp)
-if(TARGET test_subscription_options)
-  target_link_libraries(test_subscription_options ${PROJECT_NAME})
-endif()
 
 ament_add_ros_isolated_gtest(test_dynamic_storage wait_set_policies/test_dynamic_storage.cpp)
 if(TARGET test_dynamic_storage)

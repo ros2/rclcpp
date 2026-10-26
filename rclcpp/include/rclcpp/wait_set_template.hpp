@@ -225,16 +225,17 @@ public:
         // It will throw if the subscription is not in the wait set.
         if (mask.include_subscription) {
           auto local_subscription = inner_subscription;
-          local_subscription->exchange_in_use_by_wait_set_state(local_subscription.get(), false);
           this->storage_remove_subscription(std::move(local_subscription));
+          inner_subscription->exchange_in_use_by_wait_set_state(inner_subscription.get(), false);
           if (this->wait_result_holding_) {this->wait_result_dirty_ = true;}
         }
         if (mask.include_events) {
           for (auto key_event_pair : inner_subscription->get_event_handlers()) {
             auto event = key_event_pair.second;
             auto local_subscription = inner_subscription;
-            local_subscription->exchange_in_use_by_wait_set_state(event.get(), false);
             this->storage_remove_waitable(std::move(event));
+            local_subscription->exchange_in_use_by_wait_set_state(
+              key_event_pair.second.get(), false);
             if (this->wait_result_holding_) {this->wait_result_dirty_ = true;}
           }
         }
@@ -242,8 +243,9 @@ public:
           auto local_waitable = inner_subscription->get_intra_process_waitable();
           if (nullptr != local_waitable) {
             // This is the case when intra process is enabled for the subscription.
-            inner_subscription->exchange_in_use_by_wait_set_state(local_waitable.get(), false);
+            auto waitable = local_waitable;
             this->storage_remove_waitable(std::move(local_waitable));
+            inner_subscription->exchange_in_use_by_wait_set_state(waitable.get(), false);
             if (this->wait_result_holding_) {this->wait_result_dirty_ = true;}
           }
         }
@@ -328,11 +330,12 @@ public:
     this->sync_remove_guard_condition(
       std::move(guard_condition),
       [this](std::shared_ptr<rclcpp::GuardCondition> && inner_guard_condition) {
-        inner_guard_condition->exchange_in_use_by_wait_set_state(false);
         // This method comes from the StoragePolicy, and it may not exist for
         // fixed sized storage policies.
         // It will throw if the guard condition is not in the wait set.
-        this->storage_remove_guard_condition(std::move(inner_guard_condition));
+        auto local_guard_condition = inner_guard_condition;
+        this->storage_remove_guard_condition(std::move(local_guard_condition));
+        inner_guard_condition->exchange_in_use_by_wait_set_state(false);
         if (this->wait_result_holding_) {this->wait_result_dirty_ = true;}
       });
   }
@@ -388,11 +391,12 @@ public:
     this->sync_remove_timer(
       std::move(timer),
       [this](std::shared_ptr<rclcpp::TimerBase> && inner_timer) {
-        inner_timer->exchange_in_use_by_wait_set_state(false);
         // This method comes from the StoragePolicy, and it may not exist for
         // fixed sized storage policies.
         // It will throw if the timer is not in the wait set.
-        this->storage_remove_timer(std::move(inner_timer));
+        auto local_timer = inner_timer;
+        this->storage_remove_timer(std::move(local_timer));
+        inner_timer->exchange_in_use_by_wait_set_state(false);
         if (this->wait_result_holding_) {this->wait_result_dirty_ = true;}
       });
   }
@@ -448,11 +452,12 @@ public:
     this->sync_remove_client(
       std::move(client),
       [this](std::shared_ptr<rclcpp::ClientBase> && inner_client) {
-        inner_client->exchange_in_use_by_wait_set_state(false);
         // This method comes from the StoragePolicy, and it may not exist for
         // fixed sized storage policies.
         // It will throw if the client is not in the wait set.
-        this->storage_remove_client(std::move(inner_client));
+        auto local_client = inner_client;
+        this->storage_remove_client(std::move(local_client));
+        inner_client->exchange_in_use_by_wait_set_state(false);
         if (this->wait_result_holding_) {this->wait_result_dirty_ = true;}
       });
   }
@@ -508,11 +513,12 @@ public:
     this->sync_remove_service(
       std::move(service),
       [this](std::shared_ptr<rclcpp::ServiceBase> && inner_service) {
-        inner_service->exchange_in_use_by_wait_set_state(false);
         // This method comes from the StoragePolicy, and it may not exist for
         // fixed sized storage policies.
         // It will throw if the service is not in the wait set.
-        this->storage_remove_service(std::move(inner_service));
+        auto local_service = inner_service;
+        this->storage_remove_service(std::move(local_service));
+        inner_service->exchange_in_use_by_wait_set_state(false);
         if (this->wait_result_holding_) {this->wait_result_dirty_ = true;}
       });
   }
@@ -588,11 +594,12 @@ public:
     this->sync_remove_waitable(
       std::move(waitable),
       [this](std::shared_ptr<rclcpp::Waitable> && inner_waitable) {
-        inner_waitable->exchange_in_use_by_wait_set_state(false);
         // This method comes from the StoragePolicy, and it may not exist for
         // fixed sized storage policies.
         // It will throw if the waitable is not in the wait set.
-        this->storage_remove_waitable(std::move(inner_waitable));
+        auto local_waitable = inner_waitable;
+        this->storage_remove_waitable(std::move(local_waitable));
+        inner_waitable->exchange_in_use_by_wait_set_state(false);
         if (this->wait_result_holding_) {this->wait_result_dirty_ = true;}
       });
   }

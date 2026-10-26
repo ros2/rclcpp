@@ -39,11 +39,6 @@
 namespace rclcpp
 {
 
-namespace graph_listener
-{
-class GraphListener;
-}  // namespace graph_listener
-
 namespace node_interfaces
 {
 

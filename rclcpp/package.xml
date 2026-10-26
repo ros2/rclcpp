@@ -26,7 +26,6 @@
   <build_depend>rosgraph_msgs</build_depend>
   <build_depend>rosidl_runtime_c</build_depend>
   <build_depend>rosidl_runtime_cpp</build_depend>
-  <build_depend>rosidl_typesupport_c</build_depend>
   <build_depend>rosidl_typesupport_cpp</build_depend>
   <build_export_depend>ament_index_cpp</build_export_depend>
   <build_export_depend>builtin_interfaces</build_export_depend>
@@ -34,10 +33,8 @@
   <build_export_depend>rosgraph_msgs</build_export_depend>
   <build_export_depend>rosidl_runtime_c</build_export_depend>
   <build_export_depend>rosidl_runtime_cpp</build_export_depend>
-  <build_export_depend>rosidl_typesupport_c</build_export_depend>
   <build_export_depend>rosidl_typesupport_cpp</build_export_depend>
 
-  <depend>libstatistics_collector</depend>
   <depend>rcl</depend>
   <depend>rcl_logging_interface</depend>
   <depend>rcl_yaml_param_parser</depend>
@@ -45,7 +42,6 @@
   <depend>rcutils</depend>
   <depend>rmw</depend>
   <depend>rosidl_dynamic_typesupport</depend>
-  <depend>statistics_msgs</depend>
   <depend>tracetools</depend>
 
   <test_depend>ament_cmake_google_benchmark</test_depend>
@@ -58,6 +54,7 @@
   <test_depend>rmw</test_depend>
   <test_depend>rmw_implementation_cmake</test_depend>
   <test_depend>rosidl_default_generators</test_depend>
+  <test_depend>std_msgs</test_depend>
   <test_depend>test_msgs</test_depend>
 
   <export>

@@ -392,6 +392,78 @@ TEST_F(TestNode, MultipleParameterCallbacks)
   EXPECT_EQ(param_handler->num_event_callbacks(), 0UL);
 }
 
+TEST_F(TestNode, ExpiredParameterCallbacksAreSkipped)
+{
+  int live_calls = 0;
+  auto live_cb = [&live_calls](const rclcpp::Parameter &) {++live_calls;};
+  auto noop_cb = [](const rclcpp::Parameter &) {};
+
+  // Callbacks are stored last-in-first, so the expired handle is visited first.
+  {
+    auto live = param_handler->add_parameter_callback("my_int", live_cb);
+    auto expired = param_handler->add_parameter_callback("my_int", noop_cb);
+    expired.reset();
+
+    param_handler->test_event(same_node_int);
+    EXPECT_EQ(live_calls, 1);
+    param_handler->remove_parameter_callback(live);
+  }
+
+  // The expired handle is visited after the live one.
+  live_calls = 0;
+  {
+    auto expired = param_handler->add_parameter_callback("my_int", noop_cb);
+    auto live = param_handler->add_parameter_callback("my_int", live_cb);
+    expired.reset();
+
+    param_handler->test_event(same_node_int);
+    EXPECT_EQ(live_calls, 1);
+    param_handler->remove_parameter_callback(live);
+  }
+}
+
+TEST_F(TestNode, ExpiredParameterEventCallbacksAreSkipped)
+{
+  int live_calls = 0;
+  auto live_cb = [&live_calls](const rcl_interfaces::msg::ParameterEvent &) {++live_calls;};
+  auto noop_cb = [](const rcl_interfaces::msg::ParameterEvent &) {};
+
+  // Callbacks are stored last-in-first, so the expired handle is visited first.
+  {
+    auto live = param_handler->add_parameter_event_callback(live_cb);
+    auto expired = param_handler->add_parameter_event_callback(noop_cb);
+    expired.reset();
+
+    param_handler->test_event(same_node_int);
+    EXPECT_EQ(live_calls, 1);
+    param_handler->remove_parameter_event_callback(live);
+  }
+
+  // The expired handle is visited after the live one.
+  live_calls = 0;
+  {
+    auto expired = param_handler->add_parameter_event_callback(noop_cb);
+    auto live = param_handler->add_parameter_event_callback(live_cb);
+    expired.reset();
+
+    param_handler->test_event(same_node_int);
+    EXPECT_EQ(live_calls, 1);
+    param_handler->remove_parameter_event_callback(live);
+  }
+  EXPECT_EQ(param_handler->num_event_callbacks(), 0UL);
+}
+
+TEST_F(TestNode, RemoveMissingParameterCallbackDoesNotAddEntry)
+{
+  auto cb = [](const rclcpp::Parameter &) {};
+  auto handle = param_handler->add_parameter_callback("my_int", cb);
+  param_handler->remove_parameter_callback(handle);
+  EXPECT_EQ(param_handler->num_parameter_callbacks(), 0UL);
+
+  EXPECT_THROW(param_handler->remove_parameter_callback(handle), std::runtime_error);
+  EXPECT_EQ(param_handler->num_parameter_callbacks(), 0UL);
+}
+
 TEST_F(TestNode, LastInFirstCallForParameterCallbacks)
 {
   rclcpp::Time time_1;
