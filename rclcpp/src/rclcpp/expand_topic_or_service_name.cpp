@@ -33,8 +33,10 @@ rclcpp::expand_topic_or_service_name(
   const std::string & name,
   const std::string & node_name,
   const std::string & namespace_,
-  bool is_service)
+  bool is_service,
+  bool abi_test)
 {
+  (void)abi_test;
   char * expanded_topic = nullptr;
   rcl_allocator_t allocator = rcl_get_default_allocator();
   rcutils_allocator_t rcutils_allocator = rcutils_get_default_allocator();
