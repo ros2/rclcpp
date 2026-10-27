@@ -76,6 +76,7 @@ namespace rclcpp
 {
 
 /// Node is the single point of entry for creating publishers and subscribers.
+/// ABI test: this comment line has no effect on the compiled library.
 class Node : public std::enable_shared_from_this<Node>
 {
 public:
