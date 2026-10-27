@@ -27,6 +27,7 @@
 #include "rcl/error_handling.h"
 #include "rcl/rcl.h"
 
+// ABI test: second comment-only commit, pushed after backport-humble was removed by hand.
 namespace rclcpp
 {
 
