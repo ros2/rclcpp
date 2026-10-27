@@ -153,6 +153,10 @@ public:
   rmw_time_t
   to_rmw_time() const;
 
+  /// ABI test: new exported non-virtual member function (addition only).
+  bool
+  is_zero() const;
+
 private:
   rcl_duration_t rcl_duration_;
 
