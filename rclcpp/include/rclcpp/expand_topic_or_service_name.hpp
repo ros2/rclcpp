@@ -58,7 +58,8 @@ expand_topic_or_service_name(
   const std::string & name,
   const std::string & node_name,
   const std::string & namespace_,
-  bool is_service = false);
+  bool is_service = false,
+  bool abi_test = false);
 
 }  // namespace rclcpp
 
