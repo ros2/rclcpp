@@ -27,6 +27,8 @@
 #include "rcl/error_handling.h"
 #include "rcl/rcl.h"
 
+#error "ABI test: deliberate build failure, the check must fail before any ABI diff runs"
+
 namespace rclcpp
 {
 
