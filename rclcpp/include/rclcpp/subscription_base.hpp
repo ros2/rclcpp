@@ -609,6 +609,7 @@ public:
   take_dynamic_message(
     rclcpp::dynamic_typesupport::DynamicMessage & message_out,
     rclcpp::MessageInfo & message_info_out);
+
   // ===============================================================================================
 
 protected:
@@ -647,6 +648,7 @@ protected:
   std::shared_ptr<rcl_node_t> node_handle_;
 
   std::recursive_mutex callback_mutex_;
+
   // It is important to declare on_new_message_callback_ before
   // subscription_handle_, so on destruction the subscription is
   // destroyed first. Otherwise, the rmw subscription callback
