@@ -60,13 +60,14 @@ public:
     switch (timer_type) {
       case TimerType::WALL_TIMER:
         {
-          auto timer = create_wall_timer(std::chrono::seconds(1), []() {});
+          auto timer =
+            create_lifecycle_wall_timer(std::chrono::seconds(1), []() {});
           add_timer_handle(timer);
           break;
         }
       case TimerType::GENERIC_TIMER:
         {
-          auto timer = create_timer(std::chrono::seconds(1), []() {});
+          auto timer = create_lifecycle_timer(std::chrono::seconds(1), []() {});
           add_timer_handle(timer);
           break;
         }
