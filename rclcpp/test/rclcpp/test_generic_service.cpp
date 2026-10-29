@@ -131,6 +131,25 @@ TEST_F(TestGenericService, construction_and_destruction) {
   }
 }
 
+TEST_F(TestGenericService, request_and_response_outlive_service) {
+  auto callback = [](
+    rclcpp::GenericService::SharedRequest,
+    rclcpp::GenericService::SharedResponse) {};
+  std::shared_ptr<void> request;
+  std::shared_ptr<void> response;
+  {
+    auto generic_service = node->create_generic_service(
+      "test_generic_service", "rcl_interfaces/srv/ListParameters", callback);
+    request = generic_service->create_request();
+    response = generic_service->create_response();
+    ASSERT_NE(nullptr, request);
+    ASSERT_NE(nullptr, response);
+  }
+  // The deleters must not use the destroyed service.
+  EXPECT_NO_THROW(request.reset());
+  EXPECT_NO_THROW(response.reset());
+}
+
 /*
    Testing service construction and destruction for subnodes.
  */
