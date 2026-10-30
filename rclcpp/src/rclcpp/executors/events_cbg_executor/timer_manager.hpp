@@ -16,7 +16,9 @@
 
 #include <rcl/timer.h>
 
+#include <atomic>
 #include <chrono>
+#include <cstddef>
 #include <functional>
 #include <map>
 #include <memory>
@@ -136,6 +138,10 @@ class TimerQueue
     rclcpp::Clock::SharedPtr clock;
     bool in_running_list = false;
     std::function<void(const std::function<void()> & executed_cb)> timer_ready_callback;
+    // set by rcl when it moved next_call_time, consumed by the timer thread
+    std::atomic<bool> rekey_pending = false;
+    // set for ROS time timers, which register the schedule change callback
+    TimerQueue * queue = nullptr;
   };
 
 public:
@@ -171,6 +177,7 @@ public:
       if (auto shrPtr = tData->timer_ref.lock()) {
         shrPtr->clear_on_reset_callback();
       }
+      clear_on_schedule_change_callback(*tData);
     }
 
     // Release all references now, as the queue itself may outlive the libraries
@@ -232,6 +239,7 @@ public:
       if(it2 != running_timers.end()) {
         running_timers.erase(it2);
       }
+      clear_on_schedule_change_callback(**it);
       all_timers.erase(it);
     }
 
@@ -280,6 +288,19 @@ public:
         }
       });
 
+    if (timer_type == RCL_ROS_TIME) {
+      // rcl moves next_call_time of a ROS time timer on a backward jump and
+      // when ROS time is (de)activated, without calling the on reset callback
+      data->queue = this;
+      // the clock mutex serializes this with a jump callback in flight
+      std::scoped_lock clock_lock(data->clock->get_clock_mutex());
+      if (rcl_timer_set_on_schedule_change_callback(
+          data->rcl_ref.get(), &TimerQueue::on_schedule_change, data.get()) != RCL_RET_OK)
+      {
+        assert(false);
+      }
+    }
+
     {
       std::scoped_lock l(mutex);
       // this will wake up the timer thread if needed
@@ -290,6 +311,35 @@ public:
   }
 
 private:
+  /**
+   * Called by rcl after it moved next_call_time of a ROS time timer. Runs
+   * inside the clock's jump callback with the clock mutex held, which the
+   * timer thread takes while holding its wait mutex: it must not take a lock.
+   */
+  static void on_schedule_change(const void * user_data, size_t)
+  {
+    auto * timer_data = static_cast<TimerData *>(const_cast<void *>(user_data));
+    timer_data->rekey_pending = true;
+    timer_data->queue->rekey_pending_any = true;
+  }
+
+  /**
+   * Must run before the timer data is destroyed. The clock mutex serializes
+   * it with a jump callback in flight on the time source thread.
+   */
+  void clear_on_schedule_change_callback(const TimerData & timer_data)
+  {
+    if (!timer_data.queue) {
+      return;
+    }
+    std::scoped_lock clock_lock(timer_data.clock->get_clock_mutex());
+    if (rcl_timer_set_on_schedule_change_callback(
+        timer_data.rcl_ref.get(), nullptr, nullptr) != RCL_RET_OK)
+    {
+      assert(false);
+    }
+  }
+
   /**
    * Wakes the timer thread. Must be called under lock
    * by mutex
@@ -331,6 +381,7 @@ private:
       );
 
       if (it != all_timers.end()) {
+        clear_on_schedule_change_callback(**it);
         all_timers.erase(it);
       }
       return true;
@@ -378,6 +429,19 @@ private:
     if(wasEmpty || running_timers.begin()->first < old_next_call_time) {
       // the next wakeup is now earlier, wake up the timer thread so that it can pick up the timer
       wakeup_timer_thread();
+    }
+  }
+
+  /**
+   * Re-keys the running timers whose next call time was moved by rcl.
+   * Must be called under lock by mutex.
+   */
+  void rekey_pending_timers()
+  {
+    for (auto & timer_data : all_timers) {
+      if (timer_data->rekey_pending.exchange(false) && timer_data->in_running_list) {
+        add_timer_to_running_map(timer_data.get());
+      }
     }
   }
 
@@ -442,6 +506,9 @@ private:
       rclcpp::Clock::SharedPtr used_clock;
       {
         std::scoped_lock l(mutex);
+        if (rekey_pending_any.exchange(false)) {
+          rekey_pending_timers();
+        }
         ready_timer_callbacks = get_ready_timer_callbacks();
 
         if(running_timers.empty()) {
@@ -467,7 +534,7 @@ private:
           std::unique_lock<std::mutex> l(clock_waiter.mutex());
           clock_waiter.wait_until(l, used_clock,
               rclcpp::Time(next_wakeup_time.count(), timer_type), [this] () -> bool {
-              return wake_up || !running || !rclcpp::ok();
+              return wake_up || rekey_pending_any || !running || !rclcpp::ok();
           });
           wake_up = false;
         } catch (const std::runtime_error &) {
@@ -496,6 +563,8 @@ private:
 
   std::atomic_bool running = true;
   std::atomic_bool thread_terminated = false;
+  // set by the schedule change callback, consumed by the timer thread
+  std::atomic_bool rekey_pending_any = false;
 
   std::vector<std::shared_ptr<TimerData>> all_timers;
 
