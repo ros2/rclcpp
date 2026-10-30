@@ -14,6 +14,7 @@
 
 #include <gtest/gtest.h>
 
+#include <atomic>
 #include <chrono>
 #include <condition_variable>
 #include <functional>
@@ -23,6 +24,7 @@
 #include <thread>
 
 #include "rclcpp/callback_group.hpp"
+#include "rclcpp/executors/multi_threaded_executor.hpp"
 #include "rclcpp/node.hpp"
 #include "rclcpp/utilities.hpp"
 
@@ -212,4 +214,60 @@ TYPED_TEST(TestBusyWaiting, test_spin)
   this->check_for_busy_waits(start_time);
   // this should get the initial trigger, and the follow up from in the callback
   ASSERT_EQ(this->waitable->get_count(), 2u);
+}
+
+// Regression test for a busy wait in the MultiThreadedExecutor: if an entity
+// becomes ready while its mutually exclusive callback group is executing in
+// another thread, the idle threads must not spin on it until the group is
+// released.
+TEST(TestBusyWaitingMultiThreaded, no_busy_wait_while_callback_group_is_executing)
+{
+  rclcpp::init(0, nullptr);
+  {
+    auto node = std::make_shared<rclcpp::Node>(
+      "node", "TestBusyWaitingMultiThreaded_no_busy_wait_while_callback_group_is_executing");
+    auto callback_group = node->create_callback_group(
+      rclcpp::CallbackGroupType::MutuallyExclusive,
+      /* automatically_add_to_executor_with_node =*/ false);
+    auto waitable = std::make_shared<TestWaitable>();
+    node->get_node_waitables_interface()->add_waitable(waitable, callback_group);
+
+    std::atomic_bool has_executed{false};
+    waitable->set_on_execute_callback([&waitable, &has_executed]() {
+        if (!has_executed.exchange(true)) {
+          // Make the waitable ready again while its callback group is still
+          // executing, and keep the group busy for a while. During this time
+          // the other executor thread must block instead of busy waiting.
+          waitable->trigger();
+          std::this_thread::sleep_for(100ms);
+        }
+      });
+
+    rclcpp::executors::MultiThreadedExecutor executor(rclcpp::ExecutorOptions(), 2);
+    executor.add_callback_group(callback_group, node->get_node_base_interface());
+
+    std::thread spinner([&executor]() {executor.spin();});
+
+    // Let the executor settle, so that the waitable is triggered while the
+    // executor threads are idle and their entities collection is up to date.
+    const auto settle_deadline = std::chrono::steady_clock::now() + 10s;
+    while (!executor.is_spinning() && std::chrono::steady_clock::now() < settle_deadline) {
+      std::this_thread::sleep_for(1ms);
+    }
+    std::this_thread::sleep_for(100ms);
+
+    waitable->trigger();
+
+    const auto deadline = std::chrono::steady_clock::now() + 10s;
+    while (waitable->get_count() < 2u && std::chrono::steady_clock::now() < deadline) {
+      std::this_thread::sleep_for(1ms);
+    }
+
+    executor.cancel();
+    spinner.join();
+
+    EXPECT_EQ(waitable->get_count(), 2u);
+    EXPECT_LT(waitable->get_is_ready_call_count(), 10u * waitable->get_count());
+  }
+  rclcpp::shutdown();
 }
