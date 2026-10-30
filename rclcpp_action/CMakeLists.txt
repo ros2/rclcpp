@@ -72,9 +72,6 @@ ament_export_dependencies(action_msgs rcl_action rclcpp rosidl_runtime_c)
 if(BUILD_TESTING)
   find_package(ament_cmake_gtest REQUIRED)
   find_package(ament_lint_auto REQUIRED)
-  # Give cppcheck hints about macro definitions coming from outside this package
-  get_target_property(rclcpp_include_dirs rclcpp::rclcpp INTERFACE_INCLUDE_DIRECTORIES)
-  set(ament_cmake_cppcheck_ADDITIONAL_INCLUDE_DIRS ${rclcpp_include_dirs})
   ament_lint_auto_find_test_dependencies()
 
   add_subdirectory(test/benchmark)
@@ -160,8 +157,3 @@ if(BUILD_TESTING)
 endif()
 
 ament_package()
-
-if(TEST cppcheck)
-  # must set the property after ament_package()
-  set_tests_properties(cppcheck PROPERTIES TIMEOUT 600)
-endif()

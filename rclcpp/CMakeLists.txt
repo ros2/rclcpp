@@ -266,12 +266,8 @@ install(
   DESTINATION include/${PROJECT_NAME}
 )
 
-if(TEST cppcheck)
-  # must set the property after ament_package()
-  set_tests_properties(cppcheck PROPERTIES TIMEOUT 1200)
-endif()
-
 if(TEST cpplint)
+  # must set the property after ament_package()
   set_tests_properties(cpplint PROPERTIES TIMEOUT 180)
 endif()
 
