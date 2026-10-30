@@ -2,8 +2,8 @@
 Changelog for package rclcpp_lifecycle
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+33.2.0 (2026-10-30)
+-------------------
 * Fix uninitialized read in lifecycle ChangeState service (`#3359 <https://github.com/ros2/rclcpp/issues/3359>`_)
 * Remove ament_export_include_directories and ament_export_libraries calls (`#3305 <https://github.com/ros2/rclcpp/issues/3305>`_)
 * feat: Added new statistics interface / removed statistics publisher (`#3203 <https://github.com/ros2/rclcpp/issues/3203>`_)

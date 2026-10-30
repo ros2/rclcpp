@@ -3,8 +3,8 @@ Changelog for package rclcpp_action
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
-Forthcoming
------------
+33.2.0 (2026-10-30)
+-------------------
 * Remove dead code from rclcpp_action server (`#3354 <https://github.com/ros2/rclcpp/issues/3354>`_)
 * Remove ament_export_include_directories and ament_export_libraries calls (`#3305 <https://github.com/ros2/rclcpp/issues/3305>`_)
 * Add GoalStatusCode enum and get_status_code() to client goal handles (`#3292 <https://github.com/ros2/rclcpp/issues/3292>`_)

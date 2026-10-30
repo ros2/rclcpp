@@ -2,8 +2,8 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+33.2.0 (2026-10-30)
+-------------------
 * Emit executor execute tracepoint from shared entity paths (`#3368 <https://github.com/ros2/rclcpp/issues/3368>`_)
 * Remove stale MessageMemoryPool TODO from the executor (`#3374 <https://github.com/ros2/rclcpp/issues/3374>`_)
 * Fix possible data race while calling has_ready_entities in EventsCBGExecutor (`#3288 <https://github.com/ros2/rclcpp/issues/3288>`_)
