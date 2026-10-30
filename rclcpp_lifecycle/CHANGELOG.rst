@@ -2,6 +2,15 @@
 Changelog for package rclcpp_lifecycle
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Fix uninitialized read in lifecycle ChangeState service (`#3359 <https://github.com/ros2/rclcpp/issues/3359>`_)
+* Remove ament_export_include_directories and ament_export_libraries calls (`#3305 <https://github.com/ros2/rclcpp/issues/3305>`_)
+* feat: Added new statistics interface / removed statistics publisher (`#3203 <https://github.com/ros2/rclcpp/issues/3203>`_)
+* Use the SPDX identifier Apache-2.0 in package.xml license tags (`#3284 <https://github.com/ros2/rclcpp/issues/3284>`_)
+* rclcpp lifecycle tests: Granular includes and include what you use (`#3252 <https://github.com/ros2/rclcpp/issues/3252>`_)
+* Contributors: Alejandro Hernández Cordero, Janosch Machowinski, Michael Carroll, Tomoya Fujita
+
 33.1.0 (2026-08-31)
 -------------------
 * cleanup headers (`#3238 <https://github.com/ros2/rclcpp/issues/3238>`_)

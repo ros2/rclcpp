@@ -2,6 +2,16 @@
 Changelog for package rclcpp_components
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Destroy the executor before unloading component libraries (`#3319 <https://github.com/ros2/rclcpp/issues/3319>`_)
+* Remove ament_export_include_directories and ament_export_libraries calls (`#3305 <https://github.com/ros2/rclcpp/issues/3305>`_)
+* feat: Added new statistics interface / removed statistics publisher (`#3203 <https://github.com/ros2/rclcpp/issues/3203>`_)
+* Check for association with an executor before removing the node in generated component main (`#3287 <https://github.com/ros2/rclcpp/issues/3287>`_)
+* Use the SPDX identifier Apache-2.0 in package.xml license tags (`#3284 <https://github.com/ros2/rclcpp/issues/3284>`_)
+* rclcpp components tests: Granular includes and include what you use (`#3251 <https://github.com/ros2/rclcpp/issues/3251>`_)
+* Contributors: Alejandro Hernández Cordero, Janosch Machowinski, Maurice Alexander Purnawan, Michael Carroll, Tomoya Fujita, Vojtech Spurny
+
 33.1.0 (2026-08-31)
 -------------------
 * cleanup headers (`#3238 <https://github.com/ros2/rclcpp/issues/3238>`_)

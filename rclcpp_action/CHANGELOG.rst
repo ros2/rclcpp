@@ -3,6 +3,15 @@ Changelog for package rclcpp_action
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
+Forthcoming
+-----------
+* Remove dead code from rclcpp_action server (`#3354 <https://github.com/ros2/rclcpp/issues/3354>`_)
+* Remove ament_export_include_directories and ament_export_libraries calls (`#3305 <https://github.com/ros2/rclcpp/issues/3305>`_)
+* Add GoalStatusCode enum and get_status_code() to client goal handles (`#3292 <https://github.com/ros2/rclcpp/issues/3292>`_)
+* Use the SPDX identifier Apache-2.0 in package.xml license tags (`#3284 <https://github.com/ros2/rclcpp/issues/3284>`_)
+* rclcpp action tests: Granular includes and include what you use (`#3250 <https://github.com/ros2/rclcpp/issues/3250>`_)
+* Contributors: Alejandro Hernández Cordero, DV (David Vadovszki), Michael Carroll, Tomoya Fujita
+
 33.1.0 (2026-08-31)
 -------------------
 * cleanup headers (`#3238 <https://github.com/ros2/rclcpp/issues/3238>`_)

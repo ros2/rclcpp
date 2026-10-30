@@ -2,6 +2,43 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Emit executor execute tracepoint from shared entity paths (`#3368 <https://github.com/ros2/rclcpp/issues/3368>`_)
+* Remove stale MessageMemoryPool TODO from the executor (`#3374 <https://github.com/ros2/rclcpp/issues/3374>`_)
+* Fix possible data race while calling has_ready_entities in EventsCBGExecutor (`#3288 <https://github.com/ros2/rclcpp/issues/3288>`_)
+* Fix loaned message ownership transfer by returning loans via shared_ptr custom deleter (`#3280 <https://github.com/ros2/rclcpp/issues/3280>`_)
+* Fix shutdown callback leak in wait_for_message (`#3358 <https://github.com/ros2/rclcpp/issues/3358>`_)
+* Fix ParameterEventHandler skipping callbacks next to expired handles (`#3357 <https://github.com/ros2/rclcpp/issues/3357>`_)
+* Hide noexcept function_traits specializations from Doxygen (`#3367 <https://github.com/ros2/rclcpp/issues/3367>`_)
+* Tighten a few rclcpp tests and remove test dead code (`#3355 <https://github.com/ros2/rclcpp/issues/3355>`_)
+* Fix data race in IntraProcessManager::lowest_available_capacity (`#3361 <https://github.com/ros2/rclcpp/issues/3361>`_)
+* Removed unused rosidl typesupport (`#3345 <https://github.com/ros2/rclcpp/issues/3345>`_)
+* Fix crash in ~Executor for executors using the minimal constructor (`#3350 <https://github.com/ros2/rclcpp/issues/3350>`_)
+* Remove unused stop_sleeping\_ flag from Clock (`#3347 <https://github.com/ros2/rclcpp/issues/3347>`_)
+* Remove unused NotNull helper, NodeParameters::node_logging\_ and node_name_old (`#3351 <https://github.com/ros2/rclcpp/issues/3351>`_)
+* Remove redundant checks and an unused forward declaration (`#3352 <https://github.com/ros2/rclcpp/issues/3352>`_)
+* Remove unused test messages left over from topic statistics (`#3346 <https://github.com/ros2/rclcpp/issues/3346>`_)
+* Fix use-after-free of removed timers in EventsCBGExecutor (`#3315 <https://github.com/ros2/rclcpp/issues/3315>`_)
+* Don't let exceptions escape destructors (`#3278 <https://github.com/ros2/rclcpp/issues/3278>`_)
+* test :- add test for subscriber queue size behavior (Fixes `#421 <https://github.com/ros2/rclcpp/issues/421>`_) (`#3299 <https://github.com/ros2/rclcpp/issues/3299>`_)
+* Support noexcept callables in function_traits (`#3322 <https://github.com/ros2/rclcpp/issues/3322>`_)
+* Add const reference service callback signatures (`#3269 <https://github.com/ros2/rclcpp/issues/3269>`_)
+* Remove libstatistics_collector from rclcpp QUALITY_DECLARATION (`#3316 <https://github.com/ros2/rclcpp/issues/3316>`_)
+* Remove ament_export_include_directories and ament_export_libraries calls (`#3305 <https://github.com/ros2/rclcpp/issues/3305>`_)
+* feat: Added new statistics interface / removed statistics publisher (`#3203 <https://github.com/ros2/rclcpp/issues/3203>`_)
+* Preserve wait-set ownership when removal fails (`#3294 <https://github.com/ros2/rclcpp/issues/3294>`_)
+* feat(EventsCBGExecutor): Added worker queue (`#3277 <https://github.com/ros2/rclcpp/issues/3277>`_)
+* Test matched events after count queries (`#3279 <https://github.com/ros2/rclcpp/issues/3279>`_)
+* Use the SPDX identifier Apache-2.0 in package.xml license tags (`#3284 <https://github.com/ros2/rclcpp/issues/3284>`_)
+* missing include (`#3274 <https://github.com/ros2/rclcpp/issues/3274>`_)
+* Don't let malformed set_parameters requests crash the node (`#3256 <https://github.com/ros2/rclcpp/issues/3256>`_)
+* fix: Improved thread usage under congestion (`#3258 <https://github.com/ros2/rclcpp/issues/3258>`_)
+* Add const to ServiceBase::get_service_name (`#3253 <https://github.com/ros2/rclcpp/issues/3253>`_)
+* rclcpp tests: Granular includes and include what you use (`#3249 <https://github.com/ros2/rclcpp/issues/3249>`_)
+* Avoid unnecessary shared_ptr allocation for last_time_msg\_ in ClocksState (`#3248 <https://github.com/ros2/rclcpp/issues/3248>`_)
+* Contributors: Aarav Anand, Alejandro Hernández Cordero, Arman Hosseini, Bas Zalmstra, Dave Coleman, Janosch Machowinski, KR Ravindra, Maurice Alexander Purnawan, Michael Carroll, Miko Parkkinen, R Kent James, Tomoya Fujita, Vojtech Spurny, pum1k, 渠超胜
+
 33.1.0 (2026-08-31)
 -------------------
 * Reject incompatible parameter range constraints (`#3243 <https://github.com/ros2/rclcpp/issues/3243>`_)
