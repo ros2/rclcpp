@@ -242,8 +242,8 @@ public:
     const rclcpp::CallbackGroup::SharedPtr & group = nullptr,
     bool autostart = true);
 
-  /// Create a wall timer that uses the wall clock to drive the callback with an initial trigger
-  /// time.
+  /// Create an aligned wall timer that uses the wall clock to drive the callback with an
+  /// explicit initial trigger time.
   /**
    * \param[in] initial_call_time Time at which the callback should be initially triggered.
    * \param[in] period Time interval between triggers of the callback.
@@ -252,10 +252,30 @@ public:
    * \param[in] autostart The state of the clock on initialization.
    */
   template<typename DurationRepT = int64_t, typename DurationT = std::milli, typename CallbackT>
-  typename rclcpp::WallTimer<CallbackT>::SharedPtr
-  create_wall_timer(
+  typename rclcpp::AlignedWallTimer<CallbackT>::SharedPtr
+  create_aligned_wall_timer(
     Time initial_call_time,
     std::chrono::duration<DurationRepT, DurationT> period,
+    CallbackT callback,
+    const rclcpp::CallbackGroup::SharedPtr & group = nullptr,
+    bool autostart = true);
+
+  /// Create a phase-aligned wall timer that uses the wall clock to drive the callback.
+  /**
+   * \param[in] period Time interval between triggers of the callback (and alignment interval).
+   * \param[in] phase Offset added to each interval boundary.
+   * \param[in] callback User-defined callback function.
+   * \param[in] group Callback group to execute this timer's callback in.
+   * \param[in] autostart The state of the clock on initialization.
+   */
+  template<
+    typename DurationRepT = int64_t, typename DurationT = std::milli,
+    typename PhaseRepT = int64_t, typename PhaseT = std::milli,
+    typename CallbackT>
+  typename rclcpp::AlignedWallTimer<CallbackT>::SharedPtr
+  create_aligned_wall_timer(
+    std::chrono::duration<DurationRepT, DurationT> period,
+    std::chrono::duration<PhaseRepT, PhaseT> phase,
     CallbackT callback,
     const rclcpp::CallbackGroup::SharedPtr & group = nullptr,
     bool autostart = true);
@@ -273,7 +293,8 @@ public:
     CallbackT callback,
     const rclcpp::CallbackGroup::SharedPtr & group = nullptr);
 
-  /// Create a timer that uses the node clock to drive the callback with an initial trigger time.
+  /// Create an aligned timer that uses the node clock to drive the callback with an explicit
+  /// initial trigger time.
   /**
    * \param[in] initial_call_time Time at which the callback should be initially triggered.
    * \param[in] period Time interval between triggers of the callback.
@@ -282,29 +303,33 @@ public:
    * \param[in] autostart The state of the timer on initialization.
    */
   template<typename DurationRepT = int64_t, typename DurationT = std::milli, typename CallbackT>
-  typename rclcpp::GenericTimer<CallbackT>::SharedPtr
-  create_timer(
+  typename rclcpp::AlignedTimer<CallbackT>::SharedPtr
+  create_aligned_timer(
     Time initial_call_time,
     std::chrono::duration<DurationRepT, DurationT> period,
     CallbackT callback,
     const rclcpp::CallbackGroup::SharedPtr & group = nullptr,
     bool autostart = true);
 
-  /// Create and return a Client.
+  /// Create a phase-aligned timer that uses the node clock to drive the callback.
   /**
-   * \param[in] service_name The topic to service on.
-   * \param[in] qos_profile rmw_qos_profile_t Quality of service profile for client.
-   * \param[in] group Callback group to call the service.
-   * \return Shared pointer to the created client.
-   * \deprecated use rclcpp::QoS instead of rmw_qos_profile_t
+   * \param[in] period Time interval between triggers of the callback (and alignment interval).
+   * \param[in] phase Offset added to each interval boundary.
+   * \param[in] callback User-defined callback function.
+   * \param[in] group Callback group to execute this timer's callback in.
+   * \param[in] autostart The state of the timer on initialization.
    */
-  template<typename ServiceT>
-  [[deprecated("use rclcpp::QoS instead of rmw_qos_profile_t")]]
-  typename rclcpp::Client<ServiceT>::SharedPtr
-  create_client(
-    const std::string & service_name,
-    const rmw_qos_profile_t & qos_profile,
-    rclcpp::CallbackGroup::SharedPtr group = nullptr);
+  template<
+    typename DurationRepT = int64_t, typename DurationT = std::milli,
+    typename PhaseRepT = int64_t, typename PhaseT = std::milli,
+    typename CallbackT>
+  typename rclcpp::AlignedTimer<CallbackT>::SharedPtr
+  create_aligned_timer(
+    std::chrono::duration<DurationRepT, DurationT> period,
+    std::chrono::duration<PhaseRepT, PhaseT> phase,
+    CallbackT callback,
+    const rclcpp::CallbackGroup::SharedPtr & group = nullptr,
+    bool autostart = true);
 
   /// Create and return a Client.
   /**
