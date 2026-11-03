@@ -371,6 +371,18 @@ TEST_F(TestLifecycleServiceClient, lifecycle_transitions) {
   EXPECT_EQ(transitions.size(), 0u);
 }
 
+TEST_F(TestLifecycleServiceClient, invalid_transition_fails) {
+  EXPECT_EQ(
+    lifecycle_client()->get_state().id, lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
+
+  // ACTIVATE is not a valid transition from UNCONFIGURED.
+  EXPECT_FALSE(
+    lifecycle_client()->change_state(
+      lifecycle_msgs::msg::Transition::TRANSITION_ACTIVATE));
+  EXPECT_EQ(
+    lifecycle_client()->get_state().id, lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
+}
+
 TEST_F(TestLifecycleServiceClient, get_service_names_and_types_by_node)
 {
   EXPECT_THROW(

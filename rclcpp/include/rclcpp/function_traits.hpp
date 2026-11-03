@@ -78,6 +78,7 @@ template<typename ReturnTypeT, typename ... Args>
 struct function_traits<ReturnTypeT (*)(Args ...)>: function_traits<ReturnTypeT(Args ...)>
 {};
 
+/// \cond
 // noexcept is part of the function type since C++17, so the noexcept variants need their own
 // specializations.
 template<typename ReturnTypeT, typename ... Args>
@@ -87,6 +88,7 @@ struct function_traits<ReturnTypeT(Args ...) noexcept>: function_traits<ReturnTy
 template<typename ReturnTypeT, typename ... Args>
 struct function_traits<ReturnTypeT (*)(Args ...) noexcept>: function_traits<ReturnTypeT(Args ...)>
 {};
+/// \endcond
 
 // std::bind for object methods
 template<typename ClassT, typename ReturnTypeT, typename ... Args, typename ... FArgs>
@@ -126,6 +128,7 @@ struct function_traits<
   : function_traits<ReturnTypeT(Args ...)>
 {};
 
+/// \cond
 // std::bind for object noexcept methods
 template<typename ClassT, typename ReturnTypeT, typename ... Args, typename ... FArgs>
 #if defined DOXYGEN_ONLY
@@ -145,7 +148,9 @@ struct function_traits<
 #endif
   : function_traits<ReturnTypeT(Args ...)>
 {};
+/// \endcond
 
+/// \cond
 // std::bind for object const noexcept methods
 template<typename ClassT, typename ReturnTypeT, typename ... Args, typename ... FArgs>
 #if defined DOXYGEN_ONLY
@@ -165,6 +170,7 @@ struct function_traits<
 #endif
   : function_traits<ReturnTypeT(Args ...)>
 {};
+/// \endcond
 
 // std::bind for free functions
 template<typename ReturnTypeT, typename ... Args, typename ... FArgs>
@@ -182,6 +188,7 @@ struct function_traits<std::_Binder<std::_Unforced, ReturnTypeT( &)(Args ...), F
   : function_traits<ReturnTypeT(Args ...)>
 {};
 
+/// \cond
 // std::bind for noexcept free functions
 template<typename ReturnTypeT, typename ... Args, typename ... FArgs>
 #if defined DOXYGEN_ONLY
@@ -198,6 +205,7 @@ struct function_traits<
 #endif
   : function_traits<ReturnTypeT(Args ...)>
 {};
+/// \endcond
 
 // Lambdas
 template<typename ClassT, typename ReturnTypeT, typename ... Args>
@@ -205,10 +213,12 @@ struct function_traits<ReturnTypeT (ClassT::*)(Args ...) const>
   : function_traits<ReturnTypeT(ClassT &, Args ...)>
 {};
 
+/// \cond
 template<typename ClassT, typename ReturnTypeT, typename ... Args>
 struct function_traits<ReturnTypeT (ClassT::*)(Args ...) const noexcept>
   : function_traits<ReturnTypeT(ClassT &, Args ...)>
 {};
+/// \endcond
 
 template<typename FunctionT>
 struct function_traits<FunctionT &>: function_traits<FunctionT>

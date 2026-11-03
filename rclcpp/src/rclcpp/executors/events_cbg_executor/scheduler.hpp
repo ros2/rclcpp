@@ -237,6 +237,11 @@ public:
 
     CallbackGroupType get_type() {return type;}
 
+    std::mutex & get_ready_mutex()
+    {
+      return ready_mutex;
+    }
+
     // true if this cbg is inside the scheduler's queue
     bool in_queue = false;
 

@@ -31,7 +31,6 @@ int main(int argc, char * argv[])
 {
   auto args = rclcpp::init_and_remove_ros_arguments(argc, argv);
   rclcpp::Logger logger = rclcpp::get_logger(NODE_MAIN_LOGGER_NAME);
-  @executor@ exec;
   rclcpp::NodeOptions options;
   options.arguments(args);
 
@@ -64,6 +63,10 @@ int main(int argc, char * argv[])
     RCLCPP_ERROR(logger, "Failed to load library");
     return 1;
   }
+  // Declare the executor after the loader, so on destruction the executor is
+  // destroyed first. Otherwise, the executor could release component entities
+  // after the loader has unloaded their library.
+  @executor@ exec;
   // Scope to destruct node_wrapper before shutdown
   {
     rclcpp_components::NodeInstanceWrapper node_wrapper = node_factory->create_node_instance(options);

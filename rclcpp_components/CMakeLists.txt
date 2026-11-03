@@ -89,8 +89,6 @@ if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
   find_package(ament_cmake_google_benchmark REQUIRED)
   find_package(benchmark REQUIRED)
-  # Give cppcheck hints about macro definitions coming from outside this package
-  get_target_property(ament_cmake_cppcheck_ADDITIONAL_INCLUDE_DIRS benchmark::benchmark INTERFACE_INCLUDE_DIRECTORIES)
   ament_lint_auto_find_test_dependencies()
 
   set(components "")

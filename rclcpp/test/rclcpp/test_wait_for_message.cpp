@@ -78,6 +78,18 @@ TEST_F(TestWaitForMessage, wait_for_message) {
   EXPECT_EQ(out, *get_messages_strings()[0]);
 }
 
+TEST_F(TestWaitForMessage, wait_for_message_removes_shutdown_callback) {
+  using MsgT = test_msgs::msg::Strings;
+  auto context = node_->get_node_base_interface()->get_context();
+  const auto num_callbacks = context->get_on_shutdown_callbacks().size();
+
+  MsgT out;
+  for (auto i = 0; i < 5; ++i) {
+    EXPECT_FALSE(rclcpp::wait_for_message(out, node_, topic_name_, 1ms));
+  }
+  EXPECT_EQ(num_callbacks, context->get_on_shutdown_callbacks().size());
+}
+
 TEST_F(TestWaitForMessage, wait_for_message_indefinitely) {
   using MsgT = test_msgs::msg::Strings;
   MsgT out;
