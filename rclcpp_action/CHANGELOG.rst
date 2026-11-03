@@ -3,6 +3,11 @@ Changelog for package rclcpp_action
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
+28.1.23 (2026-11-03)
+--------------------
+* Synchronize Jazzy action-server clock callback changes (`#3318 <https://github.com/ros2/rclcpp//issues/3318>`_)
+* Contributors: Miko Parkkinen
+
 28.1.22 (2026-08-31)
 --------------------
 

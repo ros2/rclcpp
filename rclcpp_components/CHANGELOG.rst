@@ -2,6 +2,12 @@
 Changelog for package rclcpp_components
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+28.1.23 (2026-11-03)
+--------------------
+* Destroy the executor before unloading component libraries (backport `#3319 <https://github.com/ros2/rclcpp//issues/3319>`_) (`#3365 <https://github.com/ros2/rclcpp//issues/3365>`_)
+* Check for association with an executor before removing the node in generated component main (`#3287 <https://github.com/ros2/rclcpp//issues/3287>`_) (`#3297 <https://github.com/ros2/rclcpp//issues/3297>`_)
+* Contributors: mergify[bot]
+
 28.1.22 (2026-08-31)
 --------------------
 * Check for association with an executor before removing nodes in ComponentManager (`#3190 <https://github.com/ros2/rclcpp/issues/3190>`_) (`#3197 <https://github.com/ros2/rclcpp/issues/3197>`_)

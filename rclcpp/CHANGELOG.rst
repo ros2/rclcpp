@@ -2,6 +2,13 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+28.1.23 (2026-11-03)
+--------------------
+* Fix loaned message ownership transfer by returning loans via shared_ptr custom deleter (`#3280 <https://github.com/ros2/rclcpp//issues/3280>`_) (`#3378 <https://github.com/ros2/rclcpp//issues/3378>`_)
+* Fix possible data race while calling has_ready_entities in EventsCBGExecutor (`#3288 <https://github.com/ros2/rclcpp//issues/3288>`_) (`#3373 <https://github.com/ros2/rclcpp//issues/3373>`_)
+* Don't let malformed set_parameters requests crash the node (backport `#3256 <https://github.com/ros2/rclcpp//issues/3256>`_) (`#3266 <https://github.com/ros2/rclcpp//issues/3266>`_)
+* Contributors: mergify[bot]
+
 28.1.22 (2026-08-31)
 --------------------
 * register shutdown callback without shutdown mutex (`#3239 <https://github.com/ros2/rclcpp/issues/3239>`_)
