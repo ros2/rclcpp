@@ -2,6 +2,12 @@
 Changelog for package rclcpp_components
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+32.0.4 (2026-11-03)
+-------------------
+* Destroy the executor before unloading component libraries (`#3319 <https://github.com/ros2/rclcpp//issues/3319>`_) (`#3363 <https://github.com/ros2/rclcpp//issues/3363>`_)
+* Check for association with an executor before removing the node in generated component main (`#3287 <https://github.com/ros2/rclcpp//issues/3287>`_) (`#3295 <https://github.com/ros2/rclcpp//issues/3295>`_)
+* Contributors: mergify[bot]
+
 32.0.3 (2026-08-31)
 -------------------
 * rclcpp_components: Fix compilation with clang (`#3229 <https://github.com/ros2/rclcpp/issues/3229>`_) (`#3231 <https://github.com/ros2/rclcpp/issues/3231>`_)

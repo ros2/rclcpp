@@ -2,6 +2,15 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+32.0.4 (2026-11-03)
+-------------------
+* Fix loaned message ownership transfer by returning loans via shared_ptr custom deleter (`#3280 <https://github.com/ros2/rclcpp//issues/3280>`_) (`#3376 <https://github.com/ros2/rclcpp//issues/3376>`_)
+* Fix possible data race while calling has_ready_entities in EventsCBGExecutor (`#3288 <https://github.com/ros2/rclcpp//issues/3288>`_) (`#3371 <https://github.com/ros2/rclcpp//issues/3371>`_)
+* Don't let exceptions escape destructors (backport `#3278 <https://github.com/ros2/rclcpp//issues/3278>`_) (`#3356 <https://github.com/ros2/rclcpp//issues/3356>`_)
+* Don't let malformed set_parameters requests crash the node (backport `#3256 <https://github.com/ros2/rclcpp//issues/3256>`_) (`#3264 <https://github.com/ros2/rclcpp//issues/3264>`_)
+* Reject incompatible parameter range constraints (`#3243 <https://github.com/ros2/rclcpp//issues/3243>`_) (`#3254 <https://github.com/ros2/rclcpp//issues/3254>`_)
+* Contributors: mergify[bot]
+
 32.0.3 (2026-08-31)
 -------------------
 * Add wait_for_message overload using node interfaces (backport `#3230 <https://github.com/ros2/rclcpp/issues/3230>`_) (`#3233 <https://github.com/ros2/rclcpp/issues/3233>`_)
