@@ -2,6 +2,11 @@
 Changelog for package rclcpp_components
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+16.0.23 (2026-11-03)
+--------------------
+* Check for association with an executor before removing the node in ge… (backport `#3287 <https://github.com/ros2/rclcpp//issues/3287>`_) (`#3298 <https://github.com/ros2/rclcpp//issues/3298>`_)
+* Contributors: mergify[bot]
+
 16.0.22 (2026-10-12)
 --------------------
 * Fix isolated component manager shutdown on Humble (`#3282 <https://github.com/ros2/rclcpp/issues/3282>`_)

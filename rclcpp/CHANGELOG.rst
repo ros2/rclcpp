@@ -2,6 +2,9 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+16.0.23 (2026-11-03)
+--------------------
+
 16.0.22 (2026-10-12)
 --------------------
 * [Humble] Updates to not use std::move in some places. (backport `#2353 <https://github.com/ros2/rclcpp/issues/2353>`_) (`#3310 <https://github.com/ros2/rclcpp/issues/3310>`_)
