@@ -328,7 +328,9 @@ GenericClient::create_message(IntrospectionMessageMembersPtr message_members) co
   message_members->init_function(message, rosidl_runtime_cpp::MessageInitialization::ZERO);
   return std::shared_ptr<void>(
     message,
-    [message_members](void * p)
+    // The object can outlive the client. ts_lib keeps the type support library
+    // loaded until fini_function runs.
+    [message_members, ts_lib = ts_lib_](void * p)
     {
       message_members->fini_function(p);
       delete[] reinterpret_cast<uint8_t *>(p);
