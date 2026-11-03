@@ -144,6 +144,21 @@ TEST_F(TestGenericService, create_generic_service_with_node) {
   EXPECT_STREQ("/ns/test_generic_service", generic_service->get_service_name());
 }
 
+TEST_F(TestGenericService, create_generic_service_default_arguments) {
+  auto callback = [](
+    rclcpp::GenericService::SharedRequest,
+    rclcpp::GenericService::SharedResponse) {};
+
+  auto from_node = rclcpp::create_generic_service(
+    node, "from_node", "test_msgs/srv/Empty", callback);
+  EXPECT_NE(nullptr, from_node);
+
+  auto from_interfaces = rclcpp::create_generic_service(
+    node->get_node_base_interface(), node->get_node_services_interface(),
+    "from_interfaces", "test_msgs/srv/Empty", callback);
+  EXPECT_NE(nullptr, from_interfaces);
+}
+
 /*
    Testing service construction and destruction for subnodes.
  */

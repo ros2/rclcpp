@@ -24,6 +24,7 @@
 #include "rclcpp/node_interfaces/node_base_interface.hpp"
 #include "rclcpp/node_interfaces/get_node_services_interface.hpp"
 #include "rclcpp/node_interfaces/node_services_interface.hpp"
+#include "rclcpp/qos.hpp"
 #include "rclcpp/visibility_control.hpp"
 #include "rmw/rmw.h"
 
@@ -50,8 +51,8 @@ create_generic_service(
   const std::string & service_name,
   const std::string & service_type,
   CallbackT && callback,
-  const rclcpp::QoS & qos,
-  rclcpp::CallbackGroup::SharedPtr group)
+  const rclcpp::QoS & qos = rclcpp::ServicesQoS(),
+  rclcpp::CallbackGroup::SharedPtr group = nullptr)
 {
   rclcpp::GenericServiceCallback any_service_callback;
   any_service_callback.set(std::forward<CallbackT>(callback));
@@ -87,8 +88,8 @@ create_generic_service(
   const std::string & service_name,
   const std::string & service_type,
   CallbackT && callback,
-  const rclcpp::QoS & qos,
-  rclcpp::CallbackGroup::SharedPtr group)
+  const rclcpp::QoS & qos = rclcpp::ServicesQoS(),
+  rclcpp::CallbackGroup::SharedPtr group = nullptr)
 {
   return create_generic_service<CallbackT>(
     rclcpp::node_interfaces::get_node_base_interface(node),
