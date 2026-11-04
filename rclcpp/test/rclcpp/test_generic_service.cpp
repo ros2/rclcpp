@@ -26,6 +26,7 @@
 #include <utility>
 
 #include "rclcpp/client.hpp"
+#include "rclcpp/create_generic_service.hpp"
 #include "rclcpp/duration.hpp"
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp/executors.hpp"
@@ -148,6 +149,33 @@ TEST_F(TestGenericService, request_and_response_outlive_service) {
   // The deleters must not use the destroyed service.
   EXPECT_NO_THROW(request.reset());
   EXPECT_NO_THROW(response.reset());
+}
+
+TEST_F(TestGenericService, create_generic_service_with_node) {
+  auto callback = [](
+    rclcpp::GenericService::SharedRequest,
+    rclcpp::GenericService::SharedResponse) {};
+  auto generic_service = rclcpp::create_generic_service(
+    node, "test_generic_service", "test_msgs/srv/Empty", callback,
+    rclcpp::ServicesQoS(), nullptr);
+  ASSERT_NE(nullptr, generic_service);
+  EXPECT_NE(nullptr, generic_service->get_service_handle());
+  EXPECT_STREQ("/ns/test_generic_service", generic_service->get_service_name());
+}
+
+TEST_F(TestGenericService, create_generic_service_default_arguments) {
+  auto callback = [](
+    rclcpp::GenericService::SharedRequest,
+    rclcpp::GenericService::SharedResponse) {};
+
+  auto from_node = rclcpp::create_generic_service(
+    node, "from_node", "test_msgs/srv/Empty", callback);
+  EXPECT_NE(nullptr, from_node);
+
+  auto from_interfaces = rclcpp::create_generic_service(
+    node->get_node_base_interface(), node->get_node_services_interface(),
+    "from_interfaces", "test_msgs/srv/Empty", callback);
+  EXPECT_NE(nullptr, from_interfaces);
 }
 
 /*
