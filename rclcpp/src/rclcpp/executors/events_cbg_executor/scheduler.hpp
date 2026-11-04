@@ -237,8 +237,6 @@ public:
 
     CallbackGroupType get_type() {return type;}
 
-    bool is_ready();
-
     std::mutex & get_ready_mutex()
     {
       return ready_mutex;
