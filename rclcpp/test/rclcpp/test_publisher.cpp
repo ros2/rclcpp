@@ -14,12 +14,14 @@
 
 #include <gtest/gtest.h>
 
+#include <atomic>
 #include <chrono>
 #include <functional>
 #include <future>
 #include <memory>
 #include <stdexcept>
 #include <string>
+#include <thread>
 #include <utility>
 #include <vector>
 
@@ -699,6 +701,31 @@ TEST_F(TestPublisher, lowest_available_ipm_capacity) {
 
   ASSERT_EQ(0, pub_ipm_disabled->lowest_available_ipm_capacity());
   ASSERT_EQ(history_depth - 1u, pub_ipm_enabled->lowest_available_ipm_capacity());
+}
+
+TEST_F(TestPublisher, lowest_available_ipm_capacity_concurrent_subscriptions) {
+  initialize(rclcpp::NodeOptions().use_intra_process_comms(true));
+
+  auto pub = node->create_publisher<test_msgs::msg::Strings>("topic", 10);
+  auto do_nothing = [](std::shared_ptr<const test_msgs::msg::Strings>) {};
+
+  // Query the capacity while intra-process subscriptions are added and removed.
+  std::atomic<bool> done{false};
+  std::thread reader([&pub, &done]() {
+      while (!done) {
+        pub->lowest_available_ipm_capacity();
+      }
+    });
+
+  for (int i = 0; i < 50; ++i) {
+    std::vector<rclcpp::Subscription<test_msgs::msg::Strings>::SharedPtr> subs;
+    for (int j = 0; j < 20; ++j) {
+      subs.push_back(node->create_subscription<test_msgs::msg::Strings>("topic", 10, do_nothing));
+    }
+  }
+  done = true;
+  reader.join();
+  EXPECT_EQ(0u, pub->lowest_available_ipm_capacity());
 }
 
 INSTANTIATE_TEST_SUITE_P(

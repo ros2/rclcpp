@@ -87,7 +87,6 @@ struct ShouldUseIntraprocess
 };
 
 using UseIntraprocess = ShouldUseIntraprocess<true>;
-using DoNotUseIntraprocess = ShouldUseIntraprocess<false>;
 
 struct UseCustomContext
 {

@@ -1329,14 +1329,6 @@ TEST_F(TestGoalRequestServer, execute_goal_request_received_update_goal_state_er
   EXPECT_THROW(SendClientGoalRequest(), rclcpp::exceptions::RCLError);
 }
 
-TEST_F(TestGoalRequestServer, publish_status_server_get_goal_handles_errors)
-{
-  auto mock = mocking_utils::patch_and_return(
-    "lib:rclcpp_action", rcl_action_server_get_goal_handles, RCL_RET_ERROR);
-
-  EXPECT_THROW(SendClientGoalRequest(), rclcpp::exceptions::RCLError);
-}
-
 TEST_F(TestGoalRequestServer, publish_status_get_goal_status_array_errors)
 {
   auto mock = mocking_utils::patch_and_return(

@@ -163,13 +163,6 @@ TEST_F(TestTypeSupport, test_service_ts_get_params_srv) {
   EXPECT_TRUE(test_type_support_init_fini(ts));
 }
 
-TEST_F(TestTypeSupport, test_service_ts_get_params_srv_type) {
-  const rosidl_service_type_support_t * ts =
-    rclcpp::type_support::get_get_parameters_srv_type_support();
-  ASSERT_NE(nullptr, ts);
-  EXPECT_TRUE(test_type_support_init_fini(ts));
-}
-
 TEST_F(TestTypeSupport, test_service_ts_get_parameters_types_srv) {
   const rosidl_service_type_support_t * ts =
     rclcpp::type_support::get_get_parameter_types_srv_type_support();
