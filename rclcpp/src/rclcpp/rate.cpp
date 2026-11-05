@@ -52,7 +52,7 @@ Rate::sleep()
     next_interval = now + period_;
   }
   // Update the interval
-  last_interval_ += period_;
+  last_interval_ = next_interval;
   // If the time_to_sleep is negative or zero, don't sleep
   if (next_interval <= now) {
     // If an entire cycle was missed then reset next interval.
