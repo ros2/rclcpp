@@ -57,15 +57,7 @@ install(DIRECTORY include/
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
-  # Give cppcheck hints about macro definitions coming from outside this package
-  get_target_property(rclcpp_include_dirs rclcpp::rclcpp INTERFACE_INCLUDE_DIRECTORIES)
-  set(ament_cmake_cppcheck_ADDITIONAL_INCLUDE_DIRS ${rclcpp_include_dirs})
-  list(APPEND AMENT_LINT_AUTO_EXCLUDE "ament_cmake_cppcheck")
   ament_lint_auto_find_test_dependencies()
-
-  find_package(ament_cmake_cppcheck REQUIRED)
-  ament_cppcheck()
-  set_tests_properties(cppcheck PROPERTIES TIMEOUT 360)
 
   find_package(performance_test_fixture REQUIRED)
 

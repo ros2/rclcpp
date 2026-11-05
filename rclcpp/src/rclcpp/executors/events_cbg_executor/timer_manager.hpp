@@ -549,7 +549,6 @@ private:
         });
       }
     }
-    thread_terminated = true;
   }
 
   rcl_clock_type_t timer_type;
