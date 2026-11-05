@@ -159,7 +159,7 @@ GenericService::handle_request(
 }
 
 void
-GenericService::send_response(rmw_request_id_t & req_id, SharedResponse & response)
+GenericService::send_response(rmw_request_id_t & req_id, const SharedResponse & response)
 {
   rcl_ret_t ret = rcl_send_response(get_service_handle().get(), &req_id, response.get());
 
