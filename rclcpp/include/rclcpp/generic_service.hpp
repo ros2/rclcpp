@@ -292,7 +292,7 @@ public:
 
   RCLCPP_PUBLIC
   void
-  send_response(rmw_request_id_t & req_id, SharedResponse & response);
+  send_response(rmw_request_id_t & req_id, const SharedResponse & response);
 
 private:
   RCLCPP_DISABLE_COPY(GenericService)
