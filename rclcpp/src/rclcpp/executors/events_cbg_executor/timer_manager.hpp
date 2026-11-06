@@ -23,93 +23,12 @@
 #include <utility>
 #include <vector>
 
+#include <rclcpp/clock.hpp>
 #include <rclcpp/timer.hpp>
 #include <rclcpp/utilities.hpp>
 
 namespace rclcpp::executors::cbg_executor
 {
-
-/**
- * Specialized version of rclcpp::ClockConditionalVariable
- *
- * This version accepts the clock on waits instead of on construction.
- * This is needed, as clocks may be deleted during normal operation,
- * and be don't have a way to create a permanent ros time clock.
- */
-class ClockConditionalVariable
-{
-  std::mutex pred_mutex_;
-  bool shutdown_ = false;
-  rclcpp::Context::SharedPtr context_;
-  rclcpp::OnShutdownCallbackHandle shutdown_cb_handle_;
-  ClockWaiter::UniquePtr clock_;
-
-public:
-  explicit ClockConditionalVariable(rclcpp::Context::SharedPtr context)
-  :context_(std::move(context))
-  {
-    if (!context_ || !context_->is_valid()) {
-      throw std::runtime_error("context cannot be slept with because it's invalid");
-    }
-    // Wake this thread if the context is shutdown
-    shutdown_cb_handle_ = context_->add_on_shutdown_callback(
-      [this]() {
-        std::unique_lock lock(pred_mutex_);
-        shutdown_ = true;
-        if(clock_) {
-          clock_->notify_one();
-        }
-    });
-  }
-
-  ~ClockConditionalVariable()
-  {
-    context_->remove_on_shutdown_callback(shutdown_cb_handle_);
-  }
-
-  bool
-  wait_until(
-    std::unique_lock<std::mutex> & lock, const rclcpp::Clock::SharedPtr & clock,
-    const rclcpp::Time & until,
-    const std::function<bool ()> & pred)
-  {
-    if(lock.mutex() != &pred_mutex_) {
-      throw std::runtime_error(
-          "ClockConditionalVariable::wait_until: Internal error, given lock does not use"
-          " mutex returned by this->mutex()");
-    }
-
-    if(shutdown_) {
-      return false;
-    }
-
-    clock_ = std::make_unique<ClockWaiter>(clock);
-
-    clock_->wait_until(lock, until, [this, &pred] () -> bool {
-        return shutdown_ || pred();
-      });
-
-    clock_.reset();
-
-    return true;
-  }
-
-  void
-  notify_one()
-  {
-    std::unique_lock lock(pred_mutex_);
-
-    if(clock_) {
-      clock_->notify_one();
-    }
-  }
-
-  std::mutex &
-  mutex()
-  {
-    return pred_mutex_;
-  }
-};
 
 /**
  * @brief A class for managing a queue of timers
@@ -488,7 +407,7 @@ private:
 
   rclcpp::Clock::SharedPtr used_clock_for_timers;
 
-  ClockConditionalVariable clock_waiter;
+  rclcpp::ClockConditionalVariable clock_waiter;
   bool wake_up = false;
 
   std::mutex mutex;
