@@ -298,7 +298,8 @@ public:
    * @param pred may be called in cased of spurious wakeups, but must be called every time
    *             notify_one() was called. During the call to pred, the given lock will be locked.
    *             This method will return, if pred returns true.
-   * @throws std::runtime_error if this waiter was constructed without a clock.
+   * @throws std::runtime_error if this waiter was constructed without a clock, or if
+   *             abs_time's clock type differs from the clock's.
    */
   RCLCPP_PUBLIC
   bool
@@ -316,6 +317,8 @@ public:
    * @param pred may be called in cased of spurious wakeups, but must be called every time
    *             notify_one() was called. During the call to pred, the given lock will be locked.
    *             This method will return, if pred returns true.
+   * @throws std::runtime_error if clock is null, or if abs_time's clock type differs from
+   *             the clock's.
    */
   RCLCPP_PUBLIC
   bool
@@ -379,7 +382,8 @@ public:
    *             This method will return, if pred returns true.
    *
    * @return false if the context was already shut down, true otherwise.
-   * @throws std::runtime_error if this conditional variable was constructed without a clock.
+   * @throws std::runtime_error if this conditional variable was constructed without a clock,
+   *             or if until's clock type differs from the clock's.
    */
   RCLCPP_PUBLIC
   bool
@@ -400,6 +404,8 @@ public:
    *             This method will return, if pred returns true.
    *
    * @return false if the context was already shut down, true otherwise.
+   * @throws std::runtime_error if clock is null, or if until's clock type differs from
+   *             the clock's.
    */
   RCLCPP_PUBLIC
   bool

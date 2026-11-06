@@ -289,6 +289,27 @@ TEST_F(TestClockWakeup, wait_without_clock_throws) {
     std::runtime_error);
 }
 
+TEST_F(TestClockWakeup, wait_with_null_clock_throws) {
+  auto clock = std::make_shared<rclcpp::Clock>(RCL_SYSTEM_TIME);
+  rclcpp::ClockConditionalVariable cond(clock);
+  std::unique_lock lk(cond.mutex());
+
+  // A null clock is an error, it does not fall back to the clock given at construction
+  EXPECT_THROW(
+    cond.wait_until(lk, nullptr, clock->now(), [] () {return true;}),
+    std::runtime_error);
+}
+
+TEST_F(TestClockWakeup, wait_with_mismatched_clock_type_throws) {
+  auto clock = std::make_shared<rclcpp::Clock>(RCL_STEADY_TIME);
+  rclcpp::ClockConditionalVariable cond(rclcpp::contexts::get_global_default_context());
+  std::unique_lock lk(cond.mutex());
+
+  EXPECT_THROW(
+    cond.wait_until(lk, clock, rclcpp::Time(0, 0, RCL_SYSTEM_TIME), [] () {return true;}),
+    std::runtime_error);
+}
+
 TEST_P(TestClockWakeup, clock_waiter_clock_given_on_wait_times_out) {
   auto clock = std::make_shared<rclcpp::Clock>(GetParam());
   rclcpp::ClockWaiter waiter;
@@ -298,6 +319,19 @@ TEST_P(TestClockWakeup, clock_waiter_clock_given_on_wait_times_out) {
   const auto start_time = std::chrono::steady_clock::now();
   EXPECT_FALSE(waiter.wait_until(lk, clock, clock->now() + 10ms, [] () {return false;}));
   EXPECT_LT(std::chrono::steady_clock::now(), start_time + 1s);
+}
+
+TEST_F(TestClockWakeup, clock_waiter_without_clock_throws) {
+  rclcpp::ClockWaiter waiter;
+  std::mutex mutex;
+  std::unique_lock lk(mutex);
+
+  EXPECT_THROW(
+    waiter.wait_until(lk, rclcpp::Time(0, 0), [] () {return true;}),
+    std::runtime_error);
+  EXPECT_THROW(
+    waiter.wait_until(lk, nullptr, rclcpp::Time(0, 0), [] () {return true;}),
+    std::runtime_error);
 }
 
 TEST_F(TestClockWakeup, wait_after_shutdown_returns_false) {
