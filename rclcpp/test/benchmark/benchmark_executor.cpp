@@ -468,7 +468,6 @@ public:
     callback_count = 0;
     reset_heap_counters();
 
-    std::mutex cond_mutex;
     std::unique_lock<std::mutex> lk(cond_mutex);
     auto thread = std::thread(
       [&executor] {
@@ -479,10 +478,10 @@ public:
       (void)_;
       last_cb_triggered = false;
 
-      // start the cascasde
+      // start the cascade
       waitables[0]->trigger();
 
-      cascade_done.wait_for(lk, 500ms);
+      cascade_done.wait_for(lk, 500ms, [this]() {return last_cb_triggered;});
 
       if (!last_cb_triggered) {
         st.SkipWithError("No message was received");
