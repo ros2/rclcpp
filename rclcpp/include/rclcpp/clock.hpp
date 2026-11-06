@@ -278,6 +278,14 @@ public:
   RCLCPP_PUBLIC
   explicit ClockWaiter(const rclcpp::Clock::SharedPtr & clock);
 
+  /// Construct without a clock, so that every wait names the clock to wait on.
+  /**
+   * Use this if the clock to wait on is only known at wait time, for example because
+   * the clocks involved may be destroyed between waits.
+   */
+  RCLCPP_PUBLIC
+  ClockWaiter();
+
   RCLCPP_PUBLIC
   ~ClockWaiter();
 
@@ -290,11 +298,29 @@ public:
    * @param pred may be called in cased of spurious wakeups, but must be called every time
    *             notify_one() was called. During the call to pred, the given lock will be locked.
    *             This method will return, if pred returns true.
+   * @throws std::runtime_error if this waiter was constructed without a clock.
    */
   RCLCPP_PUBLIC
   bool
   wait_until(
     std::unique_lock<std::mutex> & lock,
+    const rclcpp::Time & abs_time, const std::function<bool ()> & pred);
+
+  /**
+   * Like wait_until() above, but waiting on the given clock instead of the one this
+   * waiter was constructed with.
+   * @param lock A locked lock. The lock must be locked at call time, or this method will throw.
+   *             The lock will be atomically released and this thread will blocked.
+   * @param clock The clock to wait on. Only used for the duration of this call.
+   * @param abs_time The time until which this thread shall be blocked.
+   * @param pred may be called in cased of spurious wakeups, but must be called every time
+   *             notify_one() was called. During the call to pred, the given lock will be locked.
+   *             This method will return, if pred returns true.
+   */
+  RCLCPP_PUBLIC
+  bool
+  wait_until(
+    std::unique_lock<std::mutex> & lock, const rclcpp::Clock::SharedPtr & clock,
     const rclcpp::Time & abs_time, const std::function<bool ()> & pred);
 
   /**
@@ -328,6 +354,16 @@ public:
   ClockConditionalVariable(
     const rclcpp::Clock::SharedPtr & clock,
     const rclcpp::Context::SharedPtr & context = rclcpp::contexts::get_global_default_context());
+
+  /// Construct without a clock, so that every wait names the clock to wait on.
+  /**
+   * Use this if the clock to wait on is only known at wait time, for example because
+   * the clocks involved may be destroyed between waits.
+   */
+  RCLCPP_PUBLIC
+  explicit ClockConditionalVariable(
+    const rclcpp::Context::SharedPtr & context = rclcpp::contexts::get_global_default_context());
+
   RCLCPP_PUBLIC
   ~ClockConditionalVariable();
 
@@ -337,18 +373,39 @@ public:
    * @param lock A locked lock. The lock must be locked at call time, or this method will throw.
    *             The lock will be atomically released and this thread will blocked.
    *             The given lock must be created using the mutex returned my mutex().
-   * @param abs_time The time until which this thread shall be blocked.
+   * @param until The time until which this thread shall be blocked.
    * @param pred may be called in cased of spurious wakeups, but must be called every time
    *             notify_one() was called. During the call to pred, the given lock will be locked.
    *             This method will return, if pred returns true.
    *
-   * @return true if until was reached.
+   * @return false if the context was already shut down, true otherwise.
+   * @throws std::runtime_error if this conditional variable was constructed without a clock.
    */
   RCLCPP_PUBLIC
   bool
   wait_until(
     std::unique_lock<std::mutex> & lock, const rclcpp::Time & until,
     const std::function<bool ()> & pred);
+
+  /**
+   * Like wait_until() above, but waiting on the given clock instead of the one this
+   * conditional variable was constructed with.
+   * @param lock A locked lock. The lock must be locked at call time, or this method will throw.
+   *             The lock will be atomically released and this thread will blocked.
+   *             The given lock must be created using the mutex returned my mutex().
+   * @param clock The clock to wait on. Only used for the duration of this call.
+   * @param until The time until which this thread shall be blocked.
+   * @param pred may be called in cased of spurious wakeups, but must be called every time
+   *             notify_one() was called. During the call to pred, the given lock will be locked.
+   *             This method will return, if pred returns true.
+   *
+   * @return false if the context was already shut down, true otherwise.
+   */
+  RCLCPP_PUBLIC
+  bool
+  wait_until(
+    std::unique_lock<std::mutex> & lock, const rclcpp::Clock::SharedPtr & clock,
+    const rclcpp::Time & until, const std::function<bool ()> & pred);
 
   /**
    * Notify the blocked thread, that is should reevaluate the wakeup condition.

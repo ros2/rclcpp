@@ -16,8 +16,10 @@
 
 #include <atomic>
 #include <chrono>
+#include <functional>
 #include <memory>
 #include <mutex>
+#include <stdexcept>
 #include <thread>
 
 #include "rcl/error_handling.h"
@@ -34,20 +36,44 @@ using namespace std::chrono_literals;
 class TestClockWakeup : public ::testing::TestWithParam<rcl_clock_type_e>
 {
 public:
+  /// Create a conditional variable bound to the clock, or one that is given the clock per wait
+  rclcpp::ClockConditionalVariable::UniquePtr
+  make_cond(const rclcpp::Clock::SharedPtr & clock)
+  {
+    if (clock_on_wait) {
+      return std::make_unique<rclcpp::ClockConditionalVariable>();
+    }
+    return std::make_unique<rclcpp::ClockConditionalVariable>(clock);
+  }
+
+  void
+  wait_until(
+    rclcpp::ClockConditionalVariable & cond, std::unique_lock<std::mutex> & lk,
+    const rclcpp::Clock::SharedPtr & clock, const rclcpp::Time & until,
+    const std::function<bool ()> & pred)
+  {
+    if (clock_on_wait) {
+      cond.wait_until(lk, clock, until, pred);
+    } else {
+      cond.wait_until(lk, until, pred);
+    }
+  }
+
   void test_wakeup_before_sleep(const rclcpp::Clock::SharedPtr & clock)
   {
     std::atomic_bool thread_finished = false;
-    rclcpp::ClockConditionalVariable cond(clock);
+    auto cond_ptr = make_cond(clock);
+    rclcpp::ClockConditionalVariable & cond = *cond_ptr;
 
     bool stopSleeping = false;
 
     std::thread wait_thread = std::thread(
-      [&cond, &clock, &stopSleeping, &thread_finished]()
+      [this, &cond, &clock, &stopSleeping, &thread_finished]()
       {
         // make sure the thread starts sleeping late
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
         std::unique_lock lk(cond.mutex());
-        cond.wait_until(lk, clock->now() + std::chrono::seconds(3),
+        wait_until(cond, lk, clock, clock->now() + std::chrono::seconds(3),
         [&stopSleeping] () {return stopSleeping;});
         thread_finished = true;
       });
@@ -76,15 +102,16 @@ public:
   void test_wakeup_after_sleep(const rclcpp::Clock::SharedPtr & clock)
   {
     std::atomic_bool thread_finished = false;
-    rclcpp::ClockConditionalVariable cond(clock);
+    auto cond_ptr = make_cond(clock);
+    rclcpp::ClockConditionalVariable & cond = *cond_ptr;
 
     bool stopSleeping = false;
 
     std::thread wait_thread = std::thread(
-      [&cond, &clock, &stopSleeping, &thread_finished]()
+      [this, &cond, &clock, &stopSleeping, &thread_finished]()
       {
         std::unique_lock lk(cond.mutex());
-        cond.wait_until(lk, clock->now() + std::chrono::seconds(3),
+        wait_until(cond, lk, clock, clock->now() + std::chrono::seconds(3),
         [&stopSleeping] () {return stopSleeping;});
         thread_finished = true;
       });
@@ -135,6 +162,9 @@ protected:
   }
 
   rclcpp::Node::SharedPtr node;
+
+  /// Name the clock on every wait, instead of binding it at construction
+  bool clock_on_wait = false;
 };
 
 INSTANTIATE_TEST_SUITE_P(
@@ -145,6 +175,13 @@ INSTANTIATE_TEST_SUITE_P(
 ));
 
 TEST_P(TestClockWakeup, wakeup_sleep) {
+  auto clock = std::make_shared<rclcpp::Clock>(GetParam());
+  test_wakeup_after_sleep(clock);
+  test_wakeup_before_sleep(clock);
+}
+
+TEST_P(TestClockWakeup, wakeup_sleep_clock_given_on_wait) {
+  clock_on_wait = true;
   auto clock = std::make_shared<rclcpp::Clock>(GetParam());
   test_wakeup_after_sleep(clock);
   test_wakeup_before_sleep(clock);
@@ -209,6 +246,29 @@ TEST_F(TestClockWakeup, no_wakeup_on_sim_time) {
 
   EXPECT_TRUE(thread_finished);
   EXPECT_LT(cur_time, start_time + std::chrono::seconds(1));
+}
+
+TEST_F(TestClockWakeup, wait_without_clock_throws) {
+  rclcpp::ClockConditionalVariable cond;
+  std::unique_lock lk(cond.mutex());
+
+  EXPECT_THROW(
+    cond.wait_until(lk, rclcpp::Time(0, 0), [] () {return true;}),
+    std::runtime_error);
+}
+
+TEST_F(TestClockWakeup, wait_after_shutdown_returns_false) {
+  auto context = std::make_shared<rclcpp::Context>();
+  context->init(0, nullptr);
+
+  auto clock = std::make_shared<rclcpp::Clock>(RCL_STEADY_TIME);
+  rclcpp::ClockConditionalVariable cond(clock, context);
+
+  context->shutdown("test done");
+
+  std::unique_lock lk(cond.mutex());
+  EXPECT_FALSE(
+    cond.wait_until(lk, clock->now() + std::chrono::seconds(10), [] () {return false;}));
 }
 
 TEST_F(TestClockWakeup, wakeup_on_ros_shutdown) {
