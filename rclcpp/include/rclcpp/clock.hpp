@@ -364,8 +364,7 @@ public:
    * the clocks involved may be destroyed between waits.
    */
   RCLCPP_PUBLIC
-  explicit ClockConditionalVariable(
-    const rclcpp::Context::SharedPtr & context = rclcpp::contexts::get_global_default_context());
+  explicit ClockConditionalVariable(const rclcpp::Context::SharedPtr & context);
 
   RCLCPP_PUBLIC
   ~ClockConditionalVariable();

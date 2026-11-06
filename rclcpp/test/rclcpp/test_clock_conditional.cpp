@@ -41,7 +41,8 @@ public:
   make_cond(const rclcpp::Clock::SharedPtr & clock)
   {
     if (clock_on_wait) {
-      return std::make_unique<rclcpp::ClockConditionalVariable>();
+      return std::make_unique<rclcpp::ClockConditionalVariable>(
+        rclcpp::contexts::get_global_default_context());
     }
     return std::make_unique<rclcpp::ClockConditionalVariable>(clock);
   }
@@ -281,7 +282,7 @@ TEST_P(TestClockWakeup, clock_given_on_wait_is_not_retained) {
 }
 
 TEST_F(TestClockWakeup, wait_without_clock_throws) {
-  rclcpp::ClockConditionalVariable cond;
+  rclcpp::ClockConditionalVariable cond(rclcpp::contexts::get_global_default_context());
   std::unique_lock lk(cond.mutex());
 
   EXPECT_THROW(
