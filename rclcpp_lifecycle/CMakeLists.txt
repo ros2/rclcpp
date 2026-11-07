@@ -112,6 +112,16 @@ if(BUILD_TESTING)
       rclcpp::rclcpp
       test_msgs::test_msgs)
   endif()
+  ament_add_gtest(
+    test_lifecycle_generic_publisher
+    test/test_lifecycle_generic_publisher.cpp)
+  if(TARGET test_lifecycle_generic_publisher)
+    target_link_libraries(
+      test_lifecycle_generic_publisher
+      ${PROJECT_NAME}
+      rclcpp::rclcpp
+      test_msgs::test_msgs)
+  endif()
   ament_add_ros_isolated_gtest(
     test_lifecycle_wait_for_message
     test/test_lifecycle_wait_for_message.cpp
