@@ -41,8 +41,7 @@ public:
   make_cond(const rclcpp::Clock::SharedPtr & clock)
   {
     if (clock_on_wait) {
-      return std::make_unique<rclcpp::ClockConditionalVariable>(
-        rclcpp::contexts::get_global_default_context());
+      return std::make_unique<rclcpp::ClockConditionalVariable>(nullptr);
     }
     return std::make_unique<rclcpp::ClockConditionalVariable>(clock);
   }
@@ -272,7 +271,7 @@ TEST_F(TestClockWakeup, no_wakeup_on_sim_time_clock_given_on_wait) {
 
 TEST_P(TestClockWakeup, clock_given_on_wait_is_not_retained) {
   auto clock = std::make_shared<rclcpp::Clock>(GetParam());
-  rclcpp::ClockConditionalVariable cond(rclcpp::contexts::get_global_default_context());
+  rclcpp::ClockConditionalVariable cond(nullptr);
   const auto use_count = clock.use_count();
 
   std::unique_lock lk(cond.mutex());
@@ -282,7 +281,7 @@ TEST_P(TestClockWakeup, clock_given_on_wait_is_not_retained) {
 }
 
 TEST_F(TestClockWakeup, wait_without_clock_throws) {
-  rclcpp::ClockConditionalVariable cond(rclcpp::contexts::get_global_default_context());
+  rclcpp::ClockConditionalVariable cond(nullptr);
   std::unique_lock lk(cond.mutex());
 
   EXPECT_THROW(
@@ -323,7 +322,7 @@ TEST_F(TestClockWakeup, wait_on_system_time_ignores_until_clock_type) {
 
 TEST_P(TestClockWakeup, clock_waiter_clock_given_on_wait_times_out) {
   auto clock = std::make_shared<rclcpp::Clock>(GetParam());
-  rclcpp::ClockWaiter waiter;
+  rclcpp::ClockWaiter waiter(nullptr);
   std::mutex mutex;
   std::unique_lock lk(mutex);
 
@@ -333,7 +332,7 @@ TEST_P(TestClockWakeup, clock_waiter_clock_given_on_wait_times_out) {
 }
 
 TEST_F(TestClockWakeup, clock_waiter_without_clock_throws) {
-  rclcpp::ClockWaiter waiter;
+  rclcpp::ClockWaiter waiter(nullptr);
   std::mutex mutex;
   std::unique_lock lk(mutex);
 

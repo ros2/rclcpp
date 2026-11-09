@@ -59,7 +59,7 @@ class TimerQueue
 
 public:
   TimerQueue(rcl_clock_type_t timer_type, const rclcpp::Context::SharedPtr & context)
-  : timer_type(timer_type), clock_waiter(context)
+  : timer_type(timer_type), clock_waiter(nullptr, context)
   {
     // must be initialized here so that all class members
     // are initialized

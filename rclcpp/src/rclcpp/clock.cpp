@@ -489,11 +489,6 @@ ClockWaiter::ClockWaiter(const rclcpp::Clock::SharedPtr & clock)
 {
 }
 
-ClockWaiter::ClockWaiter()
-:impl_(std::make_unique<ClockWaiterImpl>(nullptr))
-{
-}
-
 ClockWaiter::~ClockWaiter() = default;
 
 bool
@@ -538,13 +533,18 @@ public:
   :context_(context),
     waiter_(clock)
   {
-    register_shutdown_callback();
-  }
-
-  explicit Impl(const rclcpp::Context::SharedPtr & context)
-  :context_(context)
-  {
-    register_shutdown_callback();
+    if (!context_ || !context_->is_valid()) {
+      throw std::runtime_error("context cannot be slept with because it's invalid");
+    }
+    // Wake this thread if the context is shutdown
+    shutdown_cb_handle_ = context_->add_on_shutdown_callback(
+      [this]() {
+        {
+          std::unique_lock lock(pred_mutex_);
+          shutdown_ = true;
+        }
+        waiter_.notify_one();
+    });
   }
 
   ~Impl()
@@ -591,35 +591,12 @@ public:
   {
     return pred_mutex_;
   }
-
-private:
-  void
-  register_shutdown_callback()
-  {
-    if (!context_ || !context_->is_valid()) {
-      throw std::runtime_error("context cannot be slept with because it's invalid");
-    }
-    // Wake this thread if the context is shutdown
-    shutdown_cb_handle_ = context_->add_on_shutdown_callback(
-      [this]() {
-        {
-          std::unique_lock lock(pred_mutex_);
-          shutdown_ = true;
-        }
-        waiter_.notify_one();
-    });
-  }
 };
 
 ClockConditionalVariable::ClockConditionalVariable(
   const rclcpp::Clock::SharedPtr & clock,
   const rclcpp::Context::SharedPtr & context)
 :impl_(std::make_unique<Impl>(clock, context))
-{
-}
-
-ClockConditionalVariable::ClockConditionalVariable(const rclcpp::Context::SharedPtr & context)
-:impl_(std::make_unique<Impl>(context))
 {
 }
 

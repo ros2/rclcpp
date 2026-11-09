@@ -275,16 +275,13 @@ private:
 public:
   RCLCPP_SMART_PTR_DEFINITIONS(ClockWaiter)
 
-  RCLCPP_PUBLIC
-  explicit ClockWaiter(const rclcpp::Clock::SharedPtr & clock);
-
-  /// Construct without a clock, so that every wait names the clock to wait on.
   /**
-   * Use this if the clock to wait on is only known at wait time, for example because
-   * the clocks involved may be destroyed between waits.
+   * @param clock The clock to wait on. May be null, so that every wait names the clock
+   *             to wait on, for example because the clocks involved may be destroyed
+   *             between waits.
    */
   RCLCPP_PUBLIC
-  ClockWaiter();
+  explicit ClockWaiter(const rclcpp::Clock::SharedPtr & clock);
 
   RCLCPP_PUBLIC
   ~ClockWaiter();
@@ -351,18 +348,17 @@ class ClockConditionalVariable
 public:
   RCLCPP_SMART_PTR_DEFINITIONS(ClockConditionalVariable)
 
+  /**
+   * @param clock The clock to wait on. May be null, so that every wait names the clock
+   *             to wait on, for example because the clocks involved may be destroyed
+   *             between waits.
+   * @param context The context whose shutdown wakes the waiting thread.
+   * @throws std::runtime_error if the context is null or invalid.
+   */
   RCLCPP_PUBLIC
   ClockConditionalVariable(
     const rclcpp::Clock::SharedPtr & clock,
     const rclcpp::Context::SharedPtr & context = rclcpp::contexts::get_global_default_context());
-
-  /// Construct without a clock, so that every wait names the clock to wait on.
-  /**
-   * Use this if the clock to wait on is only known at wait time, for example because
-   * the clocks involved may be destroyed between waits.
-   */
-  RCLCPP_PUBLIC
-  explicit ClockConditionalVariable(const rclcpp::Context::SharedPtr & context);
 
   RCLCPP_PUBLIC
   ~ClockConditionalVariable();
