@@ -24,6 +24,7 @@
 #include <vector>
 
 #include <rclcpp/clock.hpp>
+#include <rclcpp/logging.hpp>
 #include <rclcpp/timer.hpp>
 #include <rclcpp/utilities.hpp>
 
@@ -389,9 +390,14 @@ private:
               return wake_up || !running || !rclcpp::ok();
           });
           wake_up = false;
-        } catch (const std::runtime_error &) {
+        } catch (const std::runtime_error & e) {
           // there is a race on shutdown, were the context may
           // become invalid, while we call sleep_until
+          if (rclcpp::ok()) {
+            RCLCPP_ERROR(
+              rclcpp::get_logger("rclcpp"),
+              "timer thread failed to wait, stopping all timers of this type: %s", e.what());
+          }
           running = false;
         }
       } else {
