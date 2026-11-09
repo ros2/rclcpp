@@ -301,14 +301,24 @@ TEST_F(TestClockWakeup, wait_with_null_clock_throws) {
     std::runtime_error);
 }
 
-TEST_F(TestClockWakeup, wait_with_mismatched_clock_type_throws) {
-  auto clock = std::make_shared<rclcpp::Clock>(RCL_STEADY_TIME);
-  rclcpp::ClockConditionalVariable cond(rclcpp::contexts::get_global_default_context());
-  std::unique_lock lk(cond.mutex());
+TEST_F(TestClockWakeup, wait_on_system_time_ignores_until_clock_type) {
+  // These paths only read until's nanoseconds, so a time of another clock type is accepted
+  auto ros_clock = std::make_shared<rclcpp::Clock>(RCL_ROS_TIME);
+  ASSERT_FALSE(ros_clock->ros_time_is_active());
+  auto system_clock = std::make_shared<rclcpp::Clock>(RCL_SYSTEM_TIME);
+  const auto soon = [] (const rclcpp::Clock::SharedPtr & clock, rcl_clock_type_t type) {
+      return rclcpp::Time((clock->now() + 10ms).nanoseconds(), type);
+    };
 
-  EXPECT_THROW(
-    cond.wait_until(lk, clock, rclcpp::Time(0, 0, RCL_SYSTEM_TIME), [] () {return true;}),
-    std::runtime_error);
+  rclcpp::ClockConditionalVariable ros_cond(ros_clock);
+  std::unique_lock ros_lk(ros_cond.mutex());
+  EXPECT_NO_THROW(
+    ros_cond.wait_until(ros_lk, soon(ros_clock, RCL_SYSTEM_TIME), [] () {return false;}));
+
+  rclcpp::ClockConditionalVariable system_cond(system_clock);
+  std::unique_lock system_lk(system_cond.mutex());
+  EXPECT_NO_THROW(
+    system_cond.wait_until(system_lk, soon(system_clock, RCL_ROS_TIME), [] () {return false;}));
 }
 
 TEST_P(TestClockWakeup, clock_waiter_clock_given_on_wait_times_out) {

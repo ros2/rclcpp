@@ -457,10 +457,6 @@ public:
     std::unique_lock<std::mutex> & lock, const rclcpp::Clock::SharedPtr & clock,
     const rclcpp::Time & abs_time, const std::function<bool ()> & pred)
   {
-    if (abs_time.get_clock_type() != clock->get_clock_type()) {
-      throw std::runtime_error("Clock types do not match!");
-    }
-
     switch(clock->get_clock_type()) {
       case RCL_CLOCK_UNINITIALIZED:
         throw std::runtime_error("Error, wait on uninitialized clock called");
