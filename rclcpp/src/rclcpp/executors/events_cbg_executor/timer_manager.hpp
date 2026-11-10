@@ -258,9 +258,10 @@ public:
       return;
     }
 
-    std::unique_ptr<TimerData> data = std::make_unique<TimerData>(TimerData{std::move(handle),
-          timer,
-          timer->get_clock(), false, timer_ready_callback});
+    // TimerData holds an atomic and is not movable, so construct it in place
+    std::unique_ptr<TimerData> data(new TimerData{std::move(handle),
+        timer,
+        timer->get_clock(), false, timer_ready_callback});
 
     timer->set_on_reset_callback(
       [data_ptr = data.get(), this](size_t) {
@@ -545,11 +546,8 @@ private:
 
   std::atomic_bool running = true;
   std::atomic_bool thread_terminated = false;
-<<<<<<< HEAD
-=======
   // set by the schedule change callback, consumed by the timer thread
   std::atomic_bool rekey_pending_any = false;
->>>>>>> ae09d1b (Re-key EventsCBGExecutor timers when rcl reschedules them (#3344))
 
   std::vector<std::unique_ptr<TimerData>> all_timers;
 
