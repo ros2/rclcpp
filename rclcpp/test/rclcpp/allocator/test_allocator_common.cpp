@@ -22,13 +22,14 @@ RCPPUTILS_DEPRECATION_WARNING_OFF_START
 #include "rclcpp/allocator/allocator_common.hpp"
 RCPPUTILS_DEPRECATION_WARNING_OFF_STOP
 
+// retyped_deallocate() and retyped_reallocate() free a single element, so only allocate one.
 TEST(TestAllocatorCommon, retyped_allocate)
 {
   std::allocator<int> allocator;
   void * untyped_allocator = &allocator;
   RCPPUTILS_DEPRECATION_WARNING_OFF_START
   void * allocated_mem =
-    rclcpp::allocator::retyped_allocate<std::allocator<char>>(1u, untyped_allocator);
+    rclcpp::allocator::retyped_allocate<std::allocator<int>>(1u, untyped_allocator);
   // The more natural check here is ASSERT_NE(nullptr, ptr), but clang static
   // analysis throws a false-positive memory leak warning.  Use ASSERT_TRUE instead.
   ASSERT_TRUE(nullptr != allocated_mem);
@@ -45,7 +46,7 @@ TEST(TestAllocatorCommon, retyped_allocate)
   ASSERT_TRUE(nullptr != allocated_mem);
   void * reallocated_mem =
     rclcpp::allocator::retyped_reallocate<int, std::allocator<int>>(
-    allocated_mem, 2u, untyped_allocator);
+    allocated_mem, 1u, untyped_allocator);
   // The more natural check here is ASSERT_NE(nullptr, ptr), but clang static
   // analysis throws a false-positive memory leak warning.  Use ASSERT_TRUE instead.
   ASSERT_TRUE(nullptr != reallocated_mem);
@@ -61,10 +62,10 @@ TEST(TestAllocatorCommon, retyped_allocate)
 
 TEST(TestAllocatorCommon, retyped_zero_allocate_basic) {
 RCPPUTILS_DEPRECATION_WARNING_OFF_START
-  std::allocator<int> allocator;
+  std::allocator<char> allocator;
   void * untyped_allocator = &allocator;
   void * allocated_mem =
-    rclcpp::allocator::retyped_zero_allocate<std::allocator<char>>(20u, 1u, untyped_allocator);
+    rclcpp::allocator::retyped_zero_allocate<std::allocator<char>>(1u, 1u, untyped_allocator);
   ASSERT_TRUE(nullptr != allocated_mem);
 
   auto code = [&untyped_allocator, allocated_mem]() {
@@ -80,7 +81,7 @@ RCPPUTILS_DEPRECATION_WARNING_OFF_START
   std::allocator<int> allocator;
   void * untyped_allocator = &allocator;
   void * allocated_mem =
-    rclcpp::allocator::retyped_zero_allocate<std::allocator<char>>(20u, 1u, untyped_allocator);
+    rclcpp::allocator::retyped_zero_allocate<std::allocator<int>>(1u, 1u, untyped_allocator);
   // The more natural check here is ASSERT_NE(nullptr, ptr), but clang static
   // analysis throws a false-positive memory leak warning.  Use ASSERT_TRUE instead.
   ASSERT_TRUE(nullptr != allocated_mem);
@@ -97,7 +98,7 @@ RCPPUTILS_DEPRECATION_WARNING_OFF_START
   ASSERT_TRUE(nullptr != allocated_mem);
   void * reallocated_mem =
     rclcpp::allocator::retyped_reallocate<int, std::allocator<int>>(
-    allocated_mem, 2u, untyped_allocator);
+    allocated_mem, 1u, untyped_allocator);
   // The more natural check here is ASSERT_NE(nullptr, ptr), but clang static
   // analysis throws a false-positive memory leak warning.  Use ASSERT_TRUE instead.
   ASSERT_TRUE(nullptr != reallocated_mem);
