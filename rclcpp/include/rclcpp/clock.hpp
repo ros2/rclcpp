@@ -277,8 +277,8 @@ public:
 
   /**
    * @param clock The clock to wait on. May be null, so that every wait names the clock
-   *             to wait on, for example because the clocks involved may be destroyed
-   *             between waits.
+   *              to wait on, for example because the clocks involved may be destroyed
+   *              between waits.
    */
   RCLCPP_PUBLIC
   explicit ClockWaiter(const rclcpp::Clock::SharedPtr & clock);
@@ -350,8 +350,8 @@ public:
 
   /**
    * @param clock The clock to wait on. May be null, so that every wait names the clock
-   *             to wait on, for example because the clocks involved may be destroyed
-   *             between waits.
+   *              to wait on, for example because the clocks involved may be destroyed
+   *              between waits.
    * @param context The context whose shutdown wakes the waiting thread.
    * @throws std::runtime_error if the context is null or invalid.
    */
