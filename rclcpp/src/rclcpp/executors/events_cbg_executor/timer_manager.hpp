@@ -60,7 +60,7 @@ class TimerQueue
 
 public:
   TimerQueue(rcl_clock_type_t timer_type, const rclcpp::Context::SharedPtr & context)
-  : timer_type(timer_type), clock_waiter(nullptr, context)
+  : timer_type(timer_type), context(context), clock_waiter(nullptr, context)
   {
     // must be initialized here so that all class members
     // are initialized
@@ -393,7 +393,7 @@ private:
         } catch (const std::runtime_error & e) {
           // there is a race on shutdown, were the context may
           // become invalid, while we call sleep_until
-          if (rclcpp::ok()) {
+          if (rclcpp::ok(context)) {
             RCLCPP_ERROR(
               rclcpp::get_logger("rclcpp"),
               "timer thread failed to wait, stopping all timers of this type: %s", e.what());
@@ -410,6 +410,8 @@ private:
   }
 
   rcl_clock_type_t timer_type;
+
+  rclcpp::Context::SharedPtr context;
 
   rclcpp::Clock::SharedPtr used_clock_for_timers;
 
