@@ -19,6 +19,7 @@
 #include <stdexcept>
 #include <utility>
 
+#include "rcl/error_handling.h"
 #include "rcl/wait.h"
 
 #include "rclcpp/exceptions.hpp"
@@ -108,14 +109,22 @@ protected:
     }
 
     // (Re)build the wait set for the first time.
-    this->storage_rebuild_rcl_wait_set_with_sets(
-      subscriptions,
-      guard_conditions,
-      extra_guard_conditions,
-      timers,
-      clients,
-      services,
-      waitables);
+    try {
+      this->storage_rebuild_rcl_wait_set_with_sets(
+        subscriptions,
+        guard_conditions,
+        extra_guard_conditions,
+        timers,
+        clients,
+        services,
+        waitables);
+    } catch (...) {
+      // The destructor won't run, so clean up here.
+      if (RCL_RET_OK != rcl_wait_set_fini(&rcl_wait_set_)) {
+        rcl_reset_error();
+      }
+      throw;
+    }
   }
 
   ~StoragePolicyCommon()
