@@ -88,6 +88,7 @@
 
 #include "rclcpp_lifecycle/node_interfaces/lifecycle_node_interface.hpp"
 #include "rclcpp_lifecycle/lifecycle_publisher.hpp"
+#include "rclcpp_lifecycle/lifecycle_timer.hpp"
 #include "rclcpp_lifecycle/state.hpp"
 #include "rclcpp_lifecycle/transition.hpp"
 #include "rclcpp_lifecycle/visibility_control.h"
@@ -254,6 +255,31 @@ public:
     )
   );
 
+  /// Create a managed timer that uses the wall clock to drive the callback.
+  /**
+   * \param[in] period Time interval between triggers of the callback.
+   * \param[in] callback User-defined callback function.
+   * \param[in] group Callback group to execute this timer's callback in.
+   */
+  template<typename DurationRepT, typename DurationT, typename CallbackT>
+  typename LifecycleWallTimer<CallbackT>::SharedPtr create_lifecycle_wall_timer(
+    std::chrono::duration<DurationRepT, DurationT> period, CallbackT callback,
+    rclcpp::CallbackGroup::SharedPtr group = nullptr);
+
+  /// Create a managed timer that uses the node clock to drive the callback.
+  /**
+   * \param[in] period Time interval between triggers of the callback.
+   * \param[in] callback User-defined callback function.
+   * \param[in] group Callback group to execute this timer's callback in.
+   */
+  template<typename DurationRepT = int64_t, typename DurationT = std::milli,
+    typename CallbackT>
+  typename LifecycleGenericTimer<CallbackT>::SharedPtr
+  create_lifecycle_timer(
+    std::chrono::duration<DurationRepT, DurationT> period,
+    CallbackT callback,
+    rclcpp::CallbackGroup::SharedPtr group = nullptr);
+
   /// Create a timer that uses the wall clock to drive the callback.
   /**
    * \param[in] period Time interval between triggers of the callback.
@@ -261,6 +287,8 @@ public:
    * \param[in] group Callback group to execute this timer's callback in.
    */
   template<typename DurationRepT = int64_t, typename DurationT = std::milli, typename CallbackT>
+  [[deprecated("Use create_lifecycle_wall_timer() instead. It returns a "
+               "managed timer instead of a regular one")]]
   typename rclcpp::WallTimer<CallbackT>::SharedPtr
   create_wall_timer(
     std::chrono::duration<DurationRepT, DurationT> period,
@@ -274,6 +302,8 @@ public:
    * \param[in] group Callback group to execute this timer's callback in.
    */
   template<typename DurationRepT = int64_t, typename DurationT = std::milli, typename CallbackT>
+  [[deprecated("Use create_lifecycle_timer() instead. It returns a managed "
+               "timer instead of a regular one")]]
   typename rclcpp::GenericTimer<CallbackT>::SharedPtr
   create_timer(
     std::chrono::duration<DurationRepT, DurationT> period,
