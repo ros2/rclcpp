@@ -577,3 +577,50 @@ TEST_F(TestExecutor, is_spinning) {
 
   ASSERT_TRUE(timer_called);
 }
+
+TEST_F(TestExecutor, remove_node_removes_guard_conditions_of_all_callback_groups) {
+  DummyExecutor dummy;
+  const size_t guard_conditions_before = dummy.memory_strategy_ptr()->number_of_guard_conditions();
+
+  auto node = std::make_shared<rclcpp::Node>("node", "ns");
+  // In addition to the default callback group, this one is added automatically with the node.
+  rclcpp::CallbackGroup::SharedPtr cb_group = node->create_callback_group(
+    rclcpp::CallbackGroupType::MutuallyExclusive);
+
+  dummy.add_node(node->get_node_base_interface(), false);
+  EXPECT_EQ(
+    guard_conditions_before + 2u, dummy.memory_strategy_ptr()->number_of_guard_conditions());
+
+  dummy.remove_node(node->get_node_base_interface(), false);
+  // The guard conditions are owned by the callback groups, so none of them may be left behind.
+  EXPECT_EQ(guard_conditions_before, dummy.memory_strategy_ptr()->number_of_guard_conditions());
+
+  cb_group.reset();
+  node.reset();
+  // The executor must not wait on anything that belonged to the destroyed node.
+  EXPECT_NO_THROW(dummy.spin_some(std::chrono::milliseconds(1)));
+}
+
+TEST_F(TestExecutor, remove_callback_group_removes_guard_condition) {
+  DummyExecutor dummy;
+  const size_t guard_conditions_before = dummy.memory_strategy_ptr()->number_of_guard_conditions();
+
+  auto node = std::make_shared<rclcpp::Node>("node", "ns");
+  rclcpp::CallbackGroup::SharedPtr cb_group1 = node->create_callback_group(
+    rclcpp::CallbackGroupType::MutuallyExclusive, false);
+  rclcpp::CallbackGroup::SharedPtr cb_group2 = node->create_callback_group(
+    rclcpp::CallbackGroupType::MutuallyExclusive, false);
+
+  dummy.add_callback_group(cb_group1, node->get_node_base_interface(), false);
+  dummy.add_callback_group(cb_group2, node->get_node_base_interface(), false);
+  EXPECT_EQ(
+    guard_conditions_before + 2u, dummy.memory_strategy_ptr()->number_of_guard_conditions());
+
+  // The node still has another callback group in the executor.
+  dummy.remove_callback_group(cb_group1, false);
+  EXPECT_EQ(
+    guard_conditions_before + 1u, dummy.memory_strategy_ptr()->number_of_guard_conditions());
+
+  dummy.remove_callback_group(cb_group2, false);
+  EXPECT_EQ(guard_conditions_before, dummy.memory_strategy_ptr()->number_of_guard_conditions());
+}

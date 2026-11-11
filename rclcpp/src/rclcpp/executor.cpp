@@ -298,16 +298,18 @@ Executor::remove_callback_group_from_map(
   } else {
     throw std::runtime_error("Callback group needs to be associated with executor.");
   }
+  // The group is no longer handled by this executor, so stop waiting on its guard condition.
+  // This must not depend on the node having other groups left in the executor: the guard
+  // condition is owned by the group, and the memory strategy only keeps a raw pointer to it.
+  auto guard_condition_iter = weak_groups_to_guard_conditions_.find(weak_group_ptr);
+  if (guard_condition_iter != weak_groups_to_guard_conditions_.end()) {
+    memory_strategy_->remove_guard_condition(guard_condition_iter->second);
+    weak_groups_to_guard_conditions_.erase(guard_condition_iter);
+  }
   // If the node was matched and removed, interrupt waiting.
   if (!has_node(node_ptr, weak_groups_to_nodes_associated_with_executor_) &&
     !has_node(node_ptr, weak_groups_associated_with_executor_to_nodes_))
   {
-    auto iter = weak_groups_to_guard_conditions_.find(weak_group_ptr);
-    if (iter != weak_groups_to_guard_conditions_.end()) {
-      memory_strategy_->remove_guard_condition(iter->second);
-    }
-    weak_groups_to_guard_conditions_.erase(weak_group_ptr);
-
     if (notify) {
       try {
         interrupt_guard_condition_.trigger();
