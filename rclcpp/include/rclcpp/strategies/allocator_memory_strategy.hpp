@@ -490,7 +490,7 @@ public:
     return waitable_handles_.size();
   }
 
-private:
+protected:
   template<typename T>
   using VectorRebind =
     std::vector<T, typename std::allocator_traits<Alloc>::template rebind_alloc<T>>;
