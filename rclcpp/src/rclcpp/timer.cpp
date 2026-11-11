@@ -15,6 +15,7 @@
 #include "rclcpp/timer.hpp"
 
 #include <chrono>
+#include <stdexcept>
 #include <string>
 #include <memory>
 
@@ -28,20 +29,22 @@
 
 using rclcpp::TimerBase;
 
-TimerBase::TimerBase(
-  rclcpp::Clock::SharedPtr clock,
-  std::chrono::nanoseconds period,
-  rclcpp::Context::SharedPtr context,
-  bool autostart)
+TimerBase::TimerBase(rclcpp::Clock::SharedPtr clock)
 : clock_(clock), timer_handle_(nullptr)
+{
+}
+
+std::shared_ptr<rcl_timer_t>
+TimerBase::create_timer_handle(rclcpp::Context::SharedPtr context)
 {
   if (nullptr == context) {
     context = rclcpp::contexts::get_global_default_context();
   }
 
   auto rcl_context = context->get_rcl_context();
+  auto clock = clock_;
 
-  timer_handle_ = std::shared_ptr<rcl_timer_t>(
+  auto handle = std::shared_ptr<rcl_timer_t>(
     new rcl_timer_t, [ = ](rcl_timer_t * timer) mutable
     {
       {
@@ -59,7 +62,23 @@ TimerBase::TimerBase(
       rcl_context.reset();
     });
 
-  *timer_handle_.get() = rcl_get_zero_initialized_timer();
+  *handle.get() = rcl_get_zero_initialized_timer();
+  return handle;
+}
+
+TimerBase::TimerBase(
+  rclcpp::Clock::SharedPtr clock,
+  std::chrono::nanoseconds period,
+  rclcpp::Context::SharedPtr context,
+  bool autostart)
+: TimerBase(clock)
+{
+  if (nullptr == context) {
+    context = rclcpp::contexts::get_global_default_context();
+  }
+
+  auto rcl_context = context->get_rcl_context();
+  timer_handle_ = create_timer_handle(context);
 
   rcl_clock_t * clock_handle = clock_->get_clock_handle();
   {
@@ -220,4 +239,39 @@ TimerBase::set_on_reset_callback(rcl_event_callback_t callback, const void * use
 const rclcpp::Clock::SharedPtr & TimerBase::get_clock() const
 {
   return clock_;
+}
+
+namespace
+{
+/// Floor division for a positive divisor (unlike operator/, rounds toward negative infinity).
+int64_t
+floor_div(int64_t dividend, int64_t positive_divisor)
+{
+  int64_t quotient = dividend / positive_divisor;
+  if (dividend % positive_divisor != 0 && dividend < 0) {
+    --quotient;
+  }
+  return quotient;
+}
+}  // namespace
+
+rclcpp::Time
+rclcpp::compute_phase_aligned_time(
+  const rclcpp::Clock & clock,
+  std::chrono::nanoseconds interval,
+  std::chrono::nanoseconds phase)
+{
+  if (interval <= std::chrono::nanoseconds(0)) {
+    throw std::invalid_argument("interval must be greater than zero");
+  }
+  const rclcpp::Time now = clock.now();
+  const int64_t now_ns = now.nanoseconds();
+  const int64_t interval_ns = interval.count();
+  const int64_t phase_ns = phase.count();
+  const int64_t k = floor_div(now_ns - phase_ns, interval_ns);
+  int64_t aligned_ns = k * interval_ns + phase_ns;
+  if (aligned_ns < now_ns) {
+    aligned_ns += interval_ns;
+  }
+  return rclcpp::Time(aligned_ns, now.get_clock_type());
 }

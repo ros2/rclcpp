@@ -22,6 +22,7 @@
 #include <string>
 #include <utility>
 
+#include "rcl/time.h"
 #include "rcl/timer.h"
 
 #include "rclcpp/clock.hpp"
@@ -37,11 +38,13 @@
 
 using namespace std::chrono_literals;
 
-/// We want to test everything for both the wall and generic timer.
+/// We want to test everything for both the wall and generic timer, as well as the aligned timers.
 enum class TimerType
 {
   WALL_TIMER,
   GENERIC_TIMER,
+  ALIGNED_WALL_TIMER,
+  ALIGNED_TIMER,
 };
 
 /// Timer testing bring up and teardown
@@ -77,6 +80,14 @@ protected:
         break;
       case TimerType::GENERIC_TIMER:
         timer = test_node->create_timer(100ms, timer_callback);
+        EXPECT_FALSE(timer->is_steady());
+        break;
+      case TimerType::ALIGNED_WALL_TIMER:
+        timer = test_node->create_aligned_wall_timer(100ms, 0ms, timer_callback);
+        EXPECT_TRUE(timer->is_steady());
+        break;
+      case TimerType::ALIGNED_TIMER:
+        timer = test_node->create_aligned_timer(100ms, 0ms, timer_callback);
         EXPECT_FALSE(timer->is_steady());
         break;
     }
@@ -233,6 +244,196 @@ TEST_P(TestTimer, test_bad_arguments) {
   EXPECT_THROW(
     rclcpp::GenericTimer<void (*)()>(unitialized_clock, 1us, []() {}, context),
     rclcpp::exceptions::RCLError);
+
+  // Same set of checks, but using AlignedTimer / AlignedWallTimer.
+  auto now = steady_clock->now();
+
+  // Negative period (initial_call_time constructor)
+  EXPECT_THROW(
+    rclcpp::AlignedTimer<void (*)()>(steady_clock, now, -1ms, []() {}, context),
+    rclcpp::exceptions::RCLInvalidArgument);
+
+  // 0 duration period, should be ok for initial_call_time constructor
+  EXPECT_NO_THROW(
+    rclcpp::AlignedTimer<void (*)()>(steady_clock, now, 0ms, []() {}, context));
+
+  // Non-positive period for phase-offset constructor throws std::invalid_argument
+  EXPECT_THROW(
+    rclcpp::AlignedTimer<void (*)()>(steady_clock, 0ms, 0ms, []() {}, context),
+    std::invalid_argument);
+  EXPECT_THROW(
+    rclcpp::AlignedTimer<void (*)()>(steady_clock, -1ms, 0ms, []() {}, context),
+    std::invalid_argument);
+  EXPECT_THROW(
+    rclcpp::AlignedWallTimer<void (*)()>(0ms, 0ms, []() {}, context),
+    std::invalid_argument);
+
+  // Clock is uninitialized
+  EXPECT_THROW(
+    rclcpp::AlignedTimer<void (*)()>(unitialized_clock, now, 1us, []() {}, context),
+    rclcpp::exceptions::RCLError);
+  EXPECT_THROW(
+    rclcpp::AlignedTimer<void (*)()>(unitialized_clock, 1us, 0us, []() {}, context),
+    rclcpp::exceptions::RCLError);
+
+  // initial_call_time's clock type does not match the timer's clock
+  rclcpp::Time mismatched_clock_type_time(static_cast<int64_t>(0), RCL_SYSTEM_TIME);
+  EXPECT_THROW(
+    rclcpp::AlignedTimer<void (*)()>(
+      steady_clock, mismatched_clock_type_time, 1ms, []() {}, context),
+    std::runtime_error);
+
+  // Same check for AlignedWallTimer, which always uses a steady clock internally regardless of what
+  // clock type initial_call_time was constructed with.
+  EXPECT_THROW(
+    rclcpp::AlignedWallTimer<void (*)()>(mismatched_clock_type_time, 1ms, []() {}, context),
+    std::runtime_error);
+}
+
+TEST_P(TestTimer, test_initial_call_time)
+{
+  const auto period = 50ms;
+  const auto initial_delay = std::chrono::seconds(10);
+
+  std::shared_ptr<rclcpp::TimerBase> initial_time_timer;
+  switch (timer_type) {
+    case TimerType::WALL_TIMER:
+    case TimerType::ALIGNED_WALL_TIMER:
+      {
+        rclcpp::Clock steady_clock(RCL_STEADY_TIME);
+        initial_time_timer = test_node->create_aligned_wall_timer(
+          steady_clock.now() + rclcpp::Duration(initial_delay), period, []() {});
+        break;
+      }
+    case TimerType::GENERIC_TIMER:
+    case TimerType::ALIGNED_TIMER:
+      {
+        initial_time_timer = test_node->create_aligned_timer(
+          test_node->get_clock()->now() + rclcpp::Duration(initial_delay), period, []() {});
+        break;
+      }
+  }
+
+  // The next call should be driven by initial_call_time, not by now + period.
+  EXPECT_GT(
+    initial_time_timer->time_until_trigger().count(),
+    std::chrono::nanoseconds(period).count());
+  EXPECT_LE(
+    initial_time_timer->time_until_trigger().count(),
+    std::chrono::nanoseconds(initial_delay).count());
+
+  initial_time_timer->cancel();
+}
+
+TEST_P(TestTimer, aligned_timer_reset_does_not_advance_if_not_yet_due)
+{
+  const auto period = 50ms;
+  const auto initial_delay = std::chrono::seconds(10);
+
+  std::shared_ptr<rclcpp::TimerBase> aligned_timer;
+  switch (timer_type) {
+    case TimerType::WALL_TIMER:
+    case TimerType::ALIGNED_WALL_TIMER:
+      {
+        rclcpp::Clock steady_clock(RCL_STEADY_TIME);
+        aligned_timer = test_node->create_aligned_wall_timer(
+          steady_clock.now() + rclcpp::Duration(initial_delay), period, []() {},
+          nullptr, false);
+        break;
+      }
+    case TimerType::GENERIC_TIMER:
+    case TimerType::ALIGNED_TIMER:
+      {
+        aligned_timer = test_node->create_aligned_timer(
+          test_node->get_clock()->now() + rclcpp::Duration(initial_delay), period, []() {},
+          nullptr, false);
+        break;
+      }
+  }
+
+  EXPECT_TRUE(aligned_timer->is_canceled());
+  aligned_timer->reset();
+  EXPECT_FALSE(aligned_timer->is_canceled());
+
+  // The original phase-anchored schedule should be preserved by reset(), not recomputed from now().
+  EXPECT_GT(
+    aligned_timer->time_until_trigger().count(),
+    std::chrono::nanoseconds(period).count());
+  EXPECT_LE(
+    aligned_timer->time_until_trigger().count(),
+    std::chrono::nanoseconds(initial_delay).count());
+
+  aligned_timer->cancel();
+}
+
+TEST_P(TestTimer, aligned_timer_reset_catches_up_if_overdue)
+{
+  // Simulate an aligned timer that was paused (canceled) for much longer than several periods.
+  const auto period = 100ms;
+  const auto overdue_by = 1050ms;
+
+  std::shared_ptr<rclcpp::TimerBase> aligned_timer;
+  switch (timer_type) {
+    case TimerType::WALL_TIMER:
+    case TimerType::ALIGNED_WALL_TIMER:
+      {
+        rclcpp::Clock steady_clock(RCL_STEADY_TIME);
+        aligned_timer = test_node->create_aligned_wall_timer(
+          steady_clock.now() - rclcpp::Duration(overdue_by), period, []() {},
+          nullptr, false);
+        break;
+      }
+    case TimerType::GENERIC_TIMER:
+    case TimerType::ALIGNED_TIMER:
+      {
+        aligned_timer = test_node->create_aligned_timer(
+          test_node->get_clock()->now() - rclcpp::Duration(overdue_by), period, []() {},
+          nullptr, false);
+        break;
+      }
+  }
+
+  aligned_timer->reset();
+  EXPECT_FALSE(aligned_timer->is_canceled());
+
+  // Should have caught up to the next period boundary after now, not restarted from now().
+  EXPECT_GT(aligned_timer->time_until_trigger().count(), 0);
+  EXPECT_LE(aligned_timer->time_until_trigger().count(), std::chrono::nanoseconds(period).count());
+
+  aligned_timer->cancel();
+}
+
+TEST_P(TestTimer, aligned_timer_reset_uncancels_and_preserves_phase)
+{
+  const auto period = 10s;
+
+  std::shared_ptr<rclcpp::TimerBase> aligned_timer;
+  switch (timer_type) {
+    case TimerType::WALL_TIMER:
+    case TimerType::ALIGNED_WALL_TIMER:
+      aligned_timer = test_node->create_aligned_wall_timer(period, 0ms, []() {});
+      break;
+    case TimerType::GENERIC_TIMER:
+    case TimerType::ALIGNED_TIMER:
+      aligned_timer = test_node->create_aligned_timer(period, 0ms, []() {});
+      break;
+  }
+
+  const auto time_until_trigger_before = aligned_timer->time_until_trigger();
+
+  aligned_timer->cancel();
+  EXPECT_TRUE(aligned_timer->is_canceled());
+
+  aligned_timer->reset();
+  EXPECT_FALSE(aligned_timer->is_canceled());
+
+  // A short cancel/reset cycle with a long period should not have shifted the phase.
+  EXPECT_NEAR(
+    static_cast<double>(time_until_trigger_before.count()),
+    static_cast<double>(aligned_timer->time_until_trigger().count()),
+    static_cast<double>(std::chrono::nanoseconds(500ms).count()));
+
+  aligned_timer->cancel();
 }
 
 TEST_P(TestTimer, callback_with_timer) {
@@ -246,6 +447,12 @@ TEST_P(TestTimer, callback_with_timer) {
       break;
     case TimerType::GENERIC_TIMER:
       timer = test_node->create_timer(1ms, timer_callback);
+      break;
+    case TimerType::ALIGNED_WALL_TIMER:
+      timer = test_node->create_aligned_wall_timer(1ms, 0ms, timer_callback);
+      break;
+    case TimerType::ALIGNED_TIMER:
+      timer = test_node->create_aligned_timer(1ms, 0ms, timer_callback);
       break;
   }
   auto start = std::chrono::steady_clock::now();
@@ -271,6 +478,12 @@ TEST_P(TestTimer, callback_with_timer_info) {
     case TimerType::GENERIC_TIMER:
       timer = test_node->create_timer(1ms, timer_callback);
       break;
+    case TimerType::ALIGNED_WALL_TIMER:
+      timer = test_node->create_aligned_wall_timer(1ms, 0ms, timer_callback);
+      break;
+    case TimerType::ALIGNED_TIMER:
+      timer = test_node->create_aligned_timer(1ms, 0ms, timer_callback);
+      break;
   }
   auto start = std::chrono::steady_clock::now();
   while (info.actual_call_time.nanoseconds() == 0 &&
@@ -293,6 +506,15 @@ TEST_P(TestTimer, callback_with_period_zero) {
     case TimerType::GENERIC_TIMER:
       timer = test_node->create_timer(0ms, timer_callback);
       break;
+    case TimerType::ALIGNED_WALL_TIMER:
+      {
+        rclcpp::Clock steady_clock(RCL_STEADY_TIME);
+        timer = test_node->create_aligned_wall_timer(steady_clock.now(), 0ms, timer_callback);
+        break;
+      }
+    case TimerType::ALIGNED_TIMER:
+      timer = test_node->create_aligned_timer(test_node->get_clock()->now(), 0ms, timer_callback);
+      break;
   }
   auto start = std::chrono::steady_clock::now();
   while (nullptr == timer_ptr &&
@@ -314,12 +536,25 @@ TEST_P(TestTimer, test_failures_with_exceptions)
     std::shared_ptr<rclcpp::TimerBase> timer_to_test_destructor;
     // Test destructor failure, just logs a msg
     auto mock = mocking_utils::inject_on_return("lib:rclcpp", rcl_timer_fini, RCL_RET_ERROR);
-    if (timer_type == TimerType::WALL_TIMER) {
-      timer_to_test_destructor =
-        test_node->create_wall_timer(std::chrono::milliseconds(0), [](void) {});
-    } else {
-      timer_to_test_destructor =
-        test_node->create_timer(std::chrono::milliseconds(0), [](void) {});
+    switch (timer_type) {
+      case TimerType::WALL_TIMER:
+        timer_to_test_destructor =
+          test_node->create_wall_timer(std::chrono::milliseconds(0), [](void) {});
+        break;
+      case TimerType::GENERIC_TIMER:
+        timer_to_test_destructor =
+          test_node->create_timer(std::chrono::milliseconds(0), [](void) {});
+        break;
+      case TimerType::ALIGNED_WALL_TIMER:
+        timer_to_test_destructor =
+          test_node->create_aligned_wall_timer(
+            rclcpp::Clock(RCL_STEADY_TIME).now(), std::chrono::milliseconds(0), [](void) {});
+        break;
+      case TimerType::ALIGNED_TIMER:
+        timer_to_test_destructor =
+          test_node->create_aligned_timer(
+            test_node->get_clock()->now(), std::chrono::milliseconds(0), [](void) {});
+        break;
     }
     timer_to_test_destructor.reset();
   }
@@ -359,13 +594,21 @@ TEST_P(TestTimer, test_failures_with_exceptions)
 
 INSTANTIATE_TEST_SUITE_P(
   PerTimerType, TestTimer,
-  ::testing::Values(TimerType::WALL_TIMER, TimerType::GENERIC_TIMER),
+  ::testing::Values(
+    TimerType::WALL_TIMER,
+    TimerType::GENERIC_TIMER,
+    TimerType::ALIGNED_WALL_TIMER,
+    TimerType::ALIGNED_TIMER),
   [](const ::testing::TestParamInfo<TimerType> & info) -> std::string {
     switch (info.param) {
       case TimerType::WALL_TIMER:
         return std::string("wall_timer");
       case TimerType::GENERIC_TIMER:
         return std::string("generic_timer");
+      case TimerType::ALIGNED_WALL_TIMER:
+        return std::string("aligned_wall_timer");
+      case TimerType::ALIGNED_TIMER:
+        return std::string("aligned_timer");
       default:
         break;
     }
@@ -386,4 +629,68 @@ TEST_P(TestTimer, test_timer_without_autostart)
     timer_without_autostart->time_until_trigger().count(),
     std::chrono::nanoseconds::max().count());
   EXPECT_FALSE(timer_without_autostart->is_canceled());
+}
+
+class TestComputePhaseAlignedTime : public ::testing::Test
+{
+protected:
+  void SetUp() override
+  {
+    rclcpp::init(0, nullptr);
+    clock_ = std::make_shared<rclcpp::Clock>(RCL_ROS_TIME);
+    rcl_clock_ = clock_->get_clock_handle();
+    ASSERT_EQ(RCL_RET_OK, rcl_enable_ros_time_override(rcl_clock_));
+  }
+
+  void TearDown() override
+  {
+    rclcpp::shutdown();
+  }
+
+  void set_now(rcl_time_point_value_t now_ns)
+  {
+    ASSERT_EQ(RCL_RET_OK, rcl_set_ros_time_override(rcl_clock_, now_ns));
+  }
+
+  rclcpp::Clock::SharedPtr clock_;
+  rcl_clock_t * rcl_clock_;
+};
+
+TEST_F(TestComputePhaseAlignedTime, rejects_non_positive_interval)
+{
+  set_now(1);
+  EXPECT_THROW(
+    rclcpp::compute_phase_aligned_time(*clock_, 0ns),
+    std::invalid_argument);
+  EXPECT_THROW(
+    rclcpp::compute_phase_aligned_time(*clock_, -1ns),
+    std::invalid_argument);
+}
+
+TEST_F(TestComputePhaseAlignedTime, advances_to_next_boundary_with_zero_phase)
+{
+  set_now(1'000'000'000);  // 1.0s
+  auto result = rclcpp::compute_phase_aligned_time(*clock_, 300ms);
+  EXPECT_EQ(1'200'000'000, result.nanoseconds());
+}
+
+TEST_F(TestComputePhaseAlignedTime, returns_now_when_already_on_a_boundary)
+{
+  set_now(900'000'000);  // 0.9s, an exact multiple of the 300ms interval
+  auto result = rclcpp::compute_phase_aligned_time(*clock_, 300ms);
+  EXPECT_EQ(900'000'000, result.nanoseconds());
+}
+
+TEST_F(TestComputePhaseAlignedTime, honors_phase_offset)
+{
+  set_now(1'000'000'000);  // 1.0s
+  auto result = rclcpp::compute_phase_aligned_time(*clock_, 300ms, 50ms);
+  EXPECT_EQ(1'250'000'000, result.nanoseconds());
+}
+
+TEST_F(TestComputePhaseAlignedTime, result_uses_clocks_type)
+{
+  set_now(1);
+  auto result = rclcpp::compute_phase_aligned_time(*clock_, 300ms);
+  EXPECT_EQ(RCL_ROS_TIME, result.get_clock_type());
 }

@@ -116,6 +116,47 @@ Node::create_wall_timer(
 }
 
 template<typename DurationRepT, typename DurationT, typename CallbackT>
+typename rclcpp::AlignedWallTimer<CallbackT>::SharedPtr
+Node::create_aligned_wall_timer(
+  rclcpp::Time initial_call_time,
+  std::chrono::duration<DurationRepT, DurationT> period,
+  CallbackT callback,
+  const rclcpp::CallbackGroup::SharedPtr & group,
+  bool autostart)
+{
+  return rclcpp::create_aligned_wall_timer(
+    initial_call_time,
+    period,
+    std::move(callback),
+    group,
+    this->node_base_.get(),
+    this->node_timers_.get(),
+    autostart);
+}
+
+template<
+  typename DurationRepT, typename DurationT,
+  typename PhaseRepT, typename PhaseT,
+  typename CallbackT>
+typename rclcpp::AlignedWallTimer<CallbackT>::SharedPtr
+Node::create_aligned_wall_timer(
+  std::chrono::duration<DurationRepT, DurationT> period,
+  std::chrono::duration<PhaseRepT, PhaseT> phase,
+  CallbackT callback,
+  const rclcpp::CallbackGroup::SharedPtr & group,
+  bool autostart)
+{
+  return rclcpp::create_aligned_wall_timer(
+    period,
+    phase,
+    std::move(callback),
+    group,
+    this->node_base_.get(),
+    this->node_timers_.get(),
+    autostart);
+}
+
+template<typename DurationRepT, typename DurationT, typename CallbackT>
 typename rclcpp::GenericTimer<CallbackT>::SharedPtr
 Node::create_timer(
   std::chrono::duration<DurationRepT, DurationT> period,
@@ -129,6 +170,49 @@ Node::create_timer(
     group,
     this->node_base_.get(),
     this->node_timers_.get());
+}
+
+template<typename DurationRepT, typename DurationT, typename CallbackT>
+typename rclcpp::AlignedTimer<CallbackT>::SharedPtr
+Node::create_aligned_timer(
+  rclcpp::Time initial_call_time,
+  std::chrono::duration<DurationRepT, DurationT> period,
+  CallbackT callback,
+  const rclcpp::CallbackGroup::SharedPtr & group,
+  bool autostart)
+{
+  return rclcpp::create_aligned_timer(
+    this->get_clock(),
+    initial_call_time,
+    period,
+    std::move(callback),
+    group,
+    this->node_base_.get(),
+    this->node_timers_.get(),
+    autostart);
+}
+
+template<
+  typename DurationRepT, typename DurationT,
+  typename PhaseRepT, typename PhaseT,
+  typename CallbackT>
+typename rclcpp::AlignedTimer<CallbackT>::SharedPtr
+Node::create_aligned_timer(
+  std::chrono::duration<DurationRepT, DurationT> period,
+  std::chrono::duration<PhaseRepT, PhaseT> phase,
+  CallbackT callback,
+  const rclcpp::CallbackGroup::SharedPtr & group,
+  bool autostart)
+{
+  return rclcpp::create_aligned_timer(
+    this->get_clock(),
+    period,
+    phase,
+    std::move(callback),
+    group,
+    this->node_base_.get(),
+    this->node_timers_.get(),
+    autostart);
 }
 
 template<typename ServiceT>

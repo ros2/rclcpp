@@ -26,6 +26,8 @@
 
 #include "rclcpp/clock.hpp"
 #include "rclcpp/context.hpp"
+#include "rclcpp/contexts/default_context.hpp"
+#include "rclcpp/exceptions.hpp"
 #include "rclcpp/function_traits.hpp"
 #include "rclcpp/macros.hpp"
 #include "rclcpp/utilities.hpp"
@@ -46,6 +48,30 @@ struct TimerInfo
   Time expected_call_time;
   Time actual_call_time;
 };
+
+/// Compute a phase-aligned start time for a periodic timer.
+/**
+ * The result is the smallest time greater than or equal to `clock.now()`
+ * of the form `k * interval + phase` for some non-negative integer `k`.
+ *
+ * This is useful for synchronizing periodic timers across multiple nodes
+ * or processes that share a common, synchronized clock (e.g. ROS time)
+ * without needing to exchange an explicit start time out-of-band: any two
+ * callers with a synchronized clock computing this function with the same
+ * interval and phase will agree on the same sequence of aligned instants.
+ *
+ * \param[in] clock clock used to obtain the current time
+ * \param[in] interval alignment interval; must be greater than zero
+ * \param[in] phase offset added to each interval boundary
+ * \return the computed, phase-aligned start time, using clock's clock type
+ * \throws std::invalid_argument if interval is not greater than zero
+ */
+RCLCPP_PUBLIC
+Time
+compute_phase_aligned_time(
+  const Clock & clock,
+  std::chrono::nanoseconds interval,
+  std::chrono::nanoseconds phase = std::chrono::nanoseconds(0));
 
 class TimerBase
 {
@@ -192,6 +218,22 @@ public:
   const Clock::SharedPtr & get_clock() const;
 
 protected:
+  /// Constructor for subclasses that initialize `timer_handle_` themselves.
+  /**
+   * Subclasses that use an alternate rcl timer initialization function can delegate to this
+   * constructor and call `create_timer_handle(context)` to allocate the zero-initialized
+   * `timer_handle_` before initializing the rcl timer.
+   *
+   * \param clock A clock to use for time and sleeping
+   */
+  RCLCPP_PUBLIC
+  explicit TimerBase(Clock::SharedPtr clock);
+
+  /// Allocate a zero-initialized `rcl_timer_t` shared_ptr with its cleanup deleter.
+  RCLCPP_PUBLIC
+  std::shared_ptr<rcl_timer_t>
+  create_timer_handle(rclcpp::Context::SharedPtr context);
+
   std::recursive_mutex callback_mutex_;
   // Declare callback before timer_handle_, so on destruction
   // the callback is destroyed last. Otherwise, the rcl timer
@@ -262,7 +304,9 @@ public:
   virtual ~GenericTimer()
   {
     // Stop the timer from running.
-    cancel();
+    if (timer_handle_) {
+      cancel();
+    }
   }
 
   /**
@@ -345,6 +389,11 @@ public:
 protected:
   RCLCPP_DISABLE_COPY(GenericTimer)
 
+  /// Constructor for subclasses that initialize `timer_handle_` themselves.
+  explicit GenericTimer(Clock::SharedPtr clock, FunctorT && callback)
+  : TimerBase(clock), callback_(std::forward<FunctorT>(callback))
+  {}
+
   FunctorT callback_;
 };
 
@@ -379,6 +428,194 @@ public:
 
 protected:
   RCLCPP_DISABLE_COPY(WallTimer)
+};
+
+/// Timer with an explicit start time or phase alignment that is preserved across reset() calls.
+/**
+ * Unlike GenericTimer, whose first trigger is at `now() + period` and whose `reset()` method
+ * re-anchors the schedule to `now() + period`, AlignedTimer is initialized with an explicit
+ * initial trigger time (or a period and phase offset) via `rcl_timer_init_with_start_time()`
+ * and `reset()` preserves its schedule phase.
+ */
+template<
+  typename FunctorT,
+  typename std::enable_if<
+    rclcpp::function_traits::same_arguments<FunctorT, VoidCallbackType>::value ||
+    rclcpp::function_traits::same_arguments<FunctorT, TimerCallbackType>::value ||
+    rclcpp::function_traits::same_arguments<FunctorT, TimerInfoCallbackType>::value
+  >::type * = nullptr
+>
+class AlignedTimer : public GenericTimer<FunctorT>
+{
+public:
+  RCLCPP_SMART_PTR_DEFINITIONS(AlignedTimer)
+
+  /// Constructor with an explicit initial trigger time.
+  /**
+   * \param[in] clock The clock providing the current time.
+   * \param[in] initial_call_time The time at which the callback should be initially triggered.
+   * \param[in] period The interval at which the timer fires.
+   * \param[in] callback User-specified callback function.
+   * \param[in] context custom context to be used.
+   * \param[in] autostart timer state on initialization
+   *
+   * \throws std::runtime_error if initial_call_time's clock type does not match clock's
+   */
+  explicit AlignedTimer(
+    Clock::SharedPtr clock, Time initial_call_time, std::chrono::nanoseconds period,
+    FunctorT && callback, rclcpp::Context::SharedPtr context, bool autostart = true
+  )
+  : GenericTimer<FunctorT>(clock, std::forward<FunctorT>(callback))
+  {
+    // An uninitialized clock is rejected below by rcl_timer_init_with_start_time itself; skip
+    // the type comparison here so that pre-existing error path is still what surfaces in that case.
+    if (this->clock_->get_clock_type() != RCL_CLOCK_UNINITIALIZED &&
+      initial_call_time.get_clock_type() != this->clock_->get_clock_type())
+    {
+      throw std::runtime_error(
+              "initial_call_time's clock type does not match clock's clock type");
+    }
+
+    if (nullptr == context) {
+      context = rclcpp::contexts::get_global_default_context();
+    }
+    auto rcl_context = context->get_rcl_context();
+    auto timer_handle = this->create_timer_handle(context);
+    rcl_clock_t * clock_handle = this->clock_->get_clock_handle();
+    {
+      std::lock_guard<std::mutex> clock_guard(this->clock_->get_clock_mutex());
+      rcl_ret_t ret = rcl_timer_init_with_start_time(
+        timer_handle.get(), clock_handle, rcl_context.get(),
+        initial_call_time.nanoseconds(), period.count(), nullptr,
+        rcl_get_default_allocator(), autostart);
+      if (ret != RCL_RET_OK) {
+        rclcpp::exceptions::throw_from_rcl_error(ret, "Couldn't initialize rcl timer handle");
+      }
+    }
+    this->timer_handle_ = std::move(timer_handle);
+
+    TRACETOOLS_TRACEPOINT(
+      rclcpp_timer_callback_added,
+      static_cast<const void *>(this->get_timer_handle().get()),
+      reinterpret_cast<const void *>(&this->callback_));
+#ifndef TRACETOOLS_DISABLED
+    if (TRACETOOLS_TRACEPOINT_ENABLED(rclcpp_callback_register)) {
+      char * symbol = tracetools::get_symbol(this->callback_);
+      TRACETOOLS_DO_TRACEPOINT(
+        rclcpp_callback_register,
+        reinterpret_cast<const void *>(&this->callback_),
+        symbol);
+      std::free(symbol);
+    }
+#endif
+  }
+
+  /// Convenience constructor that computes a phase-aligned initial trigger time from period and
+  /// phase offset.
+  /**
+   * The initial trigger time is computed via `compute_phase_aligned_time(*clock, period, phase)`
+   * as the smallest time `>= clock->now()` of the form `k * period + phase`.
+   *
+   * \param[in] clock The clock providing the current time.
+   * \param[in] period The interval at which the timer fires (and alignment interval; must be > 0).
+   * \param[in] phase Offset added to each interval boundary.
+   * \param[in] callback User-specified callback function.
+   * \param[in] context custom context to be used.
+   * \param[in] autostart timer state on initialization
+   *
+   * \throws std::invalid_argument if period is not greater than zero
+   */
+  explicit AlignedTimer(
+    Clock::SharedPtr clock, std::chrono::nanoseconds period, std::chrono::nanoseconds phase,
+    FunctorT && callback, rclcpp::Context::SharedPtr context, bool autostart = true
+  )
+  : AlignedTimer(
+      clock,
+      compute_initial_call_time(clock, period, phase),
+      period,
+      std::forward<FunctorT>(callback),
+      context,
+      autostart)
+  {}
+
+protected:
+  RCLCPP_DISABLE_COPY(AlignedTimer)
+
+private:
+  static Time
+  compute_initial_call_time(
+    const Clock::SharedPtr & clock,
+    std::chrono::nanoseconds period,
+    std::chrono::nanoseconds phase)
+  {
+    if (nullptr == clock) {
+      throw std::invalid_argument("clock cannot be null");
+    }
+    if (clock->get_clock_type() == RCL_CLOCK_UNINITIALIZED) {
+      return Time(static_cast<int64_t>(0), RCL_CLOCK_UNINITIALIZED);
+    }
+    return compute_phase_aligned_time(*clock, period, phase);
+  }
+};
+
+/// Wall-clock timer with an explicit start time or phase alignment preserved across reset() calls.
+template<
+  typename FunctorT,
+  typename std::enable_if<
+    rclcpp::function_traits::same_arguments<FunctorT, VoidCallbackType>::value ||
+    rclcpp::function_traits::same_arguments<FunctorT, TimerCallbackType>::value ||
+    rclcpp::function_traits::same_arguments<FunctorT, TimerInfoCallbackType>::value
+  >::type * = nullptr
+>
+class AlignedWallTimer : public AlignedTimer<FunctorT>
+{
+public:
+  RCLCPP_SMART_PTR_DEFINITIONS(AlignedWallTimer)
+
+  /// AlignedWallTimer constructor with an explicit initial trigger time.
+  /**
+   * \param[in] initial_call_time The time at which the callback should be initially triggered.
+   * \param[in] period The interval at which the timer fires.
+   * \param[in] callback The callback function to execute every interval.
+   * \param[in] context node context.
+   * \param[in] autostart timer state on initialization.
+   *
+   * \throws std::runtime_error if initial_call_time's clock type is not RCL_STEADY_TIME
+   */
+  AlignedWallTimer(
+    Time initial_call_time,
+    std::chrono::nanoseconds period,
+    FunctorT && callback,
+    rclcpp::Context::SharedPtr context,
+    bool autostart = true)
+  : AlignedTimer<FunctorT>(
+      std::make_shared<Clock>(RCL_STEADY_TIME), initial_call_time, period,
+      std::move(callback), context, autostart)
+  {}
+
+  /// AlignedWallTimer convenience constructor with period and phase offset.
+  /**
+   * \param[in] period The interval at which the timer fires (and alignment interval; must be > 0).
+   * \param[in] phase Offset added to each interval boundary.
+   * \param[in] callback The callback function to execute every interval.
+   * \param[in] context node context.
+   * \param[in] autostart timer state on initialization.
+   *
+   * \throws std::invalid_argument if period is not greater than zero
+   */
+  AlignedWallTimer(
+    std::chrono::nanoseconds period,
+    std::chrono::nanoseconds phase,
+    FunctorT && callback,
+    rclcpp::Context::SharedPtr context,
+    bool autostart = true)
+  : AlignedTimer<FunctorT>(
+      std::make_shared<Clock>(RCL_STEADY_TIME), period, phase,
+      std::move(callback), context, autostart)
+  {}
+
+protected:
+  RCLCPP_DISABLE_COPY(AlignedWallTimer)
 };
 
 }  // namespace rclcpp
