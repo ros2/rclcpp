@@ -391,13 +391,21 @@ SyncParametersClient::get_parameters(
   const std::vector<std::string> & parameter_names,
   std::chrono::nanoseconds timeout)
 {
+  rclcpp::FutureReturnCode result;
+  return get_parameters(parameter_names, timeout, result);
+}
+
+std::vector<rclcpp::Parameter>
+SyncParametersClient::get_parameters(
+  const std::vector<std::string> & parameter_names,
+  std::chrono::nanoseconds timeout,
+  rclcpp::FutureReturnCode & result)
+{
   auto f = async_parameters_client_->get_parameters(parameter_names);
   using rclcpp::executors::spin_node_until_future_complete;
-  if (
-    spin_node_until_future_complete(
-      *executor_, node_base_interface_, f,
-      timeout) == rclcpp::FutureReturnCode::SUCCESS)
-  {
+  result = spin_node_until_future_complete(
+    *executor_, node_base_interface_, f, timeout);
+  if (result == rclcpp::FutureReturnCode::SUCCESS) {
     return f.get();
   }
   // Return an empty vector if unsuccessful
