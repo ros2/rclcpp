@@ -356,6 +356,7 @@ class ClockWaiter::ClockWaiterImpl
 private:
   std::condition_variable cv_;
 
+  /// The clock given at construction, null if the clock is named by each wait
   rclcpp::Clock::SharedPtr clock_;
   bool time_source_changed_ = false;
   std::function<void(const rcl_time_jump_t &)> post_time_jump_callback;
@@ -375,11 +376,11 @@ private:
 
   bool
   wait_until_steady_time(
-    std::unique_lock<std::mutex> & lock,
+    std::unique_lock<std::mutex> & lock, const rclcpp::Clock::SharedPtr & clock,
     const rclcpp::Time & abs_time, const std::function<bool ()> & pred)
   {
     // Synchronize because RCL steady clock epoch might differ from chrono::steady_clock epoch
-    const rclcpp::Time rcl_entry = clock_->now();
+    const rclcpp::Time rcl_entry = clock->now();
     const std::chrono::steady_clock::time_point chrono_entry = std::chrono::steady_clock::now();
     const rclcpp::Duration delta_t = abs_time - rcl_entry;
     const std::chrono::steady_clock::time_point chrono_until =
@@ -391,7 +392,7 @@ private:
 
   bool
   wait_until_ros_time(
-    std::unique_lock<std::mutex> & lock,
+    std::unique_lock<std::mutex> & lock, const rclcpp::Clock::SharedPtr & clock,
     const rclcpp::Time & abs_time, const std::function<bool ()> & pred)
   {
     // Install jump handler for any amount of time change, for two purposes:
@@ -419,12 +420,12 @@ private:
     // its more overhead to have the callback being called all the time.
     // As we expect the use case to be low frequency calls to wait_until
     // with relative big pauses between the calls, we install it on demand.
-    auto clock_handler = clock_->create_jump_callback(
+    auto clock_handler = clock->create_jump_callback(
       nullptr,
       post_time_jump_callback,
       threshold);
 
-    if (!clock_->ros_time_is_active()) {
+    if (!clock->ros_time_is_active()) {
       auto system_time = std::chrono::system_clock::time_point(
         // Cast because system clock resolution is too big for nanoseconds on some systems
         std::chrono::duration_cast<std::chrono::system_clock::duration>(
@@ -438,11 +439,11 @@ private:
     // RCL_ROS_TIME with ros_time_is_active.
     // Just wait without "until" because installed
     // jump callbacks wake the cv on every new sample.
-    cv_.wait(lock, [this, &pred, &abs_time] () {
-        return clock_->now() >= abs_time || time_source_changed_ || pred();
+    cv_.wait(lock, [this, &clock, &pred, &abs_time] () {
+        return clock->now() >= abs_time || time_source_changed_ || pred();
     });
 
-    return clock_->now() < abs_time;
+    return clock->now() < abs_time;
   }
 
 public:
@@ -453,21 +454,18 @@ public:
 
   bool
   wait_until(
-    std::unique_lock<std::mutex> & lock,
+    std::unique_lock<std::mutex> & lock, const rclcpp::Clock::SharedPtr & clock,
     const rclcpp::Time & abs_time, const std::function<bool ()> & pred)
   {
-    switch(clock_->get_clock_type()) {
+    switch(clock->get_clock_type()) {
       case RCL_CLOCK_UNINITIALIZED:
         throw std::runtime_error("Error, wait on uninitialized clock called");
       case RCL_ROS_TIME:
-        return wait_until_ros_time(lock, abs_time, pred);
-        break;
+        return wait_until_ros_time(lock, clock, abs_time, pred);
       case RCL_STEADY_TIME:
-        return wait_until_steady_time(lock, abs_time, pred);
-        break;
+        return wait_until_steady_time(lock, clock, abs_time, pred);
       case RCL_SYSTEM_TIME:
         return wait_until_system_time(lock, abs_time, pred);
-        break;
     }
 
     return false;
@@ -477,6 +475,12 @@ public:
   notify_one()
   {
     cv_.notify_one();
+  }
+
+  const rclcpp::Clock::SharedPtr &
+  clock() const
+  {
+    return clock_;
   }
 };
 
@@ -492,7 +496,22 @@ ClockWaiter::wait_until(
   std::unique_lock<std::mutex> & lock,
   const rclcpp::Time & abs_time, const std::function<bool ()> & pred)
 {
-  return impl_->wait_until(lock, abs_time, pred);
+  if (!impl_->clock()) {
+    throw std::runtime_error(
+            "ClockWaiter::wait_until: constructed without a clock, the wait must name one");
+  }
+  return impl_->wait_until(lock, impl_->clock(), abs_time, pred);
+}
+
+bool
+ClockWaiter::wait_until(
+  std::unique_lock<std::mutex> & lock, const rclcpp::Clock::SharedPtr & clock,
+  const rclcpp::Time & abs_time, const std::function<bool ()> & pred)
+{
+  if (!clock) {
+    throw std::runtime_error("ClockWaiter::wait_until: clock must not be null");
+  }
+  return impl_->wait_until(lock, clock, abs_time, pred);
 }
 
 void
@@ -507,12 +526,12 @@ class ClockConditionalVariable::Impl
   bool shutdown_ = false;
   rclcpp::Context::SharedPtr context_;
   rclcpp::OnShutdownCallbackHandle shutdown_cb_handle_;
-  ClockWaiter::UniquePtr clock_;
+  ClockWaiter waiter_;
 
 public:
   Impl(const rclcpp::Clock::SharedPtr & clock, const rclcpp::Context::SharedPtr & context)
   :context_(context),
-    clock_(std::make_unique<ClockWaiter>(clock))
+    waiter_(clock)
   {
     if (!context_ || !context_->is_valid()) {
       throw std::runtime_error("context cannot be slept with because it's invalid");
@@ -524,7 +543,7 @@ public:
           std::unique_lock lock(pred_mutex_);
           shutdown_ = true;
         }
-        clock_->notify_one();
+        waiter_.notify_one();
     });
   }
 
@@ -533,10 +552,11 @@ public:
     context_->remove_on_shutdown_callback(shutdown_cb_handle_);
   }
 
+  /// Wait on `clock`, or on the clock given at construction if `clock` is null
   bool
   wait_until(
-    std::unique_lock<std::mutex> & lock, const rclcpp::Time & until,
-    const std::function<bool ()> & pred)
+    std::unique_lock<std::mutex> & lock, const rclcpp::Clock::SharedPtr & clock,
+    const rclcpp::Time & until, const std::function<bool ()> & pred)
   {
     if(lock.mutex() != &pred_mutex_) {
       throw std::runtime_error(
@@ -544,16 +564,26 @@ public:
           " mutex returned by this->mutex()");
     }
 
-    clock_->wait_until(lock, until, [this, &pred] () -> bool {
+    if(shutdown_) {
+      return false;
+    }
+
+    const auto wake = [this, &pred] () -> bool {
         return shutdown_ || pred();
-      });
+      };
+    if(clock) {
+      waiter_.wait_until(lock, clock, until, wake);
+    } else {
+      waiter_.wait_until(lock, until, wake);
+    }
+
     return true;
   }
 
   void
   notify_one()
   {
-    clock_->notify_one();
+    waiter_.notify_one();
   }
 
   std::mutex &
@@ -583,7 +613,18 @@ ClockConditionalVariable::wait_until(
   std::unique_lock<std::mutex> & lock, const rclcpp::Time & until,
   const std::function<bool ()> & pred)
 {
-  return impl_->wait_until(lock, until, pred);
+  return impl_->wait_until(lock, nullptr, until, pred);
+}
+
+bool
+ClockConditionalVariable::wait_until(
+  std::unique_lock<std::mutex> & lock, const rclcpp::Clock::SharedPtr & clock,
+  const rclcpp::Time & until, const std::function<bool ()> & pred)
+{
+  if (!clock) {
+    throw std::runtime_error("ClockConditionalVariable::wait_until: clock must not be null");
+  }
+  return impl_->wait_until(lock, clock, until, pred);
 }
 
 std::mutex &
