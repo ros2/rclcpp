@@ -14,11 +14,13 @@
 
 #include <gtest/gtest.h>
 
+#include <atomic>
 #include <chrono>
 #include <cmath>
 #include <memory>
 #include <mutex>
 #include <string>
+#include <thread>
 
 #include "rclcpp/callback_group.hpp"
 #include "rclcpp/clock.hpp"
@@ -108,4 +110,36 @@ TEST_F(TestMultiThreadedExecutor, timer_over_take) {
   auto timer = node->create_wall_timer(PERIOD_MS, timer_callback, cbg);
   executor.add_node(node);
   executor.spin();
+}
+
+/*
+   Test that two timers in the same mutually exclusive callback group are both executed
+   if their callbacks take longer than the timer period.
+ */
+TEST_F(TestMultiThreadedExecutor, mutually_exclusive_timers_starvation) {
+  rclcpp::executors::MultiThreadedExecutor executor(rclcpp::ExecutorOptions(), 2u);
+
+  std::shared_ptr<rclcpp::Node> node =
+    std::make_shared<rclcpp::Node>("test_multi_threaded_executor_timer_starvation");
+
+  auto cbg = node->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
+
+  std::atomic_int count_one {0};
+  std::atomic_int count_two {0};
+
+  auto timer_callback = [&executor, &count_one, &count_two](std::atomic_int & count) {
+      std::this_thread::sleep_for(20ms);
+      count++;
+      if (count_one + count_two >= 20) {
+        executor.cancel();
+      }
+    };
+
+  auto timer_one = node->create_wall_timer(5ms, [&]() {timer_callback(count_one);}, cbg);
+  auto timer_two = node->create_wall_timer(5ms, [&]() {timer_callback(count_two);}, cbg);
+  executor.add_node(node);
+  executor.spin();
+
+  EXPECT_GE(count_one, 5);
+  EXPECT_GE(count_two, 5);
 }
