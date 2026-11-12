@@ -218,6 +218,8 @@ protected:
   // destroyed first. Otherwise, the rmw service callback
   // would point briefly to a destroyed function.
   std::function<void(size_t)> on_new_request_callback_{nullptr};
+  // Used by rcl until introspection is turned off, so declare it before service_handle_.
+  rclcpp::Clock::SharedPtr introspection_clock_;
   // Declare service_handle_ after callback
   std::shared_ptr<rcl_service_t> service_handle_;
   bool owns_rcl_handle_ = true;
@@ -464,6 +466,13 @@ public:
     rcl_publisher_options_t pub_opts = rcl_publisher_get_default_options();
     pub_opts.qos = qos_service_event_pub.get_rmw_qos_profile();
 
+    // rcl keeps the clock its introspection publisher was created with.
+    const bool creates_publisher = !introspection_clock_ &&
+      RCL_SERVICE_INTROSPECTION_OFF != introspection_state;
+    if (creates_publisher) {
+      introspection_clock_ = clock;
+    }
+
     rcl_ret_t ret = rcl_service_configure_service_introspection(
       service_handle_.get(),
       node_handle_.get(),
@@ -471,6 +480,13 @@ public:
       srv_type_support_handle_,
       pub_opts,
       introspection_state);
+
+    // rcl destroys the publisher when introspection is turned off or fails to start.
+    if (RCL_SERVICE_INTROSPECTION_OFF == introspection_state ||
+      (creates_publisher && RCL_RET_OK != ret))
+    {
+      introspection_clock_.reset();
+    }
 
     if (RCL_RET_OK != ret) {
       rclcpp::exceptions::throw_from_rcl_error(ret, "failed to configure service introspection");

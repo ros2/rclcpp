@@ -431,3 +431,53 @@ TEST_F(TestServiceIntrospection, service_introspection_enable_disable_event_cont
     }
   }
 }
+
+TEST_F(TestServiceIntrospection, clock_destroyed_before_client_and_service)
+{
+  auto clock = std::make_shared<rclcpp::Clock>(RCL_ROS_TIME);
+  std::weak_ptr<rclcpp::Clock> weak_clock = clock;
+  client->configure_introspection(
+    clock, rclcpp::ServicesQoS(), RCL_SERVICE_INTROSPECTION_CONTENTS);
+  service->configure_introspection(
+    clock, rclcpp::ServicesQoS(), RCL_SERVICE_INTROSPECTION_CONTENTS);
+  clock.reset();
+  EXPECT_FALSE(weak_clock.expired());
+
+  // rcl keeps using the first clock.
+  client->configure_introspection(
+    std::make_shared<rclcpp::Clock>(), rclcpp::ServicesQoS(), RCL_SERVICE_INTROSPECTION_METADATA);
+  service->configure_introspection(
+    std::make_shared<rclcpp::Clock>(), rclcpp::ServicesQoS(), RCL_SERVICE_INTROSPECTION_METADATA);
+  EXPECT_FALSE(weak_clock.expired());
+
+  client.reset();
+  service.reset();
+  EXPECT_TRUE(weak_clock.expired());
+}
+
+TEST_F(TestServiceIntrospection, clock_released_when_introspection_turned_off)
+{
+  auto clock = std::make_shared<rclcpp::Clock>(RCL_ROS_TIME);
+  std::weak_ptr<rclcpp::Clock> weak_clock = clock;
+  client->configure_introspection(
+    clock, rclcpp::ServicesQoS(), RCL_SERVICE_INTROSPECTION_CONTENTS);
+  service->configure_introspection(
+    clock, rclcpp::ServicesQoS(), RCL_SERVICE_INTROSPECTION_CONTENTS);
+  clock.reset();
+
+  client->configure_introspection(
+    std::make_shared<rclcpp::Clock>(), rclcpp::ServicesQoS(), RCL_SERVICE_INTROSPECTION_OFF);
+  service->configure_introspection(
+    std::make_shared<rclcpp::Clock>(), rclcpp::ServicesQoS(), RCL_SERVICE_INTROSPECTION_OFF);
+  EXPECT_TRUE(weak_clock.expired());
+
+  // Re-enabling uses the new clock.
+  auto new_clock = std::make_shared<rclcpp::Clock>(RCL_ROS_TIME);
+  std::weak_ptr<rclcpp::Clock> weak_new_clock = new_clock;
+  client->configure_introspection(
+    new_clock, rclcpp::ServicesQoS(), RCL_SERVICE_INTROSPECTION_CONTENTS);
+  service->configure_introspection(
+    new_clock, rclcpp::ServicesQoS(), RCL_SERVICE_INTROSPECTION_CONTENTS);
+  new_clock.reset();
+  EXPECT_FALSE(weak_new_clock.expired());
+}
