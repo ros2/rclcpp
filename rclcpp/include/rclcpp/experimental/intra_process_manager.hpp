@@ -28,6 +28,7 @@
 #include <vector>
 #include <typeinfo>
 
+#include "rclcpp/allocator/allocator_common.hpp"
 #include "rclcpp/allocator/allocator_deleter.hpp"
 #include "rclcpp/experimental/buffers/intra_process_buffer.hpp"
 #include "rclcpp/experimental/ros_message_intra_process_buffer.hpp"
@@ -627,10 +628,10 @@ private:
         } else {
           // Copy the message since we have additional subscriptions to serve
           Deleter deleter = message.get_deleter();
-          auto ptr = MessageAllocTraits::allocate(allocator, 1);
-          MessageAllocTraits::construct(allocator, ptr, *message);
+          auto ptr = allocator::allocate_and_construct<MessageAllocTraits>(allocator, *message);
+          MessageUniquePtr copied_message(ptr, deleter);
 
-          subscription->provide_intra_process_data(MessageUniquePtr(ptr, deleter));
+          subscription->provide_intra_process_data(std::move(copied_message));
         }
 
         continue;
@@ -651,12 +652,13 @@ private:
 
       if constexpr (rclcpp::TypeAdapter<MessageT, ROSMessageType>::is_specialized::value) {
         ROSMessageTypeAllocator ros_message_alloc(allocator);
-        auto ptr = ROSMessageTypeAllocatorTraits::allocate(ros_message_alloc, 1);
-        ROSMessageTypeAllocatorTraits::construct(ros_message_alloc, ptr);
         ROSMessageTypeDeleter deleter;
         allocator::set_allocator_for_deleter(&deleter, &allocator);
-        rclcpp::TypeAdapter<MessageT, ROSMessageType>::convert_to_ros_message(*message, *ptr);
+        auto ptr = allocator::allocate_and_construct<ROSMessageTypeAllocatorTraits>(
+          ros_message_alloc);
         auto ros_msg = std::unique_ptr<ROSMessageType, ROSMessageTypeDeleter>(ptr, deleter);
+        rclcpp::TypeAdapter<MessageT, ROSMessageType>::convert_to_ros_message(
+          *message, *ros_msg);
         ros_message_subscription->provide_intra_process_message(std::move(ros_msg));
       } else {
         if constexpr (std::is_same<MessageT, ROSMessageType>::value) {
@@ -669,11 +671,10 @@ private:
             // Copy the message since we have additional subscriptions to serve
             Deleter deleter = message.get_deleter();
             allocator::set_allocator_for_deleter(&deleter, &allocator);
-            auto ptr = MessageAllocTraits::allocate(allocator, 1);
-            MessageAllocTraits::construct(allocator, ptr, *message);
+            auto ptr = allocator::allocate_and_construct<MessageAllocTraits>(allocator, *message);
+            MessageUniquePtr copied_message(ptr, deleter);
 
-            ros_message_subscription->provide_intra_process_message(
-              MessageUniquePtr(ptr, deleter));
+            ros_message_subscription->provide_intra_process_message(std::move(copied_message));
           }
         }
       }
