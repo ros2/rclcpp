@@ -59,6 +59,11 @@ public:
     return !ready_entities.empty();
   }
 
+  void clear_ready_entities_intern() final
+  {
+    ready_entities.clear();
+  }
+
 private:
   std::deque<ReadyEntity> ready_entities;
 };
