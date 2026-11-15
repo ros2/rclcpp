@@ -59,6 +59,7 @@ if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
   ament_lint_auto_find_test_dependencies()
 
+  find_package(mimick_vendor REQUIRED)
   find_package(performance_test_fixture REQUIRED)
 
   add_performance_test(
