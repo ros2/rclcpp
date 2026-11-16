@@ -23,6 +23,8 @@
 #include "rcpputils/shared_library.hpp"
 
 #include "rclcpp/any_subscription_callback.hpp"
+#include "rclcpp/detail/resolve_use_intra_process.hpp"
+#include "rclcpp/intra_process_buffer_type.hpp"
 #include "rclcpp/macros.hpp"
 #include "rclcpp/node_interfaces/node_base_interface.hpp"
 #include "rclcpp/qos.hpp"
@@ -40,7 +42,11 @@ namespace rclcpp
  * Since the type is not known at compile time, this is not a template, and the dynamic library
  * containing type support information has to be identified and loaded based on the type name.
  *
- * It does not support intra-process handling.
+ * Intra-process communication is supported: messages from intra-process publishers are
+ * serialized by the publisher and delivered without going through the middleware.
+ * If the QoS is not compatible with intra-process communication (history not keep last, or
+ * depth 0), a warning is logged and the subscription receives every message through the
+ * middleware, as if intra-process communication was disabled.
  */
 class GenericSubscription : public rclcpp::SubscriptionBase
 {
@@ -64,8 +70,8 @@ public:
    * \param callback Callback for new messages of serialized form
    * \param options %Subscription options.
    * Not all subscription options are currently respected, the only relevant options for this
-   * subscription are `event_callbacks`, `use_default_callbacks`, `ignore_local_publications`, and
-   * `%callback_group`.
+   * subscription are `event_callbacks`, `use_default_callbacks`, `ignore_local_publications`,
+   * `use_intra_process_comm`, `intra_process_buffer_type` and `%callback_group`.
    */
   template<typename AllocatorT = std::allocator<void>>
   GenericSubscription(
@@ -87,6 +93,11 @@ public:
     any_callback_(callback),
     ts_lib_(ts_lib)
   {
+    // Setup intra process publishing if requested.
+    if (rclcpp::detail::resolve_use_intra_process(options, *node_base)) {
+      setup_generic_intra_process(node_base, options.intra_process_buffer_type);
+    }
+
     TRACETOOLS_TRACEPOINT(
       rclcpp_subscription_init,
       static_cast<const void *>(get_subscription_handle().get()),
@@ -182,6 +193,13 @@ public:
 
 private:
   RCLCPP_DISABLE_COPY(GenericSubscription)
+
+  RCLCPP_PUBLIC
+  void
+  setup_generic_intra_process(
+    rclcpp::node_interfaces::NodeBaseInterface * node_base,
+    rclcpp::IntraProcessBufferType buffer_type);
+
   AnySubscriptionCallback<rclcpp::SerializedMessage, std::allocator<void>> any_callback_;
   // The type support library should stay loaded, so it is stored in the GenericSubscription
   std::shared_ptr<rcpputils::SharedLibrary> ts_lib_;

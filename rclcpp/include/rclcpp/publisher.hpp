@@ -169,7 +169,8 @@ public:
           std::make_shared<ROSMessageTypeAllocator>(ros_message_type_allocator_));
       }
       // Register the publisher with the intra process manager.
-      uint64_t intra_process_publisher_id = ipm->add_publisher(this->shared_from_this(), buffer_);
+      uint64_t intra_process_publisher_id = ipm->add_publisher(
+        this->shared_from_this(), buffer_, ipm->make_serialized_buffer_snapshot(buffer_));
       this->setup_intra_process(
         intra_process_publisher_id,
         ipm);

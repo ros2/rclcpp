@@ -20,6 +20,7 @@
 #include <shared_mutex>
 
 #include <algorithm>
+#include <functional>
 #include <iterator>
 #include <memory>
 #include <stdexcept>
@@ -37,6 +38,8 @@
 #include "rclcpp/logging.hpp"
 #include "rclcpp/macros.hpp"
 #include "rclcpp/publisher_base.hpp"
+#include "rclcpp/serialization.hpp"
+#include "rclcpp/serialized_message.hpp"
 #include "rclcpp/type_adapter.hpp"
 #include "rclcpp/visibility_control.hpp"
 
@@ -97,6 +100,14 @@ private:
 public:
   RCLCPP_SMART_PTR_DEFINITIONS(IntraProcessManager)
 
+  /// Intra-process buffer type of the subscriptions registered with add_generic_subscription().
+  using GenericSubscriptionIntraProcessBuffer =
+    rclcpp::experimental::SubscriptionIntraProcessBuffer<rclcpp::SerializedMessage>;
+
+  /// Function returning a serialized copy of the messages in a transient local publisher buffer.
+  using SerializedBufferSnapshotFn =
+    std::function<std::vector<std::shared_ptr<const rclcpp::SerializedMessage>>()>;
+
   RCLCPP_PUBLIC
   IntraProcessManager();
 
@@ -149,6 +160,25 @@ public:
     return sub_id;
   }
 
+  /// Register a generic subscription with the manager, returns subscriptions unique id.
+  /**
+   * Generic subscriptions (see rclcpp::GenericSubscription) receive serialized messages.
+   * The subscription must be a GenericSubscriptionIntraProcessBuffer.
+   * Messages published intra-process to a topic with at least one matched generic subscription
+   * are serialized once, by the publishing thread, and shared among all generic subscriptions.
+   * Publishers without matched generic subscriptions are not affected.
+   *
+   * If both the publisher and the subscription are transient local, the publisher's buffer
+   * is replayed (serialized) to the new subscription, as it happens for typed subscriptions.
+   *
+   * \param subscription the SubscriptionIntraProcess to register.
+   * \return an unsigned 64-bit integer which is the subscription's unique id.
+   */
+  RCLCPP_PUBLIC
+  uint64_t
+  add_generic_subscription(
+    const rclcpp::experimental::SubscriptionIntraProcessBase::SharedPtr & subscription);
+
   /// Unregister a subscription using the subscription's unique id.
   /**
    * This method does not allocate memory.
@@ -178,7 +208,42 @@ public:
   add_publisher(
     const rclcpp::PublisherBase::SharedPtr & publisher,
     const rclcpp::experimental::buffers::IntraProcessBufferBase::SharedPtr & buffer =
-    rclcpp::experimental::buffers::IntraProcessBufferBase::SharedPtr());
+    rclcpp::experimental::buffers::IntraProcessBufferBase::SharedPtr(),
+    SerializedBufferSnapshotFn buffer_snapshot = nullptr);
+
+  /// Make a SerializedBufferSnapshotFn for a publisher's transient local buffer.
+  /**
+   * The returned function keeps a weak reference to the buffer.
+   *
+   * \param buffer publisher's buffer, as given to add_publisher.
+   * \return a function that returns a serialized copy of the messages stored in the buffer.
+   */
+  template<
+    typename ROSMessageType,
+    typename Alloc,
+    typename Deleter>
+  static
+  SerializedBufferSnapshotFn
+  make_serialized_buffer_snapshot(
+    const std::shared_ptr<buffers::IntraProcessBuffer<ROSMessageType, Alloc, Deleter>> & buffer)
+  {
+    if (!buffer) {
+      return nullptr;
+    }
+    std::weak_ptr<buffers::IntraProcessBuffer<ROSMessageType, Alloc, Deleter>> weak_buffer = buffer;
+    return [weak_buffer]() {
+             std::vector<std::shared_ptr<const rclcpp::SerializedMessage>> serialized;
+             auto buffer = weak_buffer.lock();
+             if (!buffer) {
+               return serialized;
+             }
+             for (const auto & message : buffer->get_all_data_shared()) {
+               serialized.push_back(
+                 serialize_for_generic_subscriptions<ROSMessageType, ROSMessageType>(*message));
+             }
+             return serialized;
+           };
+  }
 
   /// Unregister a publisher using the publisher's unique id.
   /**
@@ -239,6 +304,10 @@ public:
         "Calling do_intra_process_publish for invalid or no longer existing publisher id");
       return;
     }
+    // Generic subscriptions first: the typed path below may give away the message.
+    this->template provide_to_generic_subscriptions<MessageT, ROSMessageType>(
+      intra_process_publisher_id, *message);
+
     const auto & sub_ids = publisher_it->second;
 
     if (sub_ids.take_ownership_subscriptions.empty()) {
@@ -303,6 +372,10 @@ public:
         "Calling do_intra_process_publish for invalid or no longer existing publisher id");
       return nullptr;
     }
+    // Generic subscriptions first: the typed path below may give away the message.
+    this->template provide_to_generic_subscriptions<MessageT, ROSMessageType>(
+      intra_process_publisher_id, *message);
+
     const auto & sub_ids = publisher_it->second;
 
     if (sub_ids.take_ownership_subscriptions.empty()) {
@@ -450,6 +523,10 @@ private:
   RCLCPP_PUBLIC
   void
   insert_sub_id_for_pub(uint64_t sub_id, uint64_t pub_id, bool use_take_shared_method);
+
+  RCLCPP_PUBLIC
+  void
+  insert_generic_sub_id_for_pub(uint64_t sub_id, uint64_t pub_id, bool use_take_shared_method);
 
   RCLCPP_PUBLIC
   bool
@@ -680,10 +757,67 @@ private:
     }
   }
 
+
+  /// Serialize a message published intra-process, for generic subscriptions.
+  template<
+    typename MessageT,
+    typename ROSMessageType>
+  static
+  std::unique_ptr<rclcpp::SerializedMessage>
+  serialize_for_generic_subscriptions(const MessageT & message)
+  {
+    static const rclcpp::Serialization<ROSMessageType> serializer;
+    auto serialized_message = std::make_unique<rclcpp::SerializedMessage>();
+    if constexpr (std::is_same<MessageT, ROSMessageType>::value) {
+      serializer.serialize_message(&message, serialized_message.get());
+    } else {
+      ROSMessageType ros_msg;
+      rclcpp::TypeAdapter<MessageT, ROSMessageType>::convert_to_ros_message(message, ros_msg);
+      serializer.serialize_message(&ros_msg, serialized_message.get());
+    }
+    return serialized_message;
+  }
+
+  /// Serialize and deliver a message to the generic subscriptions matched with a publisher.
+  /**
+   * Does nothing (and does not serialize) if no generic subscription is matched.
+   * Must be called with mutex_ locked.
+   */
+  template<
+    typename MessageT,
+    typename ROSMessageType>
+  void
+  provide_to_generic_subscriptions(uint64_t intra_process_publisher_id, const MessageT & message)
+  {
+    auto publisher_it = pub_to_generic_subs_.find(intra_process_publisher_id);
+    if (publisher_it == pub_to_generic_subs_.end() ||
+      (publisher_it->second.take_shared_subscriptions.empty() &&
+      publisher_it->second.take_ownership_subscriptions.empty()))
+    {
+      return;
+    }
+    add_serialized_msg_to_generic_buffers(
+      serialize_for_generic_subscriptions<MessageT, ROSMessageType>(message),
+      publisher_it->second);
+  }
+
+  /// Deliver a serialized message to generic subscriptions, copying it only for owning ones.
+  /**
+   * Must be called with mutex_ locked.
+   */
+  RCLCPP_PUBLIC
+  void
+  add_serialized_msg_to_generic_buffers(
+    std::unique_ptr<rclcpp::SerializedMessage> message,
+    const SplittedSubscriptions & sub_ids) const;
+
   PublisherToSubscriptionIdsMap pub_to_subs_;
+  PublisherToSubscriptionIdsMap pub_to_generic_subs_;
   SubscriptionMap subscriptions_;
+  SubscriptionMap generic_subscriptions_;
   PublisherMap publishers_;
   PublisherBufferMap publisher_buffers_;
+  std::unordered_map<uint64_t, SerializedBufferSnapshotFn> publisher_buffer_snapshots_;
 
   mutable std::shared_timed_mutex mutex_;
 
