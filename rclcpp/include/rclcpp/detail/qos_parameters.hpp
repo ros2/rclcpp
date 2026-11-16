@@ -281,10 +281,7 @@ inline
 int64_t
 rmw_duration_to_int64_t(rmw_time_t rmw_duration)
 {
-  return ::rclcpp::Duration(
-    static_cast<int32_t>(rmw_duration.sec),
-    static_cast<uint32_t>(rmw_duration.nsec)
-  ).nanoseconds();
+  return ::rclcpp::Duration::from_rmw_time(rmw_duration).nanoseconds();
 }
 
 /// \internal Throw an exception if `policy_value_stringified` is NULL.
