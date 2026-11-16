@@ -17,6 +17,7 @@
 
 #include <rmw/types.h>
 
+#include <chrono>
 #include <memory>
 #include <stdexcept>
 #include <string>
@@ -193,9 +194,17 @@ protected:
       return;
     }
 
-    rmw_message_info_t msg_info;
-    msg_info.publisher_gid = {0, {0}};
+    rmw_message_info_t msg_info = rmw_get_zero_initialized_message_info();
     msg_info.from_intra_process = true;
+
+    // The publication time is not stored in the intra-process buffer: both timestamps are set
+    // to "now", so that users of the message info (e.g. rosbag2, which records them) get a
+    // valid value rather than an un-initialised one.
+    // IPC delivery has little/no transport latency by definition.
+    const auto nanos = std::chrono::time_point_cast<std::chrono::nanoseconds>(
+      std::chrono::system_clock::now());
+    msg_info.source_timestamp = nanos.time_since_epoch().count();
+    msg_info.received_timestamp = msg_info.source_timestamp;
 
     auto shared_ptr = std::static_pointer_cast<std::pair<ConstMessageSharedPtr, MessageUniquePtr>>(
       data);
