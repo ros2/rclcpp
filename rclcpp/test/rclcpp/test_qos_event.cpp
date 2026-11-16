@@ -300,8 +300,10 @@ TEST_F(TestQosEvent, execute) {
   auto rcl_handle = publisher->get_publisher_handle();
 
   bool handler_callback_executed = false;
-  // This callback requires some type of parameter, but it could be anything
-  auto callback = [&handler_callback_executed](int) {handler_callback_executed = true;};
+  // The argument type must match the event's status type.
+  auto callback = [&handler_callback_executed](rclcpp::QOSDeadlineOfferedInfo) {
+      handler_callback_executed = true;
+    };
   const rcl_publisher_event_type_t event_type = RCL_PUBLISHER_OFFERED_DEADLINE_MISSED;
 
   rclcpp::EventHandler<decltype(callback), decltype(rcl_handle)> handler(
