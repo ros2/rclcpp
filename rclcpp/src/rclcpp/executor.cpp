@@ -16,6 +16,7 @@
 #include <cassert>
 #include <chrono>
 #include <iterator>
+#include <list>
 #include <memory>
 #include <map>
 #include <stdexcept>
@@ -49,7 +50,102 @@ using rclcpp::Executor;
 /// The events and intraprocess waitable are already added via the callback group.
 static constexpr rclcpp::SubscriptionWaitSetMask kDefaultSubscriptionMask = {true, false, false};
 
-class rclcpp::ExecutorImplementation {};
+enum class EntityType {Timer, Subscription, Service, Client, Waitable};
+
+class rclcpp::ExecutorImplementation
+{
+public:
+  struct BlockedEntity
+  {
+    std::weak_ptr<void> entity;
+    rclcpp::CallbackGroup::WeakPtr callback_group;
+    EntityType type;
+  };
+
+  /// Return true if the entity can be executed now, otherwise remember it as blocked.
+  bool
+  take_or_block(
+    const std::shared_ptr<void> & entity,
+    const rclcpp::CallbackGroup::SharedPtr & callback_group,
+    EntityType type)
+  {
+    auto first_of_group = std::find_if(
+      blocked_entities.begin(), blocked_entities.end(),
+      [&callback_group](const BlockedEntity & blocked) {
+        return blocked.callback_group.lock() == callback_group;
+      });
+    // An entity of the same group that was blocked earlier goes first.
+    if (callback_group->can_be_taken_from() &&
+      (first_of_group == blocked_entities.end() || first_of_group->entity.lock() == entity))
+    {
+      if (first_of_group != blocked_entities.end()) {
+        blocked_entities.erase(first_of_group);
+      }
+      return true;
+    }
+    auto it = std::find_if(
+      first_of_group, blocked_entities.end(),
+      [&entity](const BlockedEntity & blocked) {
+        return blocked.entity.lock() == entity;
+      });
+    if (it == blocked_entities.end()) {
+      blocked_entities.push_back({entity, callback_group, type});
+    }
+    return false;
+  }
+
+  /// Get the oldest blocked entity whose callback group can be taken from again.
+  bool
+  get_next_blocked(rclcpp::AnyExecutable & any_executable)
+  {
+    for (auto it = blocked_entities.begin(); it != blocked_entities.end(); ) {
+      auto entity = it->entity.lock();
+      auto callback_group = it->callback_group.lock();
+      if (entity && callback_group && !callback_group->can_be_taken_from()) {
+        ++it;
+        continue;
+      }
+      auto type = it->type;
+      it = blocked_entities.erase(it);
+      if (!entity || !callback_group) {
+        continue;
+      }
+      switch (type) {
+        case EntityType::Timer:
+          any_executable.timer = std::static_pointer_cast<rclcpp::TimerBase>(entity);
+          if (any_executable.timer->is_ready()) {
+            any_executable.data = any_executable.timer->call();
+          }
+          if (!any_executable.data) {
+            // The timer was canceled or reset in the meantime.
+            any_executable.timer.reset();
+            continue;
+          }
+          break;
+        case EntityType::Subscription:
+          any_executable.subscription =
+            std::static_pointer_cast<rclcpp::SubscriptionBase>(entity);
+          break;
+        case EntityType::Service:
+          any_executable.service = std::static_pointer_cast<rclcpp::ServiceBase>(entity);
+          break;
+        case EntityType::Client:
+          any_executable.client = std::static_pointer_cast<rclcpp::ClientBase>(entity);
+          break;
+        case EntityType::Waitable:
+          any_executable.waitable = std::static_pointer_cast<rclcpp::Waitable>(entity);
+          any_executable.data = any_executable.waitable->take_data();
+          break;
+      }
+      any_executable.callback_group = callback_group;
+      return true;
+    }
+    return false;
+  }
+
+  /// Ready entities that were skipped because their callback group was in use, oldest first.
+  std::list<BlockedEntity> blocked_entities;
+};
 
 Executor::Executor(const std::shared_ptr<rclcpp::Context> & context)
 : spinning(false),
@@ -813,12 +909,14 @@ Executor::get_next_ready_executable(AnyExecutable & any_executable)
   // entities collection must be rebuilt so the group is excluded from the next
   // wait. Otherwise a level-triggered entity wakes the wait set immediately and
   // the calling thread busy waits until the callback group is released.
-  auto can_be_taken_from = [this](const rclcpp::CallbackGroup::SharedPtr & callback_group) {
+  auto can_be_taken_from = [this](
+    const std::shared_ptr<void> & entity,
+    const rclcpp::CallbackGroup::SharedPtr & callback_group,
+    EntityType type) {
       if (!callback_group || !callback_group->can_be_taken_from()) {
         entities_need_rebuild_.store(true);
-        return false;
       }
-      return true;
+      return callback_group && impl_->take_or_block(entity, callback_group, type);
     };
 
   if (!valid_executable) {
@@ -832,7 +930,9 @@ Executor::get_next_ready_executable(AnyExecutable & any_executable)
       auto entity_iter = current_collection_.timers.find(timer->get_timer_handle().get());
       if (entity_iter != current_collection_.timers.end()) {
         auto callback_group = entity_iter->second.callback_group.lock();
-        if (!can_be_taken_from(callback_group)) {
+        if (!can_be_taken_from(timer, callback_group, EntityType::Timer)) {
+          // A blocked timer is executed from the blocked entities, not from this wait result.
+          wait_result_->clear_timer_with_index(current_timer_index);
           current_timer_index++;
           continue;
         }
@@ -862,7 +962,7 @@ Executor::get_next_ready_executable(AnyExecutable & any_executable)
         subscription->get_subscription_handle().get());
       if (entity_iter != current_collection_.subscriptions.end()) {
         auto callback_group = entity_iter->second.callback_group.lock();
-        if (!can_be_taken_from(callback_group)) {
+        if (!can_be_taken_from(subscription, callback_group, EntityType::Subscription)) {
           continue;
         }
         any_executable.subscription = subscription;
@@ -878,7 +978,7 @@ Executor::get_next_ready_executable(AnyExecutable & any_executable)
       auto entity_iter = current_collection_.services.find(service->get_service_handle().get());
       if (entity_iter != current_collection_.services.end()) {
         auto callback_group = entity_iter->second.callback_group.lock();
-        if (!can_be_taken_from(callback_group)) {
+        if (!can_be_taken_from(service, callback_group, EntityType::Service)) {
           continue;
         }
         any_executable.service = service;
@@ -894,7 +994,7 @@ Executor::get_next_ready_executable(AnyExecutable & any_executable)
       auto entity_iter = current_collection_.clients.find(client->get_client_handle().get());
       if (entity_iter != current_collection_.clients.end()) {
         auto callback_group = entity_iter->second.callback_group.lock();
-        if (!can_be_taken_from(callback_group)) {
+        if (!can_be_taken_from(client, callback_group, EntityType::Client)) {
           continue;
         }
         any_executable.client = client;
@@ -910,7 +1010,7 @@ Executor::get_next_ready_executable(AnyExecutable & any_executable)
       auto entity_iter = current_collection_.waitables.find(waitable.get());
       if (entity_iter != current_collection_.waitables.end()) {
         auto callback_group = entity_iter->second.callback_group.lock();
-        if (!can_be_taken_from(callback_group)) {
+        if (!can_be_taken_from(waitable, callback_group, EntityType::Waitable)) {
           continue;
         }
         any_executable.waitable = waitable;
@@ -920,6 +1020,10 @@ Executor::get_next_ready_executable(AnyExecutable & any_executable)
         break;
       }
     }
+  }
+
+  if (!valid_executable) {
+    valid_executable = impl_->get_next_blocked(any_executable);
   }
 
   if (any_executable.callback_group) {
