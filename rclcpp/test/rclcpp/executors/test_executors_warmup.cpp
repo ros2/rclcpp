@@ -152,12 +152,13 @@ TYPED_TEST(TestExecutorsWarmup, spin_some_doesnt_require_warmup)
 {
   using ExecutorType = TypeParam;
 
-  // TODO(alsora): currently only the events-executor passes this test.
+  // TODO(alsora): currently only the events based executors pass this test.
   // Enable single-threaded and multi-threaded executors
   // when https://github.com/ros2/rclcpp/pull/2595 gets merged
   RCPPUTILS_DEPRECATION_WARNING_OFF_START
   if (
-    !std::is_same<ExecutorType, rclcpp::experimental::executors::EventsExecutor>())
+    !std::is_same<ExecutorType, rclcpp::experimental::executors::EventsExecutor>() &&
+    !std::is_same<ExecutorType, rclcpp::executors::EventsCBGExecutor>())
   {
     GTEST_SKIP();
   }
@@ -199,12 +200,13 @@ TYPED_TEST(TestExecutorsWarmup, spin_some_doesnt_require_warmup_with_cbgroup)
 {
   using ExecutorType = TypeParam;
 
-  // TODO(alsora): currently only the events-executor passes this test.
+  // TODO(alsora): currently only the events based executors pass this test.
   // Enable single-threaded and multi-threaded executors
   // when https://github.com/ros2/rclcpp/pull/2595 gets merged
   RCPPUTILS_DEPRECATION_WARNING_OFF_START
   if (
-    !std::is_same<ExecutorType, rclcpp::experimental::executors::EventsExecutor>())
+    !std::is_same<ExecutorType, rclcpp::experimental::executors::EventsExecutor>() &&
+    !std::is_same<ExecutorType, rclcpp::executors::EventsCBGExecutor>())
   {
     GTEST_SKIP();
   }
