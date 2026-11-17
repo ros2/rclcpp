@@ -481,7 +481,9 @@ bool EventsCBGExecutor::collect_and_execute_ready_events(
   RCPPUTILS_SCOPE_EXIT(this->spinning.store(false); );
 
   const auto start = std::chrono::steady_clock::now();
-  const auto end_time = start + max_duration;
+  // a max_duration of 0 means that there is no time limit
+  const auto end_time = max_duration == std::chrono::nanoseconds::zero() ?
+    std::chrono::steady_clock::time_point::max() : start + max_duration;
   auto cur_time = start;
 
   bool had_work = false;
@@ -495,7 +497,13 @@ bool EventsCBGExecutor::collect_and_execute_ready_events(
 
     had_work = true;
 
-    if (!recollect_if_no_work_available) {
+    // If entities were added, the collected work contained the request to resync
+    // the callback groups, and not yet the events of the new entities. In this
+    // case we need to resync and collect once more, even if we shall only collect
+    // once. Otherwise the new entities would not be served before the next call.
+    if (!recollect_if_no_work_available &&
+      !needs_callback_group_resync.load(std::memory_order_acquire))
+    {
       // we are done
       return had_work;
     }
