@@ -72,6 +72,7 @@ ament_export_dependencies(action_msgs rcl_action rclcpp rosidl_runtime_c)
 if(BUILD_TESTING)
   find_package(ament_cmake_gtest REQUIRED)
   find_package(ament_lint_auto REQUIRED)
+  find_package(mimick_vendor REQUIRED)
   ament_lint_auto_find_test_dependencies()
 
   add_subdirectory(test/benchmark)

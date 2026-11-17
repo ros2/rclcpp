@@ -1,3 +1,4 @@
+find_package(mimick_vendor REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
 
 find_package(test_msgs REQUIRED)
