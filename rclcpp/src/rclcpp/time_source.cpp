@@ -244,6 +244,12 @@ public:
     rclcpp::node_interfaces::NodeClockInterface::SharedPtr node_clock_interface,
     rclcpp::node_interfaces::NodeParametersInterface::SharedPtr node_parameters_interface)
   {
+    {
+      // A previous detachNode() on this NodeState set detaching_; clear
+      // it so a re-attach can create the clock subscription again.
+      std::lock_guard<std::mutex> guard(clock_sub_lock_);
+      detaching_ = false;
+    }
     std::lock_guard<std::mutex> guard(node_base_lock_);
     node_base_ = std::move(node_base_interface);
     node_topics_ = std::move(node_topics_interface);
@@ -291,6 +297,16 @@ public:
   // Detach the attached node
   void detachNode()
   {
+    {
+      // Block create_clock_sub() before tearing anything down: without
+      // this, a concurrent post_set_parameters(true) could install a
+      // fresh subscription and clock executor thread after
+      // destroy_clock_sub() returned empty but before the node
+      // interfaces below are cleared, leaving the new thread running
+      // against null interfaces.
+      std::lock_guard<std::mutex> guard(clock_sub_lock_);
+      detaching_ = true;
+    }
     // destroy_clock_sub() *must* be first here, to ensure that the executor
     // can't possibly call any of the callbacks as we are cleaning up.
     destroy_clock_sub();
@@ -350,6 +366,13 @@ private:
   using SubscriptionT = rclcpp::Subscription<rosgraph_msgs::msg::Clock>;
   std::shared_ptr<SubscriptionT> clock_subscription_{nullptr};
   std::mutex clock_sub_lock_;
+  // Set while detachNode() is tearing the clock subscription down.
+  // Guarded by clock_sub_lock_: create_clock_sub() refuses to start a
+  // new clock executor thread while this is set, so no thread can be
+  // created in the window between destroy_clock_sub() returning and
+  // detachNode() clearing the node interfaces (ros2/rclcpp#3412 review
+  // feedback on #2962).
+  bool detaching_{false};
   rclcpp::CallbackGroup::SharedPtr clock_callback_group_;
   rclcpp::executors::SingleThreadedExecutor::SharedPtr clock_executor_;
 
@@ -371,6 +394,11 @@ private:
   void create_clock_sub()
   {
     std::lock_guard<std::mutex> guard(clock_sub_lock_);
+    if (detaching_) {
+      // detachNode() is tearing down; do not start a new clock executor
+      // thread that would outlive the node interfaces.
+      return;
+    }
     if (clock_subscription_) {
       // Subscription already created.
       return;
@@ -396,10 +424,16 @@ private:
       clock_executor_ =
         std::make_shared<rclcpp::executors::SingleThreadedExecutor>(exec_options);
       if (!clock_executor_thread_.joinable()) {
+        // Capture the executor and callback group by value: the thread
+        // must not read the clock_executor_/clock_callback_group_ members,
+        // because destroy_clock_sub() moves them out to join the thread
+        // without holding clock_sub_lock_ (see ros2/rclcpp#2962). Reading
+        // the members here would race that move and dereference a null
+        // executor if the thread starts after the move.
         clock_executor_thread_ = std::thread(
-          [this]() {
-            clock_executor_->add_callback_group(clock_callback_group_, node_base_);
-            clock_executor_->spin();
+          [this, executor = clock_executor_, group = clock_callback_group_]() {
+            executor->add_callback_group(group, node_base_);
+            executor->spin();
           }
         );
       }
@@ -429,13 +463,59 @@ private:
   // Destroy the subscription for the clock topic
   void destroy_clock_sub()
   {
-    std::lock_guard<std::mutex> guard(clock_sub_lock_);
-    if (clock_executor_thread_.joinable()) {
-      clock_executor_->cancel();
-      clock_executor_thread_.join();
-      clock_executor_->remove_callback_group(clock_callback_group_);
+    // Tear down the clock subscription and its executor thread without
+    // holding clock_sub_lock_ across the thread join (see ros2/rclcpp#2962).
+    //
+    // The previous implementation held clock_sub_lock_ while joining
+    // clock_executor_thread_. The executor thread's shutdown path can
+    // contend on the same lock, deadlocking the join. Moving the thread,
+    // executor, callback group and subscription into locals under the lock
+    // and joining outside of it breaks the cycle.
+    //
+    // The subscription is moved (not reset) under the lock, so a concurrent
+    // create_clock_sub() sees no subscription and builds a fresh one instead
+    // of returning early on a stale subscription that this function would
+    // then reset, which would leave sim time enabled with no subscription.
+    // The old subscription is kept alive in a local until after the join,
+    // so the executor thread can finish any in-flight callback without
+    // touching a destroyed subscription.
+    //
+    // The teardown is repeated if a concurrent create_clock_sub() installed
+    // a new subscription/thread while the old thread was being joined (only
+    // possible when post_set_parameters(false) races
+    // post_set_parameters(true); the detachNode() race is closed by the
+    // detaching_ flag, which blocks create_clock_sub() for the whole
+    // teardown). destroy_clock_sub() must never return with a clock executor
+    // thread still spinning behind it: detachNode() resets the node
+    // interfaces right after, and the executor thread's lambda captures
+    // `this`.
+    for (;; ) {
+      std::thread thread_to_join;
+      rclcpp::executors::SingleThreadedExecutor::SharedPtr executor_to_stop;
+      rclcpp::CallbackGroup::SharedPtr callback_group_to_remove;
+      std::shared_ptr<SubscriptionT> subscription_to_keep_alive;
+      {
+        std::lock_guard<std::mutex> guard(clock_sub_lock_);
+        if (!clock_executor_thread_.joinable() && !clock_subscription_) {
+          return;
+        }
+        thread_to_join = std::move(clock_executor_thread_);
+        executor_to_stop = std::move(clock_executor_);
+        callback_group_to_remove = std::move(clock_callback_group_);
+        subscription_to_keep_alive = std::move(clock_subscription_);
+      }
+
+      if (executor_to_stop) {
+        executor_to_stop->cancel();
+      }
+      if (thread_to_join.joinable()) {
+        thread_to_join.join();
+      }
+      if (executor_to_stop && callback_group_to_remove) {
+        executor_to_stop->remove_callback_group(callback_group_to_remove);
+      }
+      // subscription_to_keep_alive is destroyed here, after the join.
     }
-    clock_subscription_.reset();
   }
 
   // On set Parameters callback handle
