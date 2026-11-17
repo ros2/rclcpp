@@ -478,6 +478,68 @@ TYPED_TEST(TestExecutors, spinSome)
   }
 }
 
+// The purpose of this test is to check that a max_duration of 0 means "no limit":
+//   - spin_some() executes all the work that was ready when it was called
+//   - spin_all(0) executes work until none is left
+TYPED_TEST(TestExecutors, spinSomeAndSpinAllWithoutMaxDuration)
+{
+  using ExecutorType = TypeParam;
+
+  // Use an isolated callback group to avoid interference from any housekeeping
+  // items that may be in the default callback group of the node.
+  constexpr bool automatically_add_to_executor_with_node = false;
+  auto isolated_callback_group = this->node->create_callback_group(
+    rclcpp::CallbackGroupType::MutuallyExclusive,
+    automatically_add_to_executor_with_node);
+
+  // The callbacks take some time, so that the clock has always advanced
+  // after the first one was executed.
+  auto slow_callback = []() {
+      std::this_thread::sleep_for(1ms);
+    };
+
+  constexpr size_t number_of_waitables = 5u;
+  auto waitable_interfaces = this->node->get_node_waitables_interface();
+  std::vector<std::shared_ptr<TestWaitable>> waitables;
+  for (size_t i = 0; i < number_of_waitables; ++i) {
+    waitables.push_back(std::make_shared<TestWaitable>());
+    waitables.back()->set_on_execute_callback(slow_callback);
+    waitable_interfaces->add_waitable(waitables.back(), isolated_callback_group);
+  }
+
+  auto number_of_waitables_executed = [&waitables]() {
+      size_t count = 0;
+      for (const auto & waitable : waitables) {
+        count += waitable->get_count();
+      }
+      return count;
+    };
+
+  ExecutorType executor;
+  executor.add_callback_group(isolated_callback_group, this->node->get_node_base_interface());
+
+  for (const auto & waitable : waitables) {
+    waitable->trigger();
+  }
+  executor.spin_some();
+  EXPECT_EQ(number_of_waitables_executed(), number_of_waitables)
+    << "spin_some() without a max_duration did not execute all the ready waitables";
+
+  // The deprecated EventsExecutor rejects a max_duration of 0 in spin_all()
+  RCPPUTILS_DEPRECATION_WARNING_OFF_START
+  if (std::is_same<ExecutorType, rclcpp::experimental::executors::EventsExecutor>()) {
+    return;
+  }
+  RCPPUTILS_DEPRECATION_WARNING_OFF_STOP
+
+  for (const auto & waitable : waitables) {
+    waitable->trigger();
+  }
+  executor.spin_all(0ns);
+  EXPECT_EQ(number_of_waitables_executed(), 2u * number_of_waitables)
+    << "spin_all() with a max_duration of 0 did not execute all the ready waitables";
+}
+
 // The purpose of this test is to check that the ExecutorT.spin_some() method:
 //   - does not continue executing after max_duration has elapsed
 TYPED_TEST(TestExecutors, spinSomeMaxDuration)
