@@ -17,6 +17,8 @@
 #include <atomic>
 #include <memory>
 #include <mutex>
+#include <utility>
+#include <vector>
 
 namespace rclcpp
 {
@@ -34,7 +36,8 @@ IntraProcessManager::~IntraProcessManager()
 uint64_t
 IntraProcessManager::add_publisher(
   const rclcpp::PublisherBase::SharedPtr & publisher,
-  const rclcpp::experimental::buffers::IntraProcessBufferBase::SharedPtr & buffer)
+  const rclcpp::experimental::buffers::IntraProcessBufferBase::SharedPtr & buffer,
+  SerializedBufferSnapshotFn buffer_snapshot)
 {
   std::unique_lock<std::shared_timed_mutex> lock(mutex_);
 
@@ -44,6 +47,9 @@ IntraProcessManager::add_publisher(
   if (publisher->is_durability_transient_local()) {
     if (buffer) {
       publisher_buffers_[pub_id] = buffer;
+      if (buffer_snapshot) {
+        publisher_buffer_snapshots_[pub_id] = std::move(buffer_snapshot);
+      }
     } else {
       throw std::runtime_error(
               "transient_local publisher needs to pass"
@@ -69,7 +75,68 @@ IntraProcessManager::add_publisher(
     }
   }
 
+  for (auto & pair : generic_subscriptions_) {
+    auto subscription = pair.second.lock();
+    if (!subscription) {
+      continue;
+    }
+    if (can_communicate(publisher, subscription)) {
+      insert_generic_sub_id_for_pub(pair.first, pub_id, subscription->use_take_shared_method());
+    }
+  }
+
   return pub_id;
+}
+
+uint64_t
+IntraProcessManager::add_generic_subscription(
+  const rclcpp::experimental::SubscriptionIntraProcessBase::SharedPtr & subscription)
+{
+  if (!std::dynamic_pointer_cast<GenericSubscriptionIntraProcessBuffer>(subscription)) {
+    throw std::invalid_argument(
+            "add_generic_subscription() requires a GenericSubscriptionIntraProcessBuffer");
+  }
+
+  std::unique_lock<std::shared_timed_mutex> lock(mutex_);
+
+  uint64_t sub_id = IntraProcessManager::get_next_unique_id();
+
+  generic_subscriptions_[sub_id] = subscription;
+
+  // adds the subscription id to all the matchable publishers
+  for (auto & pair : publishers_) {
+    auto publisher = pair.second.lock();
+    if (!publisher) {
+      continue;
+    }
+    if (!can_communicate(publisher, subscription)) {
+      continue;
+    }
+    uint64_t pub_id = pair.first;
+    insert_generic_sub_id_for_pub(sub_id, pub_id, subscription->use_take_shared_method());
+    if (publisher->is_durability_transient_local() &&
+      subscription->is_durability_transient_local())
+    {
+      auto snapshot_it = publisher_buffer_snapshots_.find(pub_id);
+      if (snapshot_it == publisher_buffer_snapshots_.end()) {
+        // The publisher was built against a version of rclcpp without generic subscription
+        // support: its history can't be serialized, late-joining generic subscriptions miss it.
+        continue;
+      }
+      SplittedSubscriptions only_this_sub;
+      if (subscription->use_take_shared_method()) {
+        only_this_sub.take_shared_subscriptions.push_back(sub_id);
+      } else {
+        only_this_sub.take_ownership_subscriptions.push_back(sub_id);
+      }
+      for (const auto & serialized_message : snapshot_it->second()) {
+        add_serialized_msg_to_generic_buffers(
+          std::make_unique<rclcpp::SerializedMessage>(*serialized_message), only_this_sub);
+      }
+    }
+  }
+
+  return sub_id;
 }
 
 void
@@ -78,6 +145,18 @@ IntraProcessManager::remove_subscription(uint64_t intra_process_subscription_id)
   std::unique_lock<std::shared_timed_mutex> lock(mutex_);
 
   subscriptions_.erase(intra_process_subscription_id);
+  generic_subscriptions_.erase(intra_process_subscription_id);
+
+  auto remove_sub_id = [intra_process_subscription_id](std::vector<uint64_t> & sub_ids)
+    {
+      sub_ids.erase(
+        std::remove(sub_ids.begin(), sub_ids.end(), intra_process_subscription_id),
+        sub_ids.end());
+    };
+  for (auto & pair : pub_to_generic_subs_) {
+    remove_sub_id(pair.second.take_shared_subscriptions);
+    remove_sub_id(pair.second.take_ownership_subscriptions);
+  }
 
   for (auto & pair : pub_to_subs_) {
     pair.second.take_shared_subscriptions.erase(
@@ -121,7 +200,9 @@ IntraProcessManager::remove_publisher(uint64_t intra_process_publisher_id)
 
   publishers_.erase(intra_process_publisher_id);
   publisher_buffers_.erase(intra_process_publisher_id);
+  publisher_buffer_snapshots_.erase(intra_process_publisher_id);
   pub_to_subs_.erase(intra_process_publisher_id);
+  pub_to_generic_subs_.erase(intra_process_publisher_id);
 }
 
 bool
@@ -158,6 +239,13 @@ IntraProcessManager::get_subscription_count(uint64_t intra_process_publisher_id)
     publisher_it->second.take_shared_subscriptions.size() +
     publisher_it->second.take_ownership_subscriptions.size();
 
+  auto generic_it = pub_to_generic_subs_.find(intra_process_publisher_id);
+  if (generic_it != pub_to_generic_subs_.end()) {
+    count +=
+      generic_it->second.take_shared_subscriptions.size() +
+      generic_it->second.take_ownership_subscriptions.size();
+  }
+
   return count;
 }
 
@@ -166,18 +254,20 @@ IntraProcessManager::get_subscription_intra_process(uint64_t intra_process_subsc
 {
   std::shared_lock<std::shared_timed_mutex> lock(mutex_);
 
-  auto subscription_it = subscriptions_.find(intra_process_subscription_id);
-  if (subscription_it == subscriptions_.end()) {
-    return nullptr;
-  } else {
+  for (auto * subscriptions : {&subscriptions_, &generic_subscriptions_}) {
+    auto subscription_it = subscriptions->find(intra_process_subscription_id);
+    if (subscription_it == subscriptions->end()) {
+      continue;
+    }
     auto subscription = subscription_it->second.lock();
     if (subscription) {
       return subscription;
     } else {
-      subscriptions_.erase(subscription_it);
+      subscriptions->erase(subscription_it);
       return nullptr;
     }
   }
+  return nullptr;
 }
 
 uint64_t
@@ -215,6 +305,71 @@ IntraProcessManager::insert_sub_id_for_pub(
   }
 }
 
+void
+IntraProcessManager::insert_generic_sub_id_for_pub(
+  uint64_t sub_id,
+  uint64_t pub_id,
+  bool use_take_shared_method)
+{
+  if (use_take_shared_method) {
+    pub_to_generic_subs_[pub_id].take_shared_subscriptions.push_back(sub_id);
+  } else {
+    pub_to_generic_subs_[pub_id].take_ownership_subscriptions.push_back(sub_id);
+  }
+}
+
+void
+IntraProcessManager::add_serialized_msg_to_generic_buffers(
+  std::unique_ptr<rclcpp::SerializedMessage> message,
+  const SplittedSubscriptions & sub_ids) const
+{
+  auto get_subscription = [this](uint64_t sub_id)
+    {
+      auto subscription_it = generic_subscriptions_.find(sub_id);
+      if (subscription_it == generic_subscriptions_.end()) {
+        throw std::runtime_error("subscription has unexpectedly gone out of scope");
+      }
+      // add_generic_subscription() checked the type: static cast is safe.
+      // Expired subscriptions are skipped (nullptr), remove_subscription() cleans them up.
+      return std::static_pointer_cast<GenericSubscriptionIntraProcessBuffer>(
+        subscription_it->second.lock());
+    };
+
+  const auto & shared_ids = sub_ids.take_shared_subscriptions;
+  const auto & owned_ids = sub_ids.take_ownership_subscriptions;
+
+  if (!shared_ids.empty()) {
+    std::shared_ptr<const rclcpp::SerializedMessage> shared_msg;
+    if (owned_ids.empty()) {
+      // None of the buffers require ownership, so we promote the pointer
+      shared_msg = std::move(message);
+    } else {
+      shared_msg = std::make_shared<const rclcpp::SerializedMessage>(*message);
+    }
+    for (auto sub_id : shared_ids) {
+      auto subscription = get_subscription(sub_id);
+      if (subscription) {
+        subscription->provide_intra_process_data(shared_msg);
+      }
+    }
+  }
+
+  for (auto it = owned_ids.begin(); it != owned_ids.end(); ++it) {
+    auto subscription = get_subscription(*it);
+    if (!subscription) {
+      continue;
+    }
+    if (std::next(it) == owned_ids.end()) {
+      // If this is the last subscription, give up ownership
+      subscription->provide_intra_process_data(std::move(message));
+    } else {
+      // Copy the message since we have additional subscriptions to serve
+      subscription->provide_intra_process_data(
+        std::make_unique<rclcpp::SerializedMessage>(*message));
+    }
+  }
+}
+
 bool
 IntraProcessManager::can_communicate(
   const rclcpp::PublisherBase::SharedPtr & pub,
@@ -249,17 +404,24 @@ IntraProcessManager::lowest_available_capacity(const uint64_t intra_process_publ
     return 0u;
   }
 
+  auto generic_it = pub_to_generic_subs_.find(intra_process_publisher_id);
+  const bool no_generic_subscriptions = generic_it == pub_to_generic_subs_.end() ||
+    (generic_it->second.take_shared_subscriptions.empty() &&
+    generic_it->second.take_ownership_subscriptions.empty());
+
   if (publisher_it->second.take_shared_subscriptions.empty() &&
-    publisher_it->second.take_ownership_subscriptions.empty())
+    publisher_it->second.take_ownership_subscriptions.empty() &&
+    no_generic_subscriptions)
   {
     // no subscriptions available
     return 0u;
   }
 
-  auto available_capacity = [this, &capacity](const uint64_t intra_process_subscription_id)
+  auto available_capacity = [&capacity](
+    const SubscriptionMap & subscriptions, const uint64_t intra_process_subscription_id)
     {
-      auto subscription_it = subscriptions_.find(intra_process_subscription_id);
-      if (subscription_it != subscriptions_.end()) {
+      auto subscription_it = subscriptions.find(intra_process_subscription_id);
+      if (subscription_it != subscriptions.end()) {
         auto subscription = subscription_it->second.lock();
         if (subscription) {
           capacity = std::min(capacity, subscription->available_capacity());
@@ -273,11 +435,21 @@ IntraProcessManager::lowest_available_capacity(const uint64_t intra_process_publ
     };
 
   for (const auto sub_id : publisher_it->second.take_shared_subscriptions) {
-    available_capacity(sub_id);
+    available_capacity(subscriptions_, sub_id);
   }
 
   for (const auto sub_id : publisher_it->second.take_ownership_subscriptions) {
-    available_capacity(sub_id);
+    available_capacity(subscriptions_, sub_id);
+  }
+
+  if (!no_generic_subscriptions) {
+    for (const auto sub_id : generic_it->second.take_shared_subscriptions) {
+      available_capacity(generic_subscriptions_, sub_id);
+    }
+
+    for (const auto sub_id : generic_it->second.take_ownership_subscriptions) {
+      available_capacity(generic_subscriptions_, sub_id);
+    }
   }
 
   return capacity;

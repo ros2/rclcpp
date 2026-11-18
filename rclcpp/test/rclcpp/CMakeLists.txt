@@ -659,6 +659,12 @@ if(TARGET test_generic_pubsub)
   target_link_libraries(test_generic_pubsub ${PROJECT_NAME} rcl::rcl test_msgs::test_msgs)
 endif()
 
+ament_add_ros_isolated_gtest(test_generic_subscription_intra_process
+  test_generic_subscription_intra_process.cpp)
+if(TARGET test_generic_subscription_intra_process)
+  target_link_libraries(test_generic_subscription_intra_process ${PROJECT_NAME} test_msgs::test_msgs)
+endif()
+
 ament_add_gmock_executable(test_add_callback_groups_to_executor test_add_callback_groups_to_executor.cpp)
 if(TARGET test_add_callback_groups_to_executor)
   target_link_libraries(test_add_callback_groups_to_executor ${PROJECT_NAME} test_msgs::test_msgs)
