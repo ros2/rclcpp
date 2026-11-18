@@ -14,12 +14,14 @@
 
 #include "rclcpp/graph_listener.hpp"
 
+#include <algorithm>
 #include <cstdio>
 #include <exception>
 #include <memory>
 #include <string>
 #include <vector>
 #include "rcl/error_handling.h"
+#include "rcl/guard_condition.h"
 #include "rcl/types.h"
 #include "rclcpp/detail/add_guard_condition_to_rcl_wait_set.hpp"
 #include "rclcpp/exceptions.hpp"
@@ -138,23 +140,34 @@ GraphListener::run_loop()
     // Put the interrupt guard condition in the wait set.
     detail::add_guard_condition_to_rcl_wait_set(wait_set_, interrupt_guard_condition_);
 
-    // Put graph guard conditions for each node into the wait set.
-    std::vector<size_t> graph_gc_indexes(node_graph_interfaces_size, 0u);
+    // Put the graph guard conditions of the nodes into the wait set.
+    // Each node has its own rcl graph guard condition, but they usually wrap one rmw guard
+    // condition shared by all nodes of the context. rmw_wait() resets a triggered guard condition
+    // when it reports it, so a guard condition added twice is reported only once. Hence each rmw
+    // guard condition is added once and all nodes sharing it are notified below.
+    std::vector<const rmw_guard_condition_t *> waited_graph_gcs;
+    waited_graph_gcs.reserve(node_graph_interfaces_size);
     for (size_t i = 0u; i < node_graph_interfaces_size; ++i) {
       auto node_ptr = node_graph_interfaces_[i];
       // Only wait on graph changes if some user of the node is watching.
       if (node_ptr->count_graph_users() == 0) {
         continue;
       }
-      // Add the graph guard condition for the node to the wait set.
       auto graph_gc = node_ptr->get_graph_guard_condition();
       if (!graph_gc) {
         throw_from_rcl_error(RCL_RET_ERROR, "failed to get graph guard condition");
       }
-      ret = rcl_wait_set_add_guard_condition(&wait_set_, graph_gc, &graph_gc_indexes[i]);
+      const auto rmw_graph_gc = rcl_guard_condition_get_rmw_handle(graph_gc);
+      if (std::find(waited_graph_gcs.begin(), waited_graph_gcs.end(), rmw_graph_gc) !=
+        waited_graph_gcs.end())
+      {
+        continue;
+      }
+      ret = rcl_wait_set_add_guard_condition(&wait_set_, graph_gc, nullptr);
       if (RCL_RET_OK != ret) {
         throw_from_rcl_error(ret, "failed to add graph guard condition to wait set");
       }
+      waited_graph_gcs.push_back(rmw_graph_gc);
     }
 
     // Wait for: graph changes, interrupt, or shutdown/SIGINT
@@ -166,14 +179,27 @@ GraphListener::run_loop()
       throw_from_rcl_error(ret, "failed to wait on wait set");
     }
 
-    // Notify nodes who's guard conditions are set (triggered).
+    // Collect the triggered rmw graph guard conditions.
+    // rcl_wait() leaves triggered guard conditions in the wait set and sets the others to NULL.
+    std::vector<const rmw_guard_condition_t *> triggered_graph_gcs;
+    for (size_t i = 0u; i < wait_set_.size_of_guard_conditions; ++i) {
+      if (wait_set_.guard_conditions[i]) {
+        triggered_graph_gcs.push_back(
+          rcl_guard_condition_get_rmw_handle(wait_set_.guard_conditions[i]));
+      }
+    }
+
+    // Notify every node whose graph guard condition is set (triggered).
     for (size_t i = 0u; i < node_graph_interfaces_size; ++i) {
       const auto node_ptr = node_graph_interfaces_[i];
       auto graph_gc = node_ptr->get_graph_guard_condition();
       if (!graph_gc) {
         throw_from_rcl_error(RCL_RET_ERROR, "failed to get graph guard condition");
       }
-      if (graph_gc == wait_set_.guard_conditions[graph_gc_indexes[i]]) {
+      if (std::find(
+          triggered_graph_gcs.begin(), triggered_graph_gcs.end(),
+          rcl_guard_condition_get_rmw_handle(graph_gc)) != triggered_graph_gcs.end())
+      {
         node_ptr->notify_graph_change();
       }
       if (is_shutdown()) {
