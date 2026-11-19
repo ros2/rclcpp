@@ -525,12 +525,10 @@ TYPED_TEST(TestExecutors, spinSomeAndSpinAllWithoutMaxDuration)
   EXPECT_EQ(number_of_waitables_executed(), number_of_waitables)
     << "spin_some() without a max_duration did not execute all the ready waitables";
 
-  // The deprecated EventsExecutor rejects a max_duration of 0 in spin_all()
-  RCPPUTILS_DEPRECATION_WARNING_OFF_START
+  // The EventsExecutor rejects a max_duration of 0 in spin_all()
   if (std::is_same<ExecutorType, rclcpp::experimental::executors::EventsExecutor>()) {
     return;
   }
-  RCPPUTILS_DEPRECATION_WARNING_OFF_STOP
 
   for (const auto & waitable : waitables) {
     waitable->trigger();
