@@ -17,6 +17,8 @@
 #include <memory>
 #include <utility>
 
+#include "rclcpp/node_traits.hpp"
+
 #include "rclcpp/contexts/default_context.hpp"
 #include "rclcpp/node_interfaces/node_base_interface_traits.hpp"
 #include "rclcpp/node_interfaces/node_base.hpp"
@@ -45,6 +47,25 @@ public:
     return nullptr;
   }
 };
+
+namespace
+{
+class DerivedNode : public rclcpp::Node
+{};
+}  // namespace
+
+TEST(TestNodeTraits, is_node) {
+  static_assert(rclcpp::is_node<rclcpp::Node>::value);
+  static_assert(rclcpp::is_node_v<DerivedNode>);
+  static_assert(rclcpp::is_node_v<const volatile DerivedNode &>);
+  static_assert(!rclcpp::is_node_v<rclcpp::Node *>);
+  static_assert(!rclcpp::is_node_v<rclcpp::Node::SharedPtr>);
+  static_assert(!rclcpp::is_node_v<int>);
+  static_assert(!rclcpp::is_node_v<MyNode>);
+
+  // LifecycleNode remains forward-declared in this package.
+  static_assert(!rclcpp::is_lifecycle_node<rclcpp::Node>::value);
+}
 
 template<class T, typename std::enable_if<
     rclcpp::node_interfaces::has_node_base_interface<T>::value
