@@ -142,3 +142,30 @@ TEST_F(TestEventsCBGExecutorTimerRemoval, remove_node_during_spin)
   std::this_thread::sleep_for(50ms);
   EXPECT_EQ(calls, 1);
 }
+
+TEST_F(TestEventsCBGExecutorTimerRemoval, remove_and_readd_node_during_spin)
+{
+  spin_thread = std::thread([this]() {executor->spin();});
+  ASSERT_TRUE(wait_for_callback());
+
+  // the callback that is still running belongs to the bookkeeping of the removed timer,
+  // when it returns it must not touch the bookkeeping of the timer that was added again
+  executor->remove_node(node);
+  // let the executor process the removal before the node is added again
+  std::this_thread::sleep_for(30ms);
+  executor->add_node(node);
+  ASSERT_FALSE(callback_returned) << "the node was not added again while the callback was running";
+
+  const auto deadline = std::chrono::steady_clock::now() + 5s;
+  while (!callback_returned && std::chrono::steady_clock::now() < deadline) {
+    std::this_thread::sleep_for(1ms);
+  }
+  ASSERT_TRUE(callback_returned);
+
+  // the timer that was added again keeps running after the callback returned
+  const int calls_after_return = calls;
+  while (calls < calls_after_return + 10 && std::chrono::steady_clock::now() < deadline) {
+    std::this_thread::sleep_for(1ms);
+  }
+  EXPECT_GE(calls, calls_after_return + 10);
+}
