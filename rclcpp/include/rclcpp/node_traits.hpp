@@ -18,17 +18,12 @@
 #include <type_traits>
 
 /** \file
- * Compile-time checks for node class inheritance.
+ * Compile-time checks for inheritance from rclcpp::Node.
  *
- * Both traits ignore const, volatile, and references. Raw and smart pointers
+ * The traits ignore const, volatile, and references. Raw and smart pointers
  * are checked as their own types. Private, protected, and ambiguous bases count.
- * A non-union class argument must be complete unless it is the trait's base class.
+ * A non-union class argument must be complete unless it is rclcpp::Node.
  */
-
-namespace rclcpp_lifecycle
-{
-class LifecycleNode;
-}  // namespace rclcpp_lifecycle
 
 namespace rclcpp
 {
@@ -42,15 +37,6 @@ struct is_node : std::is_base_of<Node, std::remove_cvref_t<T>>
 /// Convenience variable for is_node<T>::value.
 template<typename T>
 inline constexpr bool is_node_v = is_node<T>::value;
-
-/// True for rclcpp_lifecycle::LifecycleNode and classes derived from it.
-template<typename T>
-struct is_lifecycle_node : std::is_base_of<rclcpp_lifecycle::LifecycleNode, std::remove_cvref_t<T>>
-{};
-
-/// Convenience variable for is_lifecycle_node<T>::value.
-template<typename T>
-inline constexpr bool is_lifecycle_node_v = is_lifecycle_node<T>::value;
 
 }  // namespace rclcpp
 

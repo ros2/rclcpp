@@ -62,9 +62,6 @@ TEST(TestNodeTraits, is_node) {
   static_assert(!rclcpp::is_node_v<rclcpp::Node::SharedPtr>);
   static_assert(!rclcpp::is_node_v<int>);
   static_assert(!rclcpp::is_node_v<MyNode>);
-
-  // LifecycleNode remains forward-declared in this package.
-  static_assert(!rclcpp::is_lifecycle_node<rclcpp::Node>::value);
 }
 
 template<class T, typename std::enable_if<

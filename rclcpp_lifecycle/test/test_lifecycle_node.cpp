@@ -42,6 +42,7 @@
 #include "rclcpp/parameter_value.hpp"
 #include "rclcpp/utilities.hpp"
 #include "rclcpp_lifecycle/lifecycle_node.hpp"
+#include "rclcpp_lifecycle/node_traits.hpp"
 
 #include "./mocking_utils/patch.hpp"
 
@@ -154,12 +155,13 @@ public:
 };
 
 TEST(TestNodeTraits, is_lifecycle_node) {
-  static_assert(rclcpp::is_lifecycle_node<rclcpp_lifecycle::LifecycleNode>::value);
-  static_assert(rclcpp::is_lifecycle_node_v<EmptyLifecycleNode>);
-  static_assert(rclcpp::is_lifecycle_node_v<const volatile EmptyLifecycleNode &&>);
-  static_assert(!rclcpp::is_lifecycle_node_v<rclcpp_lifecycle::LifecycleNode *>);
-  static_assert(!rclcpp::is_lifecycle_node_v<std::unique_ptr<EmptyLifecycleNode>>);
-  static_assert(!rclcpp::is_lifecycle_node_v<void>);
+  static_assert(rclcpp_lifecycle::is_lifecycle_node<rclcpp_lifecycle::LifecycleNode>::value);
+  static_assert(rclcpp_lifecycle::is_lifecycle_node_v<EmptyLifecycleNode>);
+  static_assert(rclcpp_lifecycle::is_lifecycle_node_v<const volatile EmptyLifecycleNode &&>);
+  static_assert(!rclcpp_lifecycle::is_lifecycle_node_v<rclcpp_lifecycle::LifecycleNode *>);
+  static_assert(!rclcpp_lifecycle::is_lifecycle_node_v<std::unique_ptr<EmptyLifecycleNode>>);
+  static_assert(!rclcpp_lifecycle::is_lifecycle_node_v<void>);
+  static_assert(!rclcpp_lifecycle::is_lifecycle_node_v<rclcpp::Node>);
   static_assert(!rclcpp::is_node_v<rclcpp_lifecycle::LifecycleNode>);
 }
 
