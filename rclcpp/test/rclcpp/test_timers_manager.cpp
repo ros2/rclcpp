@@ -14,10 +14,13 @@
 
 #include <gtest/gtest.h>
 
+#include <array>
+#include <atomic>
 #include <chrono>
 #include <cmath>
 #include <memory>
 #include <utility>
+#include <vector>
 
 #include "rclcpp/contexts/default_context.hpp"
 #include "rclcpp/experimental/timers_manager.hpp"
@@ -437,4 +440,56 @@ TEST_F(TestTimersManager, check_one_timer_cancel_doesnt_affect_other_timers)
   EXPECT_GT(t2_runs, t1_runs);
 
   timers_manager->stop();
+}
+
+// Validate that timers reset while they sit below cancelled timers in the heap
+// run again (https://github.com/ros2/rclcpp/issues/2889). A cancelled timer is
+// never due, so the timers thread doesn't look below it until the heap is
+// re-sorted.
+TEST_F(TestTimersManager, reset_timers_below_cancelled_timers_run)
+{
+  auto timers_manager = std::make_shared<TimersManager>(
+    rclcpp::contexts::get_global_default_context());
+
+  // Keeps a timer that is due at the head of the heap, so the timers thread
+  // never waits with every timer cancelled
+  auto t_fast = TimerT::make_shared(
+    1ms, []() {}, rclcpp::contexts::get_global_default_context());
+  timers_manager->add_timer(t_fast);
+
+  // Cancelled timers and timers to reset later, added in turns so that some of
+  // the latter end up below the former
+  constexpr size_t num_timers = 4;
+  std::vector<std::shared_ptr<TimerT>> cancelled_timers;
+  std::vector<std::shared_ptr<TimerT>> reset_timers;
+  std::array<std::atomic<size_t>, num_timers> reset_timers_runs{};
+  for (size_t i = 0; i < num_timers; ++i) {
+    auto cancelled = TimerT::make_shared(
+      1ms, []() {}, rclcpp::contexts::get_global_default_context());
+    cancelled->cancel();
+    timers_manager->add_timer(cancelled);
+    cancelled_timers.push_back(cancelled);
+
+    auto reset = TimerT::make_shared(
+      10ms,
+      [&reset_timers_runs, i]() {
+        reset_timers_runs[i]++;
+      },
+      rclcpp::contexts::get_global_default_context());
+    reset->cancel();
+    timers_manager->add_timer(reset);
+    reset_timers.push_back(reset);
+  }
+
+  timers_manager->start();
+  std::this_thread::sleep_for(10ms);
+  for (auto & t : reset_timers) {
+    t->reset();
+  }
+  std::this_thread::sleep_for(100ms);
+  timers_manager->stop();
+
+  for (size_t i = 0; i < num_timers; ++i) {
+    EXPECT_LT(1u, reset_timers_runs[i]) << "reset timer " << i;
+  }
 }
