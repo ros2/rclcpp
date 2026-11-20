@@ -430,7 +430,7 @@ public:
   }
 
   void
-  send_response(rmw_request_id_t & req_id, typename ServiceT::Response & response)
+  send_response(rmw_request_id_t & req_id, const typename ServiceT::Response & response)
   {
     rcl_ret_t ret = rcl_send_response(get_service_handle().get(), &req_id, &response);
 
