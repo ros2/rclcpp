@@ -268,16 +268,19 @@ protected:
 
         fun();
 
-        if(not_ready || !idle) {
+        // A reentrant group can execute the new entity in parallel to the
+        // ones already executing, so it must reach the scheduler even if
+        // the group is not idle.
+        if(not_ready || (!idle && type != CallbackGroupType::Reentrant)) {
           return;
         }
 
         idle = false;
       }
 
-      // If we reached this point, we were idle and now have work,
-      // therefore we need to move this callback group into the list
-      // of ready callback groups.
+      // If we reached this point, we were idle (or are reentrant) and
+      // now have work, therefore we need to move this callback group into
+      // the list of ready callback groups.
       scheduler.callback_group_ready(this, true);
     }
 

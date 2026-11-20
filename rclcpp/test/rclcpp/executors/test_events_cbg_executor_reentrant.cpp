@@ -126,3 +126,89 @@ TEST_F(TestEventsCBGExecutorReentrant, reentract_callback_group_runs_concurrentl
   EXPECT_FALSE(sub2_timed_out.load()) << "sub 2 timed out waiting for sub 1 to start running -- "
                                          "the reentrant callback group appears to be serialized";
 }
+
+/*
+ * Test that an entity of a reentrant callback group which becomes ready while
+ * another entity of the same group is already executing gets executed
+ * concurrently, instead of waiting for the executing one to finish.
+ *
+ * The second message is only published once the first callback is running,
+ * so the event for the second subscription always arrives while the group
+ * is busy.
+ *
+ * Related issue: https://github.com/ros2/rclcpp/issues/3328
+ */
+TEST_F(TestEventsCBGExecutorReentrant, entity_ready_during_execution_runs_concurrently)
+{
+  auto node = std::make_shared<rclcpp::Node>("test_events_cbg_executor_reentrant_busy");
+
+  std::mutex mutex;
+  std::condition_variable cv;
+  bool sub_a_started = false;
+  bool sub_b_started = false;
+  std::atomic_bool sub_a_timed_out{false};
+
+  rclcpp::SubscriptionOptions sub_opt;
+  sub_opt.callback_group = node->create_callback_group(rclcpp::CallbackGroupType::Reentrant);
+
+  auto sub_a = node->create_subscription<test_msgs::msg::Empty>(
+    "reentrant_busy_a", 10,
+    [&](test_msgs::msg::Empty) {
+      std::unique_lock<std::mutex> lock(mutex);
+      sub_a_started = true;
+      cv.notify_all();
+      if (!cv.wait_for(lock, 5s, [&]() {return sub_b_started;})) {
+        sub_a_timed_out = true;
+      }
+    },
+    sub_opt);
+
+  auto sub_b = node->create_subscription<test_msgs::msg::Empty>(
+    "reentrant_busy_b", 10,
+    [&](test_msgs::msg::Empty) {
+      std::lock_guard<std::mutex> lock(mutex);
+      sub_b_started = true;
+      cv.notify_all();
+    },
+    sub_opt);
+
+  auto pub_a = node->create_publisher<test_msgs::msg::Empty>("reentrant_busy_a", 10);
+  auto pub_b = node->create_publisher<test_msgs::msg::Empty>("reentrant_busy_b", 10);
+
+  auto discovery_deadline = std::chrono::steady_clock::now() + 5s;
+  while ((pub_a->get_subscription_count() == 0 || pub_b->get_subscription_count() == 0) &&
+    std::chrono::steady_clock::now() < discovery_deadline)
+  {
+    std::this_thread::sleep_for(10ms);
+  }
+  ASSERT_EQ(pub_a->get_subscription_count(), 1u);
+  ASSERT_EQ(pub_b->get_subscription_count(), 1u);
+
+  rclcpp::executors::EventsCBGExecutor executor(rclcpp::ExecutorOptions(), 2u);
+  executor.add_node(node);
+  std::thread spin_thread([&executor]() {executor.spin();});
+
+  pub_a->publish(test_msgs::msg::Empty());
+  bool a_started;
+  {
+    std::unique_lock<std::mutex> lock(mutex);
+    a_started = cv.wait_for(lock, 5s, [&]() {return sub_a_started;});
+  }
+  if (a_started) {
+    pub_b->publish(test_msgs::msg::Empty());
+  }
+
+  bool b_started;
+  {
+    std::unique_lock<std::mutex> lock(mutex);
+    b_started = cv.wait_for(lock, 10s, [&]() {return sub_b_started;});
+  }
+
+  executor.cancel();
+  spin_thread.join();
+
+  ASSERT_TRUE(a_started) << "sub a never ran";
+  EXPECT_TRUE(b_started) << "sub b never ran";
+  EXPECT_FALSE(sub_a_timed_out.load()) <<
+    "sub b only ran after sub a finished -- the reentrant callback group appears to be serialized";
+}
