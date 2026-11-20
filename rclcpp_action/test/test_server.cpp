@@ -884,6 +884,69 @@ TEST_F(TestServer, publish_feedback)
   ASSERT_EQ(sent_message->sequence, msg->feedback.sequence);
 }
 
+TEST_F(TestServer, publish_feedback_canceling)
+{
+  auto node = std::make_shared<rclcpp::Node>(
+    "pub_feedback_canceling", "/rclcpp_action/pub_feedback_canceling");
+  const GoalUUID uuid{{2, 20, 30, 4, 5, 6, 70, 8, 9, 1, 11, 120, 13, 14, 15, 160}};
+
+  auto handle_goal = [](
+    const GoalUUID &, std::shared_ptr<const Fibonacci::Goal>)
+    {
+      return rclcpp_action::GoalResponse::ACCEPT_AND_EXECUTE;
+    };
+
+  using GoalHandle = rclcpp_action::ServerGoalHandle<Fibonacci>;
+
+  auto handle_cancel = [](std::shared_ptr<GoalHandle>)
+    {
+      return rclcpp_action::CancelResponse::ACCEPT;
+    };
+
+  std::shared_ptr<GoalHandle> received_handle;
+  auto handle_accepted = [&received_handle](std::shared_ptr<GoalHandle> handle)
+    {
+      received_handle = handle;
+    };
+
+  auto as = rclcpp_action::create_server<Fibonacci>(
+    node, "fibonacci",
+    handle_goal,
+    handle_cancel,
+    handle_accepted);
+  (void)as;
+
+  // Subscribe to feedback messages
+  using FeedbackT = Fibonacci::Impl::FeedbackMessage;
+  std::vector<FeedbackT::ConstSharedPtr> received_msgs;
+  auto subscriber = node->create_subscription<FeedbackT>(
+    "fibonacci/_action/feedback", 10, [&received_msgs](FeedbackT::ConstSharedPtr msg)
+    {
+      received_msgs.push_back(msg);
+    });
+
+  send_goal_request(node, uuid);
+  send_cancel_request(node, uuid);
+  ASSERT_TRUE(received_handle->is_canceling());
+
+  auto sent_message = std::make_shared<Fibonacci::Feedback>();
+  sent_message->sequence = {1, 1, 2, 3, 5, 8};
+  received_handle->publish_feedback(sent_message);
+
+  // 10 seconds
+  rclcpp::executors::SingleThreadedExecutor executor;
+  executor.add_node(node);
+  const size_t max_tries = 10 * 1000 / 100;
+  for (size_t retry = 0; retry < max_tries && received_msgs.size() < 1u; ++retry) {
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    executor.spin_some();
+  }
+
+  ASSERT_EQ(1u, received_msgs.size());
+  auto & msg = received_msgs.back();
+  ASSERT_EQ(sent_message->sequence, msg->feedback.sequence);
+}
+
 TEST_F(TestServer, get_result)
 {
   auto node = std::make_shared<rclcpp::Node>("get_result", "/rclcpp_action/get_result");
