@@ -81,6 +81,17 @@ protected:
     return node->get_node_base_interface()->get_associated_with_executor_atomic().load();
   }
 
+  bool executor_has_default_callback_group()
+  {
+    const auto default_group = node->get_node_base_interface()->get_default_callback_group();
+    for (const auto & weak_group : executor->get_all_callback_groups()) {
+      if (weak_group.lock() == default_group) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   bool wait_for_callback()
   {
     return callback_entered.get_future().wait_for(5s) == std::future_status::ready;
@@ -151,12 +162,15 @@ TEST_F(TestEventsCBGExecutorTimerRemoval, remove_and_readd_node_during_spin)
   // the callback that is still running belongs to the bookkeeping of the removed timer,
   // when it returns it must not touch the bookkeeping of the timer that was added again
   executor->remove_node(node);
-  // let the executor process the removal before the node is added again
-  std::this_thread::sleep_for(30ms);
+  // wait until the executor processed the removal before the node is added again
+  const auto deadline = std::chrono::steady_clock::now() + 5s;
+  while (executor_has_default_callback_group() && std::chrono::steady_clock::now() < deadline) {
+    std::this_thread::sleep_for(1ms);
+  }
+  ASSERT_FALSE(executor_has_default_callback_group());
   executor->add_node(node);
   ASSERT_FALSE(callback_returned) << "the node was not added again while the callback was running";
 
-  const auto deadline = std::chrono::steady_clock::now() + 5s;
   while (!callback_returned && std::chrono::steady_clock::now() < deadline) {
     std::this_thread::sleep_for(1ms);
   }
