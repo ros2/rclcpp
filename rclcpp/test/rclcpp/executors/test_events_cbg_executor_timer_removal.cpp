@@ -142,3 +142,67 @@ TEST_F(TestEventsCBGExecutorTimerRemoval, remove_node_during_spin)
   std::this_thread::sleep_for(50ms);
   EXPECT_EQ(calls, 1);
 }
+
+/*
+ * Removing a node and immediately re-adding it while spinning must not leave
+ * its entities unregistered (see #3418). The remove clears the entities'
+ * event callbacks, and if the re-add happens before the spinning threads run
+ * a callback-group sync, the sync reuses the existing registered-entity
+ * cache, whose entities are already cached, so the callbacks are never
+ * re-registered and the timer never fires again.
+ */
+class TestEventsCBGExecutorNodeReadd : public testing::Test
+{
+protected:
+  void SetUp() override
+  {
+    rclcpp::init(0, nullptr);
+
+    executor = std::make_unique<rclcpp::executors::EventsCBGExecutor>(
+      rclcpp::ExecutorOptions(), 2);
+
+    node = std::make_shared<rclcpp::Node>("test_events_cbg_executor_node_readd");
+    timer = node->create_wall_timer(5ms, [this]() {timer_calls++;});
+
+    executor->add_node(node);
+  }
+
+  void TearDown() override
+  {
+    rclcpp::shutdown();
+    if (spin_thread.joinable()) {
+      spin_thread.join();
+    }
+    executor.reset();
+  }
+
+  std::unique_ptr<rclcpp::executors::EventsCBGExecutor> executor;
+  rclcpp::Node::SharedPtr node;
+  rclcpp::TimerBase::SharedPtr timer;
+  std::thread spin_thread;
+
+  std::atomic_int timer_calls{0};
+};
+
+TEST_F(TestEventsCBGExecutorNodeReadd, remove_and_immediately_readd_node_resumes_timer)
+{
+  spin_thread = std::thread([this]() {executor->spin();});
+
+  // wait until the timer is demonstrably running
+  const auto start_deadline = std::chrono::steady_clock::now() + 5s;
+  while (timer_calls < 3 && std::chrono::steady_clock::now() < start_deadline) {
+    std::this_thread::sleep_for(1ms);
+  }
+  ASSERT_GE(timer_calls, 3);
+
+  executor->remove_node(node);
+  executor->add_node(node);
+
+  // the timer must fire again after the re-add
+  const int calls_at_readd = timer_calls.load();
+  const auto deadline = std::chrono::steady_clock::now() + 5s;
+  while (timer_calls < calls_at_readd + 3 && std::chrono::steady_clock::now() < deadline) {
+    std::this_thread::sleep_for(1ms);
+  }
+  EXPECT_GE(timer_calls, calls_at_readd + 3);
+}
