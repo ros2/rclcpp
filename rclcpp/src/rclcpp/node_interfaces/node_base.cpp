@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <algorithm>
 #include <string>
 #include <limits>
 #include <memory>
@@ -223,6 +224,14 @@ NodeBase::create_callback_group(
     context_->weak_from_this(),
     automatically_add_to_executor_with_node);
   std::lock_guard<std::mutex> lock(callback_groups_mutex_);
+  // Drop entries for groups that no longer exist: this vector only holds weak
+  // pointers, so without pruning it grows by one entry per callback group ever
+  // created, even after the group itself is destroyed.
+  callback_groups_.erase(
+    std::remove_if(
+      callback_groups_.begin(), callback_groups_.end(),
+      [](const rclcpp::CallbackGroup::WeakPtr & weak_group) {return weak_group.expired();}),
+    callback_groups_.end());
   callback_groups_.push_back(group);
 
   // This guard condition is generally used to signal to this node's executor that a callback
