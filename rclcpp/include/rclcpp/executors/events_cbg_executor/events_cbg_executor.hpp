@@ -296,6 +296,14 @@ private:
   void sync_callback_groups();
 
   /**
+   * Drop the registered-entity cache for a callback group, if one exists.
+   * Called when a callback group is removed, so that a later re-add builds a
+   * fresh cache and re-registers all of the group's entities instead of
+   * reusing a cache whose event callbacks were already cleared.
+   */
+  void drop_callback_group_cache(const rclcpp::CallbackGroup::SharedPtr & group_ptr);
+
+  /**
    * Either triggers a sync, or if not spinning,
    * syncs directly.
    */

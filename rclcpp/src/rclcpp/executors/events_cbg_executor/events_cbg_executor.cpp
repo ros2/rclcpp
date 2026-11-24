@@ -727,6 +727,20 @@ const
 
 
 void
+EventsCBGExecutor::drop_callback_group_cache(
+  const rclcpp::CallbackGroup::SharedPtr & group_ptr)
+{
+  std::lock_guard lock{callback_groups_mutex};
+  callback_groups.erase(
+    std::remove_if(
+      callback_groups.begin(), callback_groups.end(),
+      [&group_ptr](const CallbackGroupData & data) {
+        return data.callback_group.lock() == group_ptr;
+      }),
+    callback_groups.end());
+}
+
+void
 EventsCBGExecutor::remove_callback_group(
   const rclcpp::CallbackGroup::SharedPtr & group_ptr,
   bool notify)
@@ -760,6 +774,7 @@ EventsCBGExecutor::remove_callback_group(
 
   // we need to unregister all callbacks
   unregister_event_callbacks(group_ptr);
+  drop_callback_group_cache(group_ptr);
 
   if (found) {
     trigger_callback_group_sync();
@@ -832,6 +847,7 @@ EventsCBGExecutor::remove_node(
     [this](const rclcpp::CallbackGroup::SharedPtr & cbg)
     {
       unregister_event_callbacks(cbg);
+      drop_callback_group_cache(cbg);
     }
   );
 
