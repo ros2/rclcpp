@@ -500,7 +500,9 @@ TEST_F(TestClockSleep, sleep_until_basic_steady) {
 
 TEST_F(TestClockSleep, sleep_until_steady_past_returns_immediately) {
   rclcpp::Clock clock(RCL_STEADY_TIME);
-  auto until = clock.now() - rclcpp::Duration(1000, 0);
+  // The steady clock counts from boot and a negative time point cannot be stored, so don't go back
+  // further than a host that has just booted can handle.
+  auto until = clock.now() - rclcpp::Duration(1, 0);
   // This should return immediately, other possible behavior might be sleep forever and timeout
   ASSERT_TRUE(clock.sleep_until(until));
 }
@@ -679,7 +681,8 @@ TEST_F(TestClockSleep, sleep_for_basic_steady) {
 
 TEST_F(TestClockSleep, sleep_for_steady_past_returns_immediately) {
   rclcpp::Clock clock(RCL_STEADY_TIME);
-  auto rel_time = rclcpp::Duration(-1000, 0);
+  // Same as above: now() + rel_time must not be negative on a freshly booted host.
+  auto rel_time = rclcpp::Duration(-1, 0);
   // This should return immediately
   ASSERT_TRUE(clock.sleep_for(rel_time));
 }
