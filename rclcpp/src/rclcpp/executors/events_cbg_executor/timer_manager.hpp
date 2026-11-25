@@ -125,8 +125,6 @@ class TimerQueue
 {
   struct TimerData
   {
-<<<<<<< HEAD
-=======
     TimerData(
       uint64_t id,
       std::shared_ptr<const rcl_timer_t> rcl_ref,
@@ -139,7 +137,6 @@ class TimerQueue
 
     // key of this timer in the queue, never reused
     const uint64_t id;
->>>>>>> 0c8d39f (perf: look up EventsCBGExecutor timers by an id instead of weak_ptr (#3424))
     std::shared_ptr<const rcl_timer_t> rcl_ref;
     std::weak_ptr<rclcpp::TimerBase> timer_ref;
     rclcpp::Clock::SharedPtr clock;
@@ -186,6 +183,13 @@ public:
       }
       clear_on_schedule_change_callback(*tData);
     }
+
+    // Release all references now, as the queue itself may outlive the libraries
+    // owning e.g. the clocks. Callbacks still executing will not re-arm their
+    // timers, as their timer data is gone.
+    running_timers.clear();
+    all_timers.clear();
+    used_clock_for_timers.reset();
   }
 
   /**
@@ -223,11 +227,7 @@ public:
 
     auto it = std::find_if(
       all_timers.begin(), all_timers.end(),
-<<<<<<< HEAD
-      [rcl_ref = timer->get_timer_handle()](const std::unique_ptr<TimerData> & d)
-=======
       [rcl_ref = timer->get_timer_handle()](const auto & e)
->>>>>>> 0c8d39f (perf: look up EventsCBGExecutor timers by an id instead of weak_ptr (#3424))
       {
         return e.second->rcl_ref == rcl_ref;
       });
@@ -279,18 +279,6 @@ public:
       return;
     }
 
-<<<<<<< HEAD
-    // TimerData holds an atomic and is not movable, so construct it in place
-    std::unique_ptr<TimerData> data(new TimerData{std::move(handle),
-        timer,
-        timer->get_clock(), false, timer_ready_callback});
-
-    timer->set_on_reset_callback(
-      [data_ptr = data.get(), this](size_t) {
-        std::scoped_lock l(mutex);
-        if (!remove_if_dropped(data_ptr)) {
-          add_timer_to_running_map(data_ptr);
-=======
     const uint64_t id = next_timer_id.fetch_add(1);
     auto data = std::make_unique<TimerData>(
       id, std::move(handle), timer, timer->get_clock(), timer_ready_callback);
@@ -302,7 +290,6 @@ public:
         auto it = all_timers.find(id);
         if (it != all_timers.end() && !remove_if_dropped(it->second.get())) {
           add_timer_to_running_map(it->second.get());
->>>>>>> 0c8d39f (perf: look up EventsCBGExecutor timers by an id instead of weak_ptr (#3424))
         }
       });
 
@@ -392,22 +379,9 @@ private:
       }
 
       // timer was deleted
-<<<<<<< HEAD
-      auto it = std::find_if(
-        all_timers.begin(), all_timers.end(), [timer_data](const std::unique_ptr<TimerData> & e) {
-          return timer_data == e.get();
-        }
-      );
-
-      if (it != all_timers.end()) {
-        clear_on_schedule_change_callback(**it);
-        all_timers.erase(it);
-      }
-=======
       clear_on_schedule_change_callback(*timer_data);
       const uint64_t id = timer_data->id;
       all_timers.erase(id);
->>>>>>> 0c8d39f (perf: look up EventsCBGExecutor timers by an id instead of weak_ptr (#3424))
       return true;
     }
     return false;
@@ -491,17 +465,6 @@ private:
       }
 
       if (time_until_call <= 0) {
-<<<<<<< HEAD
-        auto timer_done_callback = [timer_data = timer_data, this] ()
-          {
-            // Note, we have the guarantee, that the shared_ptr to this timer is
-            // valid in case this callback is executed, as the executor holds a
-            // reference to the timer during execution and at the time of this callback.
-            // Therefore timer_data is valid.
-            {
-              std::scoped_lock l(mutex);
-              add_timer_to_running_map(timer_data);
-=======
         auto timer_done_callback = [id = timer_data->id, this] ()
           {
             // The timer may have been removed from this queue while its callback
@@ -513,7 +476,6 @@ private:
             auto it = all_timers.find(id);
             if (it != all_timers.end()) {
               add_timer_to_running_map(it->second.get());
->>>>>>> 0c8d39f (perf: look up EventsCBGExecutor timers by an id instead of weak_ptr (#3424))
             }
           };
 
@@ -604,13 +566,9 @@ private:
   // set by the schedule change callback, consumed by the timer thread
   std::atomic_bool rekey_pending_any = false;
 
-<<<<<<< HEAD
-  std::vector<std::unique_ptr<TimerData>> all_timers;
-=======
   std::atomic<uint64_t> next_timer_id = 0;
 
   std::unordered_map<uint64_t, std::unique_ptr<TimerData>> all_timers;
->>>>>>> 0c8d39f (perf: look up EventsCBGExecutor timers by an id instead of weak_ptr (#3424))
 
   using TimerMap = std::multimap<std::chrono::nanoseconds, TimerData *>;
   TimerMap running_timers;
