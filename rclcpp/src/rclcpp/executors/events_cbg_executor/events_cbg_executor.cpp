@@ -117,11 +117,15 @@ EventsCBGExecutor::EventsCBGExecutor(
 EventsCBGExecutor::~EventsCBGExecutor()
 {
   shutdown();
+
+  // released only here, as callbacks still executing during shutdown()
+  // re-arm their timers through the timer_manager after they return
+  timer_manager.reset();
 }
 
 void EventsCBGExecutor::shutdown()
 {
-  if(!timer_manager) {
+  if(in_shutdown) {
     // already shut down
     return;
   }
@@ -153,10 +157,6 @@ void EventsCBGExecutor::shutdown()
       "failed to remove registered on_shutdown callback");
     rcl_reset_error();
   }
-
-  // now we may release the memory of the timer_manager,
-  // as we know no thread is working on it any more
-  timer_manager.reset();
 }
 
 void EventsCBGExecutor::remove_all_nodes_and_callback_groups()
