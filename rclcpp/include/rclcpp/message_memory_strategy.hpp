@@ -17,6 +17,7 @@
 
 #include <memory>
 #include <stdexcept>
+#include <type_traits>
 
 #include "rcl/allocator.h"
 #include "rcl/types.h"
@@ -95,7 +96,11 @@ public:
   /// Default factory method
   static SharedPtr create_default()
   {
-    return std::make_shared<MessageMemoryStrategy<MessageT, Alloc>>(std::make_shared<Alloc>());
+    if constexpr (std::is_same_v<Alloc, std::allocator<void>>) {
+      return std::make_shared<MessageMemoryStrategy<MessageT, Alloc>>();
+    } else {
+      return std::make_shared<MessageMemoryStrategy<MessageT, Alloc>>(std::make_shared<Alloc>());
+    }
   }
 
   /// By default, dynamically allocate a new message.
