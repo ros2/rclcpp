@@ -62,28 +62,10 @@ add_executable(
 )
 target_link_libraries(component_container PRIVATE component_manager rclcpp::rclcpp)
 
-add_executable(
-  component_container_event
-  src/component_container_event.cpp
-)
-target_link_libraries(component_container_event PRIVATE component_manager rclcpp::rclcpp)
-
 set(node_main_template_install_dir "share/${PROJECT_NAME}")
 install(FILES
   src/node_main.cpp.in
   DESTINATION ${node_main_template_install_dir})
-
-add_executable(
-  component_container_mt
-  src/component_container_mt.cpp
-)
-target_link_libraries(component_container_mt PRIVATE component_manager rclcpp::rclcpp)
-
-add_executable(
-  component_container_isolated
-  src/component_container_isolated.cpp
-)
-target_link_libraries(component_container_isolated PRIVATE component_manager rclcpp::rclcpp)
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
@@ -149,7 +131,7 @@ install(
 
 # Install executables
 install(
-  TARGETS component_container component_container_mt component_container_isolated component_container_event
+  TARGETS component_container
   RUNTIME DESTINATION lib/${PROJECT_NAME}
 )
 
