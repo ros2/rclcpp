@@ -129,37 +129,6 @@ struct SubscriptionCallbackTypeHelper<
     std::function<void (const std::shared_ptr<const MessageT> &, const rclcpp::MessageInfo &)>;
 };
 
-template<typename MessageT, typename CallbackT>
-struct SubscriptionCallbackTypeHelper<
-  MessageT,
-  CallbackT,
-  typename std::enable_if_t<
-    rclcpp::function_traits::same_arguments<
-      CallbackT,
-      std::function<void(std::shared_ptr<MessageT>)>
-    >::value
-  >
->
-{
-  using callback_type = std::function<void (std::shared_ptr<MessageT>)>;
-};
-
-template<typename MessageT, typename CallbackT>
-struct SubscriptionCallbackTypeHelper<
-  MessageT,
-  CallbackT,
-  typename std::enable_if_t<
-    rclcpp::function_traits::same_arguments<
-      CallbackT,
-      std::function<void(std::shared_ptr<MessageT>, const rclcpp::MessageInfo &)>
-    >::value
-  >
->
-{
-  using callback_type =
-    std::function<void (std::shared_ptr<MessageT>, const rclcpp::MessageInfo &)>;
-};
-
 }  // namespace detail
 }  // namespace rclcpp
 

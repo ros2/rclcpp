@@ -137,22 +137,6 @@ struct AnySubscriptionCallbackPossibleTypes
     std::function<void (
         const std::shared_ptr<const rclcpp::SerializedMessage> &,
         const rclcpp::MessageInfo &)>;
-
-  // Deprecated signatures:
-  using SharedPtrCallback =
-    std::function<void (std::shared_ptr<SubscribedType>)>;
-  using SharedPtrROSMessageCallback =
-    std::function<void (std::shared_ptr<ROSMessageType>)>;
-  using SharedPtrWithInfoCallback =
-    std::function<void (std::shared_ptr<SubscribedType>, const rclcpp::MessageInfo &)>;
-  using SharedPtrWithInfoROSMessageCallback =
-    std::function<void (
-        std::shared_ptr<ROSMessageType>,
-        const rclcpp::MessageInfo &)>;
-  using SharedPtrSerializedMessageCallback =
-    std::function<void (std::shared_ptr<rclcpp::SerializedMessage>)>;
-  using SharedPtrSerializedMessageWithInfoCallback =
-    std::function<void (std::shared_ptr<rclcpp::SerializedMessage>, const rclcpp::MessageInfo &)>;
 };
 
 /// Template helper to select the variant type based on whether or not MessageT is a TypeAdapter.
@@ -186,11 +170,7 @@ struct AnySubscriptionCallbackHelper<MessageT, AllocatorT, false, false>
     typename CallbackTypes::ConstRefSharedConstPtrCallback,
     typename CallbackTypes::ConstRefSharedConstPtrWithInfoCallback,
     typename CallbackTypes::ConstRefSharedConstPtrSerializedMessageCallback,
-    typename CallbackTypes::ConstRefSharedConstPtrSerializedMessageWithInfoCallback,
-    typename CallbackTypes::SharedPtrCallback,
-    typename CallbackTypes::SharedPtrWithInfoCallback,
-    typename CallbackTypes::SharedPtrSerializedMessageCallback,
-    typename CallbackTypes::SharedPtrSerializedMessageWithInfoCallback
+    typename CallbackTypes::ConstRefSharedConstPtrSerializedMessageWithInfoCallback
   >;
 };
 
@@ -224,13 +204,7 @@ struct AnySubscriptionCallbackHelper<MessageT, AllocatorT, true, false>
     typename CallbackTypes::ConstRefSharedConstPtrWithInfoCallback,
     typename CallbackTypes::ConstRefSharedConstPtrWithInfoROSMessageCallback,
     typename CallbackTypes::ConstRefSharedConstPtrSerializedMessageCallback,
-    typename CallbackTypes::ConstRefSharedConstPtrSerializedMessageWithInfoCallback,
-    typename CallbackTypes::SharedPtrCallback,
-    typename CallbackTypes::SharedPtrROSMessageCallback,
-    typename CallbackTypes::SharedPtrWithInfoCallback,
-    typename CallbackTypes::SharedPtrWithInfoROSMessageCallback,
-    typename CallbackTypes::SharedPtrSerializedMessageCallback,
-    typename CallbackTypes::SharedPtrSerializedMessageWithInfoCallback
+    typename CallbackTypes::ConstRefSharedConstPtrSerializedMessageWithInfoCallback
   >;
 };
 
@@ -248,9 +222,7 @@ struct AnySubscriptionCallbackHelper<MessageT, AllocatorT, false, true>
     typename CallbackTypes::SharedConstPtrSerializedMessageCallback,
     typename CallbackTypes::SharedConstPtrSerializedMessageWithInfoCallback,
     typename CallbackTypes::ConstRefSharedConstPtrSerializedMessageCallback,
-    typename CallbackTypes::ConstRefSharedConstPtrSerializedMessageWithInfoCallback,
-    typename CallbackTypes::SharedPtrSerializedMessageCallback,
-    typename CallbackTypes::SharedPtrSerializedMessageWithInfoCallback
+    typename CallbackTypes::ConstRefSharedConstPtrSerializedMessageWithInfoCallback
   >;
 };
 
@@ -339,18 +311,6 @@ private:
     typename CallbackTypes::ConstRefSharedConstPtrSerializedMessageCallback;
   using ConstRefSharedConstPtrSerializedMessageWithInfoCallback =
     typename CallbackTypes::ConstRefSharedConstPtrSerializedMessageWithInfoCallback;
-  using SharedPtrCallback =
-    typename CallbackTypes::SharedPtrCallback;
-  using SharedPtrROSMessageCallback =
-    typename CallbackTypes::SharedPtrROSMessageCallback;
-  using SharedPtrWithInfoCallback =
-    typename CallbackTypes::SharedPtrWithInfoCallback;
-  using SharedPtrWithInfoROSMessageCallback =
-    typename CallbackTypes::SharedPtrWithInfoROSMessageCallback;
-  using SharedPtrSerializedMessageCallback =
-    typename CallbackTypes::SharedPtrSerializedMessageCallback;
-  using SharedPtrSerializedMessageWithInfoCallback =
-    typename CallbackTypes::SharedPtrSerializedMessageWithInfoCallback;
 
 public:
   explicit
@@ -378,9 +338,9 @@ public:
 
   /// Generic function for setting the callback.
   /**
-   * There are specializations that overload this in order to deprecate some
-   * callback signatures, and also to fix ambiguity between shared_ptr and
-   * unique_ptr callback signatures when using them with lambda functions.
+   * There are specializations that overload this in order to fix ambiguity
+   * between shared_ptr and unique_ptr callback signatures when using them with
+   * lambda functions.
    */
   template<typename CallbackT>
   AnySubscriptionCallback<MessageT, AllocatorT>
@@ -392,75 +352,24 @@ public:
     // converted to one another, e.g. shared_ptr and unique_ptr.
     using scbth = detail::SubscriptionCallbackTypeHelper<MessageT, CallbackT>;
 
-    // Determine if the given CallbackT is a deprecated signature or not.
-    constexpr auto is_deprecated =
-      rclcpp::function_traits::same_arguments<
-      typename scbth::callback_type,
-      std::function<void(std::shared_ptr<SubscribedType>)>
-      >::value ||
-      rclcpp::function_traits::same_arguments<
-      typename scbth::callback_type,
-      std::function<void(std::shared_ptr<SubscribedType>, const rclcpp::MessageInfo &)>
-      >::value ||
-      rclcpp::function_traits::same_arguments<
-      typename scbth::callback_type,
-      std::function<void(std::shared_ptr<ROSMessageType>)>
-      >::value ||
-      rclcpp::function_traits::same_arguments<
-      typename scbth::callback_type,
-      std::function<void(std::shared_ptr<ROSMessageType>, const rclcpp::MessageInfo &)>
-      >::value ||
-      rclcpp::function_traits::same_arguments<
-      typename scbth::callback_type,
-      std::function<void(std::shared_ptr<rclcpp::SerializedMessage>)>
-      >::value ||
-      rclcpp::function_traits::same_arguments<
-      typename scbth::callback_type,
-      std::function<void(std::shared_ptr<rclcpp::SerializedMessage>, const rclcpp::MessageInfo &)>
-      >::value;
+    using CallbackMessageT = std::decay_t<
+      typename rclcpp::function_traits::function_traits<
+        typename scbth::callback_type>::template argument_type<0>>;
+    constexpr bool is_shared_ptr_to_non_const_message =
+      std::is_same<CallbackMessageT, std::shared_ptr<SubscribedType>>::value ||
+      std::is_same<CallbackMessageT, std::shared_ptr<ROSMessageType>>::value ||
+      std::is_same<CallbackMessageT, std::shared_ptr<rclcpp::SerializedMessage>>::value;
+    static_assert(
+      !is_shared_ptr_to_non_const_message,
+      "subscription callbacks taking a std::shared_ptr to a non-const message are not "
+      "supported, use std::shared_ptr<const MessageT> instead");
 
     // Use the discovered type to force the type of callback when assigning
     // into the variant.
-    if constexpr (is_deprecated) {
-      // If deprecated, call sub-routine that is deprecated.
-      set_deprecated(static_cast<typename scbth::callback_type>(callback));
-    } else {
-      // Otherwise just assign it.
-      callback_variant_ = static_cast<typename scbth::callback_type>(callback);
-    }
+    callback_variant_ = static_cast<typename scbth::callback_type>(callback);
 
     // Return copy of self for easier testing, normally will be compiled out.
     return *this;
-  }
-
-  /// Function for shared_ptr to non-const MessageT, which is deprecated.
-  template<typename SetT>
-  // *INDENT-OFF*
-  #if !defined(RCLCPP_AVOID_DEPRECATIONS_FOR_UNIT_TESTS)
-  // suppress deprecation warnings in `test_any_subscription_callback.cpp`
-  [[deprecated("use 'void(std::shared_ptr<const MessageT>)' instead")]]
-  #endif
-  // *INDENT-ON*
-  void
-  set_deprecated(std::function<void(std::shared_ptr<SetT>)> callback)
-  {
-    callback_variant_ = callback;
-  }
-
-  /// Function for shared_ptr to non-const MessageT with MessageInfo, which is deprecated.
-  template<typename SetT>
-  // *INDENT-OFF*
-  #if !defined(RCLCPP_AVOID_DEPRECATIONS_FOR_UNIT_TESTS)
-  // suppress deprecation warnings in `test_any_subscription_callback.cpp`
-  [[deprecated(
-          "use 'void(std::shared_ptr<const MessageT>, const rclcpp::MessageInfo &)' instead"
-  )]]
-  #endif
-  // *INDENT-ON*
-  void
-  set_deprecated(std::function<void(std::shared_ptr<SetT>, const rclcpp::MessageInfo &)> callback)
-  {
-    callback_variant_ = callback;
   }
 
   /// Disable the callback from being called during dispatch.
@@ -584,16 +493,14 @@ public:
         } else if constexpr (  // NOLINT[readability/braces]
           is_ta && (
             std::is_same_v<T, SharedConstPtrCallback>||
-            std::is_same_v<T, ConstRefSharedConstPtrCallback>||
-            std::is_same_v<T, SharedPtrCallback>
+            std::is_same_v<T, ConstRefSharedConstPtrCallback>
         ))
         {
           callback(convert_ros_message_to_custom_type_unique_ptr(*message));
         } else if constexpr (  // NOLINT[readability/braces]
           is_ta && (
             std::is_same_v<T, SharedConstPtrWithInfoCallback>||
-            std::is_same_v<T, ConstRefSharedConstPtrWithInfoCallback>||
-            std::is_same_v<T, SharedPtrWithInfoCallback>
+            std::is_same_v<T, ConstRefSharedConstPtrWithInfoCallback>
         ))
         {
           callback(convert_ros_message_to_custom_type_unique_ptr(*message), message_info);
@@ -609,14 +516,12 @@ public:
           callback(create_ros_unique_ptr_from_ros_shared_ptr_message(message), message_info);
         } else if constexpr (  // NOLINT[readability/braces]
           std::is_same_v<T, SharedConstPtrROSMessageCallback>||
-          std::is_same_v<T, ConstRefSharedConstPtrROSMessageCallback>||
-          std::is_same_v<T, SharedPtrROSMessageCallback>)
+          std::is_same_v<T, ConstRefSharedConstPtrROSMessageCallback>)
         {
           callback(message);
         } else if constexpr (  // NOLINT[readability/braces]
           std::is_same_v<T, SharedConstPtrWithInfoROSMessageCallback>||
-          std::is_same_v<T, ConstRefSharedConstPtrWithInfoROSMessageCallback>||
-          std::is_same_v<T, SharedPtrWithInfoROSMessageCallback>)
+          std::is_same_v<T, ConstRefSharedConstPtrWithInfoROSMessageCallback>)
         {
           callback(message, message_info);
         }
@@ -629,9 +534,7 @@ public:
           std::is_same_v<T, SharedConstPtrSerializedMessageCallback>||
           std::is_same_v<T, SharedConstPtrSerializedMessageWithInfoCallback>||
           std::is_same_v<T, ConstRefSharedConstPtrSerializedMessageCallback>||
-          std::is_same_v<T, ConstRefSharedConstPtrSerializedMessageWithInfoCallback>||
-          std::is_same_v<T, SharedPtrSerializedMessageCallback>||
-          std::is_same_v<T, SharedPtrSerializedMessageWithInfoCallback>)
+          std::is_same_v<T, ConstRefSharedConstPtrSerializedMessageWithInfoCallback>)
         {
           throw std::runtime_error(
             "Cannot dispatch std::shared_ptr<ROSMessageType> message "
@@ -681,14 +584,12 @@ public:
             message_info);
         } else if constexpr (  // NOLINT[readability/braces]
           std::is_same_v<T, SharedConstPtrSerializedMessageCallback>||
-          std::is_same_v<T, ConstRefSharedConstPtrSerializedMessageCallback>||
-          std::is_same_v<T, SharedPtrSerializedMessageCallback>)
+          std::is_same_v<T, ConstRefSharedConstPtrSerializedMessageCallback>)
         {
           callback(create_serialized_message_unique_ptr_from_shared_ptr(serialized_message));
         } else if constexpr (  // NOLINT[readability/braces]
           std::is_same_v<T, SharedConstPtrSerializedMessageWithInfoCallback>||
-          std::is_same_v<T, ConstRefSharedConstPtrSerializedMessageWithInfoCallback>||
-          std::is_same_v<T, SharedPtrSerializedMessageWithInfoCallback>)
+          std::is_same_v<T, ConstRefSharedConstPtrSerializedMessageWithInfoCallback>)
         {
           callback(
             create_serialized_message_unique_ptr_from_shared_ptr(serialized_message),
@@ -711,11 +612,7 @@ public:
           std::is_same_v<T, ConstRefSharedConstPtrCallback>||
           std::is_same_v<T, ConstRefSharedConstPtrROSMessageCallback>||
           std::is_same_v<T, ConstRefSharedConstPtrWithInfoCallback>||
-          std::is_same_v<T, ConstRefSharedConstPtrWithInfoROSMessageCallback>||
-          std::is_same_v<T, SharedPtrCallback>||
-          std::is_same_v<T, SharedPtrROSMessageCallback>||
-          std::is_same_v<T, SharedPtrWithInfoCallback>||
-          std::is_same_v<T, SharedPtrWithInfoROSMessageCallback>)
+          std::is_same_v<T, ConstRefSharedConstPtrWithInfoROSMessageCallback>)
         {
           throw std::runtime_error(
             "cannot dispatch rclcpp::SerializedMessage to "
@@ -759,15 +656,13 @@ public:
           callback(*message, message_info);
         } else if constexpr (  // NOLINT[readability/braces]
           is_ta && (
-            std::is_same_v<T, UniquePtrCallback>||
-            std::is_same_v<T, SharedPtrCallback>
+            std::is_same_v<T, UniquePtrCallback>
         ))
         {
           callback(create_custom_unique_ptr_from_custom_shared_ptr_message(message));
         } else if constexpr (  // NOLINT[readability/braces]
           is_ta && (
-            std::is_same_v<T, UniquePtrWithInfoCallback>||
-            std::is_same_v<T, SharedPtrWithInfoCallback>
+            std::is_same_v<T, UniquePtrWithInfoCallback>
         ))
         {
           callback(create_custom_unique_ptr_from_custom_shared_ptr_message(message), message_info);
@@ -802,8 +697,7 @@ public:
             callback(*message, message_info);
           }
         } else if constexpr (  // NOLINT[readability/braces]
-          std::is_same_v<T, UniquePtrROSMessageCallback>||
-          std::is_same_v<T, SharedPtrROSMessageCallback>)
+          std::is_same_v<T, UniquePtrROSMessageCallback>)
         {
           if constexpr (is_ta) {
             callback(convert_custom_type_to_ros_message_unique_ptr(*message));
@@ -811,8 +705,7 @@ public:
             callback(create_ros_unique_ptr_from_ros_shared_ptr_message(message));
           }
         } else if constexpr (  // NOLINT[readability/braces]
-          std::is_same_v<T, UniquePtrWithInfoROSMessageCallback>||
-          std::is_same_v<T, SharedPtrWithInfoROSMessageCallback>)
+          std::is_same_v<T, UniquePtrWithInfoROSMessageCallback>)
         {
           if constexpr (is_ta) {
             callback(convert_custom_type_to_ros_message_unique_ptr(*message), message_info);
@@ -847,9 +740,7 @@ public:
           std::is_same_v<T, SharedConstPtrSerializedMessageCallback>||
           std::is_same_v<T, SharedConstPtrSerializedMessageWithInfoCallback>||
           std::is_same_v<T, ConstRefSharedConstPtrSerializedMessageCallback>||
-          std::is_same_v<T, ConstRefSharedConstPtrSerializedMessageWithInfoCallback>||
-          std::is_same_v<T, SharedPtrSerializedMessageCallback>||
-          std::is_same_v<T, SharedPtrSerializedMessageWithInfoCallback>)
+          std::is_same_v<T, ConstRefSharedConstPtrSerializedMessageWithInfoCallback>)
         {
           throw std::runtime_error(
             "Cannot dispatch std::shared_ptr<const ROSMessageType> message "
@@ -898,14 +789,12 @@ public:
           callback(*message, message_info);
         } else if constexpr (  // NOLINT[readability/braces]
           is_ta && (
-            std::is_same_v<T, UniquePtrCallback>||
-            std::is_same_v<T, SharedPtrCallback>))
+            std::is_same_v<T, UniquePtrCallback>))
         {
           callback(std::move(message));
         } else if constexpr (  // NOLINT[readability/braces]
           is_ta && (
-            std::is_same_v<T, UniquePtrWithInfoCallback>||
-            std::is_same_v<T, SharedPtrWithInfoCallback>
+            std::is_same_v<T, UniquePtrWithInfoCallback>
         ))
         {
           callback(std::move(message), message_info);
@@ -940,8 +829,7 @@ public:
             callback(*message, message_info);
           }
         } else if constexpr (  // NOLINT[readability/braces]
-          std::is_same_v<T, UniquePtrROSMessageCallback>||
-          std::is_same_v<T, SharedPtrROSMessageCallback>)
+          std::is_same_v<T, UniquePtrROSMessageCallback>)
         {
           if constexpr (is_ta) {
             callback(convert_custom_type_to_ros_message_unique_ptr(*message));
@@ -949,8 +837,7 @@ public:
             callback(std::move(message));
           }
         } else if constexpr (  // NOLINT[readability/braces]
-          std::is_same_v<T, UniquePtrWithInfoROSMessageCallback>||
-          std::is_same_v<T, SharedPtrWithInfoROSMessageCallback>)
+          std::is_same_v<T, UniquePtrWithInfoROSMessageCallback>)
         {
           if constexpr (is_ta) {
             callback(convert_custom_type_to_ros_message_unique_ptr(*message), message_info);
@@ -985,9 +872,7 @@ public:
           std::is_same_v<T, SharedConstPtrSerializedMessageCallback>||
           std::is_same_v<T, SharedConstPtrSerializedMessageWithInfoCallback>||
           std::is_same_v<T, ConstRefSharedConstPtrSerializedMessageCallback>||
-          std::is_same_v<T, ConstRefSharedConstPtrSerializedMessageWithInfoCallback>||
-          std::is_same_v<T, SharedPtrSerializedMessageCallback>||
-          std::is_same_v<T, SharedPtrSerializedMessageWithInfoCallback>)
+          std::is_same_v<T, ConstRefSharedConstPtrSerializedMessageWithInfoCallback>)
         {
           throw std::runtime_error(
             "Cannot dispatch std::unique_ptr<ROSMessageType, ROSMessageTypeDeleter> message "
@@ -1023,13 +908,11 @@ public:
       std::holds_alternative<UniquePtrSerializedMessageCallback>(callback_variant_) ||
       std::holds_alternative<SharedConstPtrSerializedMessageCallback>(callback_variant_) ||
       std::holds_alternative<ConstRefSharedConstPtrSerializedMessageCallback>(callback_variant_) ||
-      std::holds_alternative<SharedPtrSerializedMessageCallback>(callback_variant_) ||
       std::holds_alternative<ConstRefSerializedMessageWithInfoCallback>(callback_variant_) ||
       std::holds_alternative<UniquePtrSerializedMessageWithInfoCallback>(callback_variant_) ||
       std::holds_alternative<SharedConstPtrSerializedMessageWithInfoCallback>(callback_variant_) ||
       std::holds_alternative<ConstRefSharedConstPtrSerializedMessageWithInfoCallback>(
-      callback_variant_) ||
-      std::holds_alternative<SharedPtrSerializedMessageWithInfoCallback>(callback_variant_);
+      callback_variant_);
   }
 
   void
