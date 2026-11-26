@@ -309,6 +309,8 @@ public:
 
     {
       std::scoped_lock l(mutex);
+      remove_dropped_idle_timers();
+
       // this will wake up the timer thread if needed
       add_timer_to_running_map(data.get());
 
@@ -360,6 +362,27 @@ private:
       clock_waiter.notify_one();
     } else {
       thread_conditional.notify_all();
+    }
+  }
+
+  /**
+   * Removes timers that were dropped while not being in the running list.
+   * Must be called under lock by mutex
+   *
+   * A canceled timer is not re-added to the running list, so remove_if_dropped
+   * never sees it again. Dropping it afterwards would leave its entry in
+   * all_timers forever, as the cache skips remove_timer for expired pointers.
+   * Timers in the running list are skipped, running_timers points to them and
+   * remove_if_dropped takes care of them.
+   */
+  void remove_dropped_idle_timers()
+  {
+    for (auto it = all_timers.begin(); it != all_timers.end(); ) {
+      // advance first, erasing an element only invalidates its own iterator
+      const TimerData * data = (it++)->second.get();
+      if (!data->in_running_list) {
+        remove_if_dropped(data);
+      }
     }
   }
 
