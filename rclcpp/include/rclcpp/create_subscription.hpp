@@ -23,6 +23,7 @@
 #include <utility>
 
 #include "rclcpp/detail/qos_parameters.hpp"
+#include "rclcpp/detail/subscription_callback_type_helper.hpp"
 #include "rclcpp/node_interfaces/get_node_topics_interface.hpp"
 #include "rclcpp/node_interfaces/node_parameters_interface.hpp"
 #include "rclcpp/node_interfaces/node_topics_interface.hpp"
@@ -135,6 +136,42 @@ create_subscription(
     node, node, topic_name, qos, std::forward<CallbackT>(callback), options, msg_mem_strat);
 }
 
+// TODO(christophebedard): remove after Makoa
+/// Create and return a subscription of the given MessageT type.
+/**
+ * \deprecated Subscription callbacks taking a std::shared_ptr to a non-const message are
+ *   deprecated, use std::shared_ptr<const MessageT> instead.
+ */
+template<
+  typename MessageT,
+  typename CallbackT,
+  typename AllocatorT = std::allocator<void>,
+  typename SubscriptionT = rclcpp::Subscription<MessageT, AllocatorT>,
+  typename MessageMemoryStrategyT = typename SubscriptionT::MessageMemoryStrategyType,
+  typename NodeT>
+requires rclcpp::detail::deprecated_subscription_callback<CallbackT, MessageT>
+[[deprecated(
+  "subscription callbacks taking a std::shared_ptr to a non-const message are deprecated, "
+  "use std::shared_ptr<const MessageT> instead")]]
+typename std::shared_ptr<SubscriptionT>
+create_subscription(
+  NodeT & node,
+  const std::string & topic_name,
+  const rclcpp::QoS & qos,
+  CallbackT && callback,
+  const rclcpp::SubscriptionOptionsWithAllocator<AllocatorT> & options = (
+    rclcpp::SubscriptionOptionsWithAllocator<AllocatorT>()
+  ),
+  typename MessageMemoryStrategyT::SharedPtr msg_mem_strat = (
+    MessageMemoryStrategyT::create_default()
+  )
+)
+{
+  return rclcpp::detail::create_subscription<
+    MessageT, CallbackT, AllocatorT, SubscriptionT, MessageMemoryStrategyT>(
+    node, node, topic_name, qos, std::forward<CallbackT>(callback), options, msg_mem_strat);
+}
+
 /// Create and return a subscription of the given MessageT type.
 /**
  * See \ref create_subscription().
@@ -145,6 +182,43 @@ template<
   typename AllocatorT = std::allocator<void>,
   typename SubscriptionT = rclcpp::Subscription<MessageT, AllocatorT>,
   typename MessageMemoryStrategyT = typename SubscriptionT::MessageMemoryStrategyType>
+typename std::shared_ptr<SubscriptionT>
+create_subscription(
+  rclcpp::node_interfaces::NodeParametersInterface::SharedPtr & node_parameters,
+  rclcpp::node_interfaces::NodeTopicsInterface::SharedPtr & node_topics,
+  const std::string & topic_name,
+  const rclcpp::QoS & qos,
+  CallbackT && callback,
+  const rclcpp::SubscriptionOptionsWithAllocator<AllocatorT> & options = (
+    rclcpp::SubscriptionOptionsWithAllocator<AllocatorT>()
+  ),
+  typename MessageMemoryStrategyT::SharedPtr msg_mem_strat = (
+    MessageMemoryStrategyT::create_default()
+  )
+)
+{
+  return rclcpp::detail::create_subscription<
+    MessageT, CallbackT, AllocatorT, SubscriptionT, MessageMemoryStrategyT>(
+    node_parameters, node_topics, topic_name, qos,
+    std::forward<CallbackT>(callback), options, msg_mem_strat);
+}
+
+// TODO(christophebedard): remove after Makoa
+/// Create and return a subscription of the given MessageT type.
+/**
+ * \deprecated Subscription callbacks taking a std::shared_ptr to a non-const message are
+ *   deprecated, use std::shared_ptr<const MessageT> instead.
+ */
+template<
+  typename MessageT,
+  typename CallbackT,
+  typename AllocatorT = std::allocator<void>,
+  typename SubscriptionT = rclcpp::Subscription<MessageT, AllocatorT>,
+  typename MessageMemoryStrategyT = typename SubscriptionT::MessageMemoryStrategyType>
+requires rclcpp::detail::deprecated_subscription_callback<CallbackT, MessageT>
+[[deprecated(
+  "subscription callbacks taking a std::shared_ptr to a non-const message are deprecated, "
+  "use std::shared_ptr<const MessageT> instead")]]
 typename std::shared_ptr<SubscriptionT>
 create_subscription(
   rclcpp::node_interfaces::NodeParametersInterface::SharedPtr & node_parameters,

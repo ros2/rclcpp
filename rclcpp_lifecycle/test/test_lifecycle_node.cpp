@@ -39,6 +39,7 @@
 #include "rclcpp/node_options.hpp"
 #include "rclcpp/parameter.hpp"
 #include "rclcpp/parameter_value.hpp"
+#include "rclcpp/serialized_message.hpp"
 #include "rclcpp/utilities.hpp"
 #include "rclcpp_lifecycle/lifecycle_node.hpp"
 
@@ -650,6 +651,34 @@ TEST_F(TestDefaultStateMachine, lifecycle_subscriber) {
     test_node->create_subscription<lifecycle_msgs::msg::State>("~/empty", 10, cb);
 
   SUCCEED();
+}
+
+TEST_F(TestDefaultStateMachine, lifecycle_subscriber_deprecated_callback) {
+  auto test_node = std::make_shared<MoodyLifecycleNode<GoodMood>>("testnode");
+
+  auto cb = [](std::shared_ptr<lifecycle_msgs::msg::State> msg) {(void) msg;};
+  auto generic_cb = [](std::shared_ptr<rclcpp::SerializedMessage> msg) {(void) msg;};
+#if !defined(_WIN32)
+# pragma GCC diagnostic push
+# pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#else  // !defined(_WIN32)
+# pragma warning(push)
+# pragma warning(disable: 4996)
+#endif
+  auto lifecycle_sub =
+    test_node->create_subscription<lifecycle_msgs::msg::State>("~/empty", 10, cb);
+  auto lifecycle_generic_sub = test_node->create_generic_subscription(
+    "~/empty_generic", "lifecycle_msgs/msg/State", 10, generic_cb);
+#if !defined(_WIN32)
+# pragma GCC diagnostic pop
+#else  // !defined(_WIN32)
+# pragma warning(pop)
+#endif
+
+  ASSERT_NE(nullptr, lifecycle_sub);
+  EXPECT_STREQ("/testnode/empty", lifecycle_sub->get_topic_name());
+  ASSERT_NE(nullptr, lifecycle_generic_sub);
+  EXPECT_STREQ("/testnode/empty_generic", lifecycle_generic_sub->get_topic_name());
 }
 
 // Parameters are tested more thoroughly in rclcpp's test_node.cpp
