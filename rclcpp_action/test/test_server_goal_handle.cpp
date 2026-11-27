@@ -78,13 +78,16 @@ public:
     auto on_terminal_state = [](const rclcpp_action::GoalUUID &, std::shared_ptr<void>) {};
     auto on_executing = [](const rclcpp_action::GoalUUID &) {};
     auto publish_feedback =
-      [](std::shared_ptr<test_msgs::action::Fibonacci::Impl::FeedbackMessage>) {};
+      [this](std::shared_ptr<test_msgs::action::Fibonacci::Impl::FeedbackMessage>) {
+        ++this->feedback_count_;
+      };
     handle_ = std::make_unique<FibonacciServerGoalHandle>(
       rcl_handle, uuid, goal, on_terminal_state, on_executing, publish_feedback);
   }
 
 protected:
   std::unique_ptr<FibonacciServerGoalHandle> handle_;
+  size_t feedback_count_{0};
 };
 
 TEST_F(TestServerGoalHandle, construct_destruct) {
@@ -178,6 +181,7 @@ TEST_F(TestServerGoalHandle, publish_feedback_not_executing) {
   // Goal is in accepted (not executing) state, publish_feedback should warn and ignore
   auto feedback = std::make_shared<test_msgs::action::Fibonacci::Feedback>();
   EXPECT_NO_THROW(handle_->publish_feedback(feedback));
+  EXPECT_EQ(0u, feedback_count_);
 }
 
 TEST_F(TestServerGoalHandle, publish_feedback_executing) {
@@ -185,6 +189,17 @@ TEST_F(TestServerGoalHandle, publish_feedback_executing) {
   handle_->execute();
   auto feedback = std::make_shared<test_msgs::action::Fibonacci::Feedback>();
   EXPECT_NO_THROW(handle_->publish_feedback(feedback));
+  EXPECT_EQ(1u, feedback_count_);
+}
+
+TEST_F(TestServerGoalHandle, publish_feedback_canceling) {
+  // Goal is in canceling state, publish_feedback should succeed
+  handle_->execute();
+  handle_->cancel_goal();
+  EXPECT_TRUE(handle_->is_canceling());
+  auto feedback = std::make_shared<test_msgs::action::Fibonacci::Feedback>();
+  EXPECT_NO_THROW(handle_->publish_feedback(feedback));
+  EXPECT_EQ(1u, feedback_count_);
 }
 
 TEST_F(TestServerGoalHandle, publish_feedback_after_succeed) {
@@ -194,6 +209,21 @@ TEST_F(TestServerGoalHandle, publish_feedback_after_succeed) {
   handle_->succeed(result);
   auto feedback = std::make_shared<test_msgs::action::Fibonacci::Feedback>();
   EXPECT_NO_THROW(handle_->publish_feedback(feedback));
+  EXPECT_EQ(0u, feedback_count_);
+}
+
+TEST_F(TestServerGoalHandle, publish_feedback_after_canceled) {
+  // Goal reached terminal canceled state, publish_feedback should warn and ignore
+  handle_->execute();
+  handle_->cancel_goal();
+  EXPECT_TRUE(handle_->is_canceling());
+  auto result = std::make_shared<test_msgs::action::Fibonacci::Result>();
+  handle_->canceled(result);
+  EXPECT_FALSE(handle_->is_canceling());
+  EXPECT_FALSE(handle_->is_active());
+  auto feedback = std::make_shared<test_msgs::action::Fibonacci::Feedback>();
+  EXPECT_NO_THROW(handle_->publish_feedback(feedback));
+  EXPECT_EQ(0u, feedback_count_);
 }
 
 TEST_F(TestServerGoalHandle, rcl_action_goal_handle_get_status_error) {

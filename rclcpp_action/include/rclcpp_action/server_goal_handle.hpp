@@ -147,22 +147,23 @@ class ServerGoalHandle : public ServerGoalHandleBase
 public:
   /// Send an update about the progress of a goal.
   /**
-   * This must only be called when the goal is executing.
+   * This must only be called when the goal is executing or canceling.
    * If execution of a goal is deferred then `ServerGoalHandle::set_executing()` must be called
    * first.
    *
-   * If the goal is in any state besides executing, a warning will be logged and the feedback
-   * will not be published.
+   * If the goal is in any state besides executing or canceling, a warning will be logged and
+   * the feedback will not be published.
    *
    * \param[in] feedback_msg the message to publish to clients.
    */
   void
   publish_feedback(std::shared_ptr<typename ActionT::Feedback> feedback_msg)
   {
-    if (!is_executing()) {
+    if (!is_executing() && !is_canceling()) {
       RCLCPP_WARN(
         rclcpp::get_logger("rclcpp_action"),
-        "publish_feedback() called on a goal handle not in executing state, ignoring");
+        "publish_feedback() called on a goal handle not in executing or canceling state, "
+        "ignoring");
       return;
     }
     auto feedback_message = std::make_shared<typename ActionT::Impl::FeedbackMessage>();
