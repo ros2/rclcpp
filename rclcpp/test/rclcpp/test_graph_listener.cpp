@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #include <gtest/gtest.h>
+#include <chrono>
 #include <memory>
 
 #include <stdexcept>
@@ -198,6 +199,31 @@ TEST_F(TestGraphListener, error_run_graph_listener_mock_wait_timeout) {
   RCLCPP_EXPECT_THROW_EQ(
     graph_listener_test->run_protected(),
     std::runtime_error("rcl_wait unexpectedly timed out"));
+}
+
+/* A graph change wakes up the graph events of every node in the context, not only the first.
+ * The nodes share one rmw graph guard condition, which the GraphListener must not consume
+ * on behalf of a single node. */
+TEST_F(TestGraphListener, graph_change_notifies_all_nodes_in_context) {
+  using namespace std::chrono_literals;
+  auto node_b = std::make_shared<rclcpp::Node>("node_b", node_namespace);
+  auto event_a = node()->get_graph_event();
+  auto event_b = node_b->get_graph_event();
+  event_a->check_and_clear();
+  event_b->check_and_clear();
+
+  // Creating a node is a graph change.
+  auto node_c = std::make_shared<rclcpp::Node>("node_c", node_namespace);
+
+  auto wait_for_event = [](rclcpp::Node & node, const rclcpp::Event::SharedPtr & event) {
+      const auto deadline = std::chrono::steady_clock::now() + 5s;
+      while (!event->check() && std::chrono::steady_clock::now() < deadline) {
+        node.wait_for_graph_change(event, 100ms);
+      }
+      return event->check();
+    };
+  EXPECT_TRUE(wait_for_event(*node(), event_a));
+  EXPECT_TRUE(wait_for_event(*node_b, event_b));
 }
 
 /* Add/Remove node usage */
