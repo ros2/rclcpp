@@ -50,19 +50,23 @@ struct CollectionEntry
 };
 
 /// Update a collection based on another collection
-/*
+/**
  * Iterates update_from and update_to to see which entities have been added/removed between
  * the two collections.
  *
- * For each new entry (in update_from, but not in update_to),
- *   add the entity and fire the on_added callback
- * For each removed entry (in update_to, but not in update_from),
- *   remove the entity and fire the on_removed callback.
+ * For each new entry (in update_from, but not in update_to):
+ *   the entry is added to update_to, and the on_added callback is fired only if
+ *   the entity's weak pointer is still valid (can be locked).
+ * For each removed entry (in update_to, but not in update_from):
+ *   the entry is removed from update_to, and the on_removed callback is fired only if
+ *   the entity's weak pointer is still valid (can be locked).
  *
- *  \param[in] update_from The collection representing the next iteration's state
- *  \param[inout] update_to The collection representing the current iteration's state
- *  \param[in] on_added Callback fired when a new entity is detected
- *  \param[in] on_removed Callback fired when an entity is removed
+ * Note: If an entity's weak pointer has expired, on_added or on_removed will not be called.
+ *
+ * \param[in] update_from The collection representing the next iteration's state
+ * \param[inout] update_to The collection representing the current iteration's state
+ * \param[in] on_added Callback fired when a new valid entity is detected
+ * \param[in] on_removed Callback fired when a valid entity is removed
  */
 template<typename CollectionType>
 void update_entities(
@@ -112,11 +116,11 @@ public:
   /// Update this collection based on the contents of another collection
   /**
    * Update the internal state of this collection, firing callbacks when entities have been
-   * added or removed.
+   * added or removed. Callbacks are only invoked for valid (non-expired) entities.
    *
    * \param[in] other Collection to compare to
-   * \param[in] on_added Callback for when entities have been added
-   * \param[in] on_removed Callback for when entities have been removed
+   * \param[in] on_added Callback for when a valid entity has been added
+   * \param[in] on_removed Callback for when a valid entity has been removed
    */
   void update(
     const EntityCollection<EntityKeyType, EntityValueType> & other,
