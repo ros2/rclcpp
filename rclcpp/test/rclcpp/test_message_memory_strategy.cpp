@@ -56,3 +56,42 @@ TEST(TestMemoryStrategies, standard_allocation) {
   EXPECT_EQ(42u, serialized_message->capacity());
   EXPECT_NO_THROW(memory_strategy->return_serialized_message(serialized_message));
 }
+
+namespace
+{
+template<typename T>
+struct CustomAllocator : std::allocator<T>
+{
+  template<typename U>
+  struct rebind
+  {
+    using other = CustomAllocator<U>;
+  };
+
+  CustomAllocator() = default;
+
+  template<typename U>
+  CustomAllocator(const CustomAllocator<U> &) noexcept
+  {
+  }
+
+  rcl_allocator_t get_rcl_allocator()
+  {
+    return rcl_get_default_allocator();
+  }
+};
+}  // namespace
+
+TEST(TestMemoryStrategies, custom_allocator_create_default) {
+  auto memory_strategy =
+    rclcpp::message_memory_strategy::MessageMemoryStrategy<
+    test_msgs::msg::Empty, CustomAllocator<int>>::create_default();
+  ASSERT_NE(nullptr, memory_strategy);
+  EXPECT_NE(nullptr, memory_strategy->message_allocator_);
+  EXPECT_NE(nullptr, memory_strategy->serialized_message_allocator_);
+  EXPECT_NE(nullptr, memory_strategy->buffer_allocator_);
+
+  auto borrowed_message = memory_strategy->borrow_message();
+  ASSERT_NE(nullptr, borrowed_message);
+  EXPECT_NO_THROW(memory_strategy->return_message(borrowed_message));
+}
