@@ -352,17 +352,20 @@ public:
     // converted to one another, e.g. shared_ptr and unique_ptr.
     using scbth = detail::SubscriptionCallbackTypeHelper<MessageT, CallbackT>;
 
-    using CallbackMessageT = std::decay_t<
-      typename rclcpp::function_traits::function_traits<
-        typename scbth::callback_type>::template argument_type<0>>;
-    constexpr bool is_shared_ptr_to_non_const_message =
-      std::is_same<CallbackMessageT, std::shared_ptr<SubscribedType>>::value ||
-      std::is_same<CallbackMessageT, std::shared_ptr<ROSMessageType>>::value ||
-      std::is_same<CallbackMessageT, std::shared_ptr<rclcpp::SerializedMessage>>::value;
-    static_assert(
-      !is_shared_ptr_to_non_const_message,
-      "subscription callbacks taking a std::shared_ptr to a non-const message are not "
-      "supported, use std::shared_ptr<const MessageT> instead");
+    using CallbackTraits =
+      rclcpp::function_traits::function_traits<typename scbth::callback_type>;
+    if constexpr (CallbackTraits::arity > 0) {
+      using CallbackMessageT =
+        std::decay_t<typename CallbackTraits::template argument_type<0>>;
+      constexpr bool is_shared_ptr_to_non_const_message =
+        std::is_same<CallbackMessageT, std::shared_ptr<SubscribedType>>::value ||
+        std::is_same<CallbackMessageT, std::shared_ptr<ROSMessageType>>::value ||
+        std::is_same<CallbackMessageT, std::shared_ptr<rclcpp::SerializedMessage>>::value;
+      static_assert(
+        !is_shared_ptr_to_non_const_message,
+        "subscription callbacks taking a std::shared_ptr to a non-const message are not "
+        "supported, use std::shared_ptr<const MessageT> instead");
+    }
 
     // Use the discovered type to force the type of callback when assigning
     // into the variant.
