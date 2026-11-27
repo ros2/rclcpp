@@ -170,6 +170,114 @@ create_timer(
   return timer;
 }
 
+/// Convenience method to create an aligned timer with an explicit initial trigger time.
+/**
+ *
+ * \tparam DurationRepT
+ * \tparam DurationT
+ * \tparam CallbackT
+ * \param clock clock to be used
+ * \param initial_call_time time at which the callback should be initially triggered
+ * \param period period to execute callback. This duration must be 0 <= period < nanoseconds::max()
+ * \param callback callback to execute via the timer period
+ * \param group callback group
+ * \param node_base node base interface
+ * \param node_timers node timer interface
+ * \param autostart defines if the timer should start its countdown on initialization or not.
+ * \return shared pointer to an aligned timer
+ * \throws std::invalid_argument if either clock, node_base or node_timers
+ * are nullptr, or period is negative or too large
+ * \throws std::runtime_error if initial_call_time's clock type does not match clock's
+ */
+template<typename DurationRepT, typename DurationT, typename CallbackT>
+typename rclcpp::AlignedTimer<CallbackT>::SharedPtr
+create_aligned_timer(
+  rclcpp::Clock::SharedPtr clock,
+  Time initial_call_time,
+  std::chrono::duration<DurationRepT, DurationT> period,
+  CallbackT callback,
+  rclcpp::CallbackGroup::SharedPtr group,
+  node_interfaces::NodeBaseInterface * node_base,
+  node_interfaces::NodeTimersInterface * node_timers,
+  bool autostart = true)
+{
+  if (clock == nullptr) {
+    throw std::invalid_argument{"clock cannot be null"};
+  }
+  if (node_base == nullptr) {
+    throw std::invalid_argument{"input node_base cannot be null"};
+  }
+  if (node_timers == nullptr) {
+    throw std::invalid_argument{"input node_timers cannot be null"};
+  }
+
+  const std::chrono::nanoseconds period_ns = detail::safe_cast_to_period_in_ns(period);
+
+  // Add a new aligned timer.
+  auto timer = rclcpp::AlignedTimer<CallbackT>::make_shared(
+    std::move(clock), initial_call_time, period_ns, std::move(callback),
+    node_base->get_context(), autostart);
+  node_timers->add_timer(timer, group);
+  return timer;
+}
+
+/// Convenience method to create a phase-aligned timer from a period and phase offset.
+/**
+ *
+ * \tparam DurationRepT
+ * \tparam DurationT
+ * \tparam PhaseRepT
+ * \tparam PhaseT
+ * \tparam CallbackT
+ * \param clock clock to be used
+ * \param period period to execute callback (and alignment interval; must be 0 < period <
+ *   nanoseconds::max())
+ * \param phase offset added to each interval boundary
+ * \param callback callback to execute via the timer period
+ * \param group callback group
+ * \param node_base node base interface
+ * \param node_timers node timer interface
+ * \param autostart defines if the timer should start its countdown on initialization or not.
+ * \return shared pointer to an aligned timer
+ * \throws std::invalid_argument if either clock, node_base or node_timers
+ * are nullptr, or period is not greater than zero or too large
+ */
+template<
+  typename DurationRepT, typename DurationT,
+  typename PhaseRepT, typename PhaseT,
+  typename CallbackT>
+typename rclcpp::AlignedTimer<CallbackT>::SharedPtr
+create_aligned_timer(
+  rclcpp::Clock::SharedPtr clock,
+  std::chrono::duration<DurationRepT, DurationT> period,
+  std::chrono::duration<PhaseRepT, PhaseT> phase,
+  CallbackT callback,
+  rclcpp::CallbackGroup::SharedPtr group,
+  node_interfaces::NodeBaseInterface * node_base,
+  node_interfaces::NodeTimersInterface * node_timers,
+  bool autostart = true)
+{
+  if (clock == nullptr) {
+    throw std::invalid_argument{"clock cannot be null"};
+  }
+  if (node_base == nullptr) {
+    throw std::invalid_argument{"input node_base cannot be null"};
+  }
+  if (node_timers == nullptr) {
+    throw std::invalid_argument{"input node_timers cannot be null"};
+  }
+
+  const std::chrono::nanoseconds period_ns = detail::safe_cast_to_period_in_ns(period);
+  const auto phase_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(phase);
+
+  // Add a new aligned timer.
+  auto timer = rclcpp::AlignedTimer<CallbackT>::make_shared(
+    std::move(clock), period_ns, phase_ns, std::move(callback),
+    node_base->get_context(), autostart);
+  node_timers->add_timer(timer, group);
+  return timer;
+}
+
 /// Convenience method to create a wall timer with node resources.
 /**
  *
@@ -208,6 +316,104 @@ create_wall_timer(
   // Add a new wall timer.
   auto timer = rclcpp::WallTimer<CallbackT>::make_shared(
     period_ns, std::move(callback), node_base->get_context(), autostart);
+  node_timers->add_timer(timer, group);
+  return timer;
+}
+
+/// Convenience method to create an aligned wall timer with an explicit initial trigger time.
+/**
+ *
+ * \tparam DurationRepT
+ * \tparam DurationT
+ * \tparam CallbackT
+ * \param initial_call_time time at which the callback should be initially triggered
+ * \param period period to execute callback. This duration must be 0 <= period < nanoseconds::max()
+ * \param callback callback to execute via the timer period
+ * \param group callback group
+ * \param node_base node base interface
+ * \param node_timers node timer interface
+ * \param autostart defines if the timer should start its countdown on initialization or not.
+ * \return shared pointer to an aligned wall timer
+ * \throws std::invalid_argument if either node_base or node_timers
+ * are null, or period is negative or too large
+ * \throws std::runtime_error if initial_call_time's clock type is not RCL_STEADY_TIME
+ */
+template<typename DurationRepT, typename DurationT, typename CallbackT>
+typename rclcpp::AlignedWallTimer<CallbackT>::SharedPtr
+create_aligned_wall_timer(
+  Time initial_call_time,
+  std::chrono::duration<DurationRepT, DurationT> period,
+  CallbackT callback,
+  rclcpp::CallbackGroup::SharedPtr group,
+  node_interfaces::NodeBaseInterface * node_base,
+  node_interfaces::NodeTimersInterface * node_timers,
+  bool autostart = true)
+{
+  if (node_base == nullptr) {
+    throw std::invalid_argument{"input node_base cannot be null"};
+  }
+
+  if (node_timers == nullptr) {
+    throw std::invalid_argument{"input node_timers cannot be null"};
+  }
+
+  const std::chrono::nanoseconds period_ns = detail::safe_cast_to_period_in_ns(period);
+
+  // Add a new aligned wall timer.
+  auto timer = rclcpp::AlignedWallTimer<CallbackT>::make_shared(
+    initial_call_time, period_ns, std::move(callback), node_base->get_context(), autostart);
+  node_timers->add_timer(timer, group);
+  return timer;
+}
+
+/// Convenience method to create a phase-aligned wall timer from a period and phase offset.
+/**
+ *
+ * \tparam DurationRepT
+ * \tparam DurationT
+ * \tparam PhaseRepT
+ * \tparam PhaseT
+ * \tparam CallbackT
+ * \param period period to execute callback (and alignment interval; must be 0 < period <
+ *   nanoseconds::max())
+ * \param phase offset added to each interval boundary
+ * \param callback callback to execute via the timer period
+ * \param group callback group
+ * \param node_base node base interface
+ * \param node_timers node timer interface
+ * \param autostart defines if the timer should start its countdown on initialization or not.
+ * \return shared pointer to an aligned wall timer
+ * \throws std::invalid_argument if either node_base or node_timers
+ * are null, or period is not greater than zero or too large
+ */
+template<
+  typename DurationRepT, typename DurationT,
+  typename PhaseRepT, typename PhaseT,
+  typename CallbackT>
+typename rclcpp::AlignedWallTimer<CallbackT>::SharedPtr
+create_aligned_wall_timer(
+  std::chrono::duration<DurationRepT, DurationT> period,
+  std::chrono::duration<PhaseRepT, PhaseT> phase,
+  CallbackT callback,
+  rclcpp::CallbackGroup::SharedPtr group,
+  node_interfaces::NodeBaseInterface * node_base,
+  node_interfaces::NodeTimersInterface * node_timers,
+  bool autostart = true)
+{
+  if (node_base == nullptr) {
+    throw std::invalid_argument{"input node_base cannot be null"};
+  }
+
+  if (node_timers == nullptr) {
+    throw std::invalid_argument{"input node_timers cannot be null"};
+  }
+
+  const std::chrono::nanoseconds period_ns = detail::safe_cast_to_period_in_ns(period);
+  const auto phase_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(phase);
+
+  // Add a new aligned wall timer.
+  auto timer = rclcpp::AlignedWallTimer<CallbackT>::make_shared(
+    period_ns, phase_ns, std::move(callback), node_base->get_context(), autostart);
   node_timers->add_timer(timer, group);
   return timer;
 }
