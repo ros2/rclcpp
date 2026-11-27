@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <algorithm>
 #include <string>
 #include <limits>
 #include <memory>
@@ -224,6 +225,12 @@ NodeBase::create_callback_group(
     automatically_add_to_executor_with_node);
   std::lock_guard<std::mutex> lock(callback_groups_mutex_);
   callback_groups_.push_back(group);
+  callback_groups_.erase(
+    std::remove_if(
+      callback_groups_.begin(),
+      callback_groups_.end(),
+      [](const rclcpp::CallbackGroup::WeakPtr & x) {return x.expired();}),
+    callback_groups_.end());
 
   // This guard condition is generally used to signal to this node's executor that a callback
   // group has been added that should be considered for new entities.
