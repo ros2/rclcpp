@@ -119,7 +119,7 @@ public:
   {
     rclcpp::init(0, nullptr);
     rclcpp::NodeOptions options{};
-    options.arguments(std::vector<std::string>{"-r", "foo:=bar"});
+    options.arguments(std::vector<std::string>{"--ros-args", "-r", "foo:=bar"});
     node = std::make_shared<rclcpp::Node>("node", "ns", options);
 
     // This dynamic cast is not necessary for the unittest itself, but instead is used to ensure
