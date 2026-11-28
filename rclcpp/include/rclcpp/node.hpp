@@ -39,6 +39,7 @@
 #include "rclcpp/client.hpp"
 #include "rclcpp/clock.hpp"
 #include "rclcpp/context.hpp"
+#include "rclcpp/detail/subscription_callback_type_helper.hpp"
 #include "rclcpp/event.hpp"
 #include "rclcpp/generic_client.hpp"
 #include "rclcpp/generic_publisher.hpp"
@@ -63,6 +64,7 @@
 #include "rclcpp/publisher.hpp"
 #include "rclcpp/publisher_options.hpp"
 #include "rclcpp/qos.hpp"
+#include "rclcpp/serialized_message.hpp"
 #include "rclcpp/service.hpp"
 #include "rclcpp/subscription.hpp"
 #include "rclcpp/subscription_options.hpp"
@@ -227,6 +229,35 @@ public:
     )
   );
 
+  // TODO(christophebedard): remove after Makoa
+  /// Create and return a Subscription.
+  /**
+   * \deprecated Subscription callbacks taking a std::shared_ptr to a non-const message are
+   *   deprecated, use std::shared_ptr<const MessageT> instead.
+   */
+  template<
+    typename MessageT,
+    typename CallbackT,
+    typename AllocatorT = std::allocator<void>,
+    typename SubscriptionT = rclcpp::Subscription<MessageT, AllocatorT>,
+    typename MessageMemoryStrategyT = typename SubscriptionT::MessageMemoryStrategyType
+  >
+  requires rclcpp::detail::deprecated_subscription_callback<CallbackT, MessageT>
+  [[deprecated(
+    "subscription callbacks taking a std::shared_ptr to a non-const message are deprecated, "
+    "use std::shared_ptr<const MessageT> instead")]]
+  std::shared_ptr<SubscriptionT>
+  create_subscription(
+    const std::string & topic_name,
+    const rclcpp::QoS & qos,
+    CallbackT && callback,
+    const SubscriptionOptionsWithAllocator<AllocatorT> & options =
+    SubscriptionOptionsWithAllocator<AllocatorT>(),
+    typename MessageMemoryStrategyT::SharedPtr msg_mem_strat = (
+      MessageMemoryStrategyT::create_default()
+    )
+  );
+
   /// Create a wall timer that uses the wall clock to drive the callback.
   /**
    * \param[in] period Time interval between triggers of the callback.
@@ -360,6 +391,30 @@ public:
   template<
     typename CallbackT,
     typename AllocatorT = std::allocator<void>>
+  std::shared_ptr<rclcpp::GenericSubscription> create_generic_subscription(
+    const std::string & topic_name,
+    const std::string & topic_type,
+    const rclcpp::QoS & qos,
+    CallbackT && callback,
+    const rclcpp::SubscriptionOptionsWithAllocator<AllocatorT> & options = (
+      rclcpp::SubscriptionOptionsWithAllocator<AllocatorT>()
+    )
+  );
+
+  // TODO(christophebedard): remove after Makoa
+  /// Create and return a GenericSubscription.
+  /**
+   * \deprecated Subscription callbacks taking a std::shared_ptr to a non-const
+   *   rclcpp::SerializedMessage are deprecated, use
+   *   std::shared_ptr<const rclcpp::SerializedMessage> instead.
+   */
+  template<
+    typename CallbackT,
+    typename AllocatorT = std::allocator<void>>
+  requires rclcpp::detail::deprecated_subscription_callback<CallbackT, rclcpp::SerializedMessage>
+  [[deprecated(
+    "subscription callbacks taking a std::shared_ptr to a non-const message are deprecated, "
+    "use std::shared_ptr<const MessageT> instead")]]
   std::shared_ptr<rclcpp::GenericSubscription> create_generic_subscription(
     const std::string & topic_name,
     const std::string & topic_type,

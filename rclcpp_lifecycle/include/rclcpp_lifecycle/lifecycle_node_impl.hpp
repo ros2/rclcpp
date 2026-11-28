@@ -90,6 +90,32 @@ LifecycleNode::create_subscription(
     msg_mem_strat);
 }
 
+template<
+  typename MessageT,
+  typename CallbackT,
+  typename AllocatorT,
+  typename SubscriptionT,
+  typename MessageMemoryStrategyT>
+requires rclcpp::detail::deprecated_subscription_callback<CallbackT, MessageT>
+std::shared_ptr<SubscriptionT>
+LifecycleNode::create_subscription(
+  const std::string & topic_name,
+  const rclcpp::QoS & qos,
+  CallbackT && callback,
+  const rclcpp::SubscriptionOptionsWithAllocator<AllocatorT> & options,
+  typename MessageMemoryStrategyT::SharedPtr msg_mem_strat)
+{
+  return rclcpp::detail::create_subscription<
+    MessageT, CallbackT, AllocatorT, SubscriptionT, MessageMemoryStrategyT>(
+    *this,
+    *this,
+    topic_name,
+    qos,
+    std::forward<CallbackT>(callback),
+    options,
+    msg_mem_strat);
+}
+
 template<typename DurationRepT, typename DurationT, typename CallbackT>
 typename rclcpp::WallTimer<CallbackT>::SharedPtr
 LifecycleNode::create_wall_timer(
@@ -175,6 +201,28 @@ LifecycleNode::create_generic_subscription(
   const rclcpp::SubscriptionOptionsWithAllocator<AllocatorT> & options)
 {
   return rclcpp::create_generic_subscription(
+    node_topics_,
+    // TODO(karsten1987): LifecycleNode is currently not supporting subnamespaces
+    // see https://github.com/ros2/rclcpp/issues/1614
+    topic_name,
+    topic_type,
+    qos,
+    std::forward<CallbackT>(callback),
+    options
+  );
+}
+
+template<typename CallbackT, typename AllocatorT>
+requires rclcpp::detail::deprecated_subscription_callback<CallbackT, rclcpp::SerializedMessage>
+std::shared_ptr<rclcpp::GenericSubscription>
+LifecycleNode::create_generic_subscription(
+  const std::string & topic_name,
+  const std::string & topic_type,
+  const rclcpp::QoS & qos,
+  CallbackT && callback,
+  const rclcpp::SubscriptionOptionsWithAllocator<AllocatorT> & options)
+{
+  return rclcpp::detail::create_generic_subscription(
     node_topics_,
     // TODO(karsten1987): LifecycleNode is currently not supporting subnamespaces
     // see https://github.com/ros2/rclcpp/issues/1614

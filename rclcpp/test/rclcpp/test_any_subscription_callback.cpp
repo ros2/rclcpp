@@ -20,8 +20,9 @@
 #include <string>
 #include <utility>
 
-#define RCLCPP_AVOID_DEPRECATIONS_FOR_UNIT_TESTS 1
 #include "rclcpp/any_subscription_callback.hpp"
+#include "rclcpp/detail/subscription_callback_type_helper.hpp"
+#include "rclcpp/subscription_options.hpp"
 #include "test_msgs/msg/empty.hpp"
 
 // Type adapter to be used in tests.
@@ -82,6 +83,64 @@ protected:
   std::shared_ptr<MyEmpty> msg_shared_ptr_{std::make_shared<MyEmpty>()};
   rclcpp::MessageInfo message_info_;
 };
+
+struct DeprecatedSubscriptionCallbackHelper
+{
+  void callback(const test_msgs::msg::Empty::SharedPtr) {}
+  void const_callback(const test_msgs::msg::Empty::ConstSharedPtr) {}
+};
+
+TEST(TestDeprecatedSubscriptionCallback, deprecated_subscription_callback) {
+  using rclcpp::detail::deprecated_subscription_callback;
+  using test_msgs::msg::Empty;
+
+  // Deprecated: std::shared_ptr to a non-const message, with or without rclcpp::MessageInfo
+  auto shared_ptr = [](std::shared_ptr<Empty>) {};
+  auto shared_ptr_info = [](std::shared_ptr<Empty>, const rclcpp::MessageInfo &) {};
+  auto serialized = [](std::shared_ptr<rclcpp::SerializedMessage>) {};
+  auto serialized_info =
+    [](std::shared_ptr<rclcpp::SerializedMessage>, const rclcpp::MessageInfo &) {};
+  auto custom = [](std::shared_ptr<MyEmpty>) {};
+  DeprecatedSubscriptionCallbackHelper helper;
+  auto bind = std::bind(
+    &DeprecatedSubscriptionCallbackHelper::callback, &helper, std::placeholders::_1);
+  static_assert(deprecated_subscription_callback<decltype(shared_ptr), Empty>);
+  static_assert(deprecated_subscription_callback<decltype(shared_ptr) &, Empty>);
+  static_assert(deprecated_subscription_callback<decltype(shared_ptr_info), Empty>);
+  static_assert(deprecated_subscription_callback<decltype(serialized), Empty>);
+  static_assert(deprecated_subscription_callback<decltype(serialized_info), Empty>);
+  static_assert(deprecated_subscription_callback<decltype(bind), Empty>);
+  static_assert(deprecated_subscription_callback<void (*)(std::shared_ptr<Empty>), Empty>);
+  static_assert(
+    deprecated_subscription_callback<std::function<void(std::shared_ptr<Empty>)>, Empty>);
+  static_assert(deprecated_subscription_callback<decltype(custom), MyTA>);
+  static_assert(deprecated_subscription_callback<decltype(shared_ptr), MyTA>);
+  static_assert(deprecated_subscription_callback<decltype(serialized), rclcpp::SerializedMessage>);
+
+  // Not deprecated
+  auto const_shared_ptr = [](std::shared_ptr<const Empty>) {};
+  auto const_shared_ptr_info = [](std::shared_ptr<const Empty>, const rclcpp::MessageInfo &) {};
+  auto const_ref = [](const Empty &) {};
+  auto unique_ptr = [](std::unique_ptr<Empty>) {};
+  auto const_ref_shared_const_ptr = [](const std::shared_ptr<const Empty> &) {};
+  auto const_serialized = [](std::shared_ptr<const rclcpp::SerializedMessage>) {};
+  auto const_custom = [](std::shared_ptr<const MyEmpty>) {};
+  auto const_bind = std::bind(
+    &DeprecatedSubscriptionCallbackHelper::const_callback, &helper, std::placeholders::_1);
+  static_assert(!deprecated_subscription_callback<decltype(const_shared_ptr), Empty>);
+  static_assert(!deprecated_subscription_callback<decltype(const_shared_ptr_info), Empty>);
+  static_assert(!deprecated_subscription_callback<decltype(const_ref), Empty>);
+  static_assert(!deprecated_subscription_callback<decltype(unique_ptr), Empty>);
+  static_assert(!deprecated_subscription_callback<decltype(const_ref_shared_const_ptr), Empty>);
+  static_assert(!deprecated_subscription_callback<decltype(const_serialized), Empty>);
+  static_assert(!deprecated_subscription_callback<decltype(const_bind), Empty>);
+  static_assert(!deprecated_subscription_callback<decltype(const_custom), MyTA>);
+  static_assert(!deprecated_subscription_callback<decltype(const_shared_ptr), MyTA>);
+
+  // Not callable, e.g., when checking an overload that does not match the call
+  static_assert(!deprecated_subscription_callback<int, Empty>);
+  static_assert(!deprecated_subscription_callback<const rclcpp::SubscriptionOptions &, Empty>);
+}
 
 TEST_F(TestAnySubscriptionCallback, construct_destruct) {
   // Default constructor.

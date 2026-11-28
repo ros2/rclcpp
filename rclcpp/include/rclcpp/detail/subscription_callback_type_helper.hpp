@@ -15,11 +15,14 @@
 #ifndef RCLCPP__DETAIL__SUBSCRIPTION_CALLBACK_TYPE_HELPER_HPP_
 #define RCLCPP__DETAIL__SUBSCRIPTION_CALLBACK_TYPE_HELPER_HPP_
 
+#include <functional>
 #include <memory>
 #include <type_traits>
 
 #include "rclcpp/function_traits.hpp"
 #include "rclcpp/message_info.hpp"
+#include "rclcpp/serialized_message.hpp"
+#include "rclcpp/type_adapter.hpp"
 
 namespace rclcpp
 {
@@ -129,6 +132,7 @@ struct SubscriptionCallbackTypeHelper<
     std::function<void (const std::shared_ptr<const MessageT> &, const rclcpp::MessageInfo &)>;
 };
 
+// TODO(christophebedard): remove everything below after Makoa
 template<typename MessageT, typename CallbackT>
 struct SubscriptionCallbackTypeHelper<
   MessageT,
@@ -159,6 +163,69 @@ struct SubscriptionCallbackTypeHelper<
   using callback_type =
     std::function<void (std::shared_ptr<MessageT>, const rclcpp::MessageInfo &)>;
 };
+
+/// Whether CallbackT is a deprecated subscription callback signature for MessageT.
+/**
+ * Subscription callbacks taking a std::shared_ptr to a non-const message (MessageT, the ROS
+ * message type of a type adapter, or rclcpp::SerializedMessage), with or without
+ * rclcpp::MessageInfo, are deprecated in favor of the std::shared_ptr<const MessageT> signatures.
+ *
+ * CallbackT must be supported by rclcpp::function_traits, see deprecated_subscription_callback.
+ */
+template<typename MessageT, typename CallbackT>
+struct is_deprecated_subscription_callback
+{
+private:
+  using callback_type =
+    typename SubscriptionCallbackTypeHelper<MessageT, std::decay_t<CallbackT>>::callback_type;
+  using SubscribedType = typename rclcpp::TypeAdapter<MessageT>::custom_type;
+  using ROSMessageType = typename rclcpp::TypeAdapter<MessageT>::ros_message_type;
+
+public:
+  static constexpr bool value =
+    rclcpp::function_traits::same_arguments<
+    callback_type,
+    std::function<void(std::shared_ptr<SubscribedType>)>
+    >::value ||
+    rclcpp::function_traits::same_arguments<
+    callback_type,
+    std::function<void(std::shared_ptr<SubscribedType>, const rclcpp::MessageInfo &)>
+    >::value ||
+    rclcpp::function_traits::same_arguments<
+    callback_type,
+    std::function<void(std::shared_ptr<ROSMessageType>)>
+    >::value ||
+    rclcpp::function_traits::same_arguments<
+    callback_type,
+    std::function<void(std::shared_ptr<ROSMessageType>, const rclcpp::MessageInfo &)>
+    >::value ||
+    rclcpp::function_traits::same_arguments<
+    callback_type,
+    std::function<void(std::shared_ptr<rclcpp::SerializedMessage>)>
+    >::value ||
+    rclcpp::function_traits::same_arguments<
+    callback_type,
+    std::function<void(std::shared_ptr<rclcpp::SerializedMessage>, const rclcpp::MessageInfo &)>
+    >::value;
+};
+
+/// Whether rclcpp::function_traits supports CallbackT.
+template<typename CallbackT>
+concept function_traits_compatible =
+  std::is_function<std::remove_pointer_t<CallbackT>>::value ||
+  std::is_bind_expression<CallbackT>::value ||
+  requires {&CallbackT::operator();};
+
+/// Whether CallbackT is a deprecated subscription callback signature for MessageT.
+/**
+ * This can be used to constrain overloads, since it does not instantiate
+ * is_deprecated_subscription_callback for types that are not supported by
+ * rclcpp::function_traits, which would be a hard error.
+ */
+template<typename CallbackT, typename MessageT>
+concept deprecated_subscription_callback =
+  (function_traits_compatible<std::decay_t<CallbackT>>) &&
+  is_deprecated_subscription_callback<MessageT, CallbackT>::value;
 
 }  // namespace detail
 }  // namespace rclcpp

@@ -98,6 +98,32 @@ Node::create_subscription(
     msg_mem_strat);
 }
 
+template<
+  typename MessageT,
+  typename CallbackT,
+  typename AllocatorT,
+  typename SubscriptionT,
+  typename MessageMemoryStrategyT>
+requires rclcpp::detail::deprecated_subscription_callback<CallbackT, MessageT>
+std::shared_ptr<SubscriptionT>
+Node::create_subscription(
+  const std::string & topic_name,
+  const rclcpp::QoS & qos,
+  CallbackT && callback,
+  const SubscriptionOptionsWithAllocator<AllocatorT> & options,
+  typename MessageMemoryStrategyT::SharedPtr msg_mem_strat)
+{
+  return rclcpp::detail::create_subscription<
+    MessageT, CallbackT, AllocatorT, SubscriptionT, MessageMemoryStrategyT>(
+    *this,
+    *this,
+    extend_name_with_sub_namespace(topic_name, this->get_sub_namespace()),
+    qos,
+    std::forward<CallbackT>(callback),
+    options,
+    msg_mem_strat);
+}
+
 template<typename DurationRepT, typename DurationT, typename CallbackT>
 typename rclcpp::WallTimer<CallbackT>::SharedPtr
 Node::create_wall_timer(
@@ -210,6 +236,26 @@ Node::create_generic_subscription(
   const rclcpp::SubscriptionOptionsWithAllocator<AllocatorT> & options)
 {
   return rclcpp::create_generic_subscription(
+    node_topics_,
+    extend_name_with_sub_namespace(topic_name, this->get_sub_namespace()),
+    topic_type,
+    qos,
+    std::forward<CallbackT>(callback),
+    options
+  );
+}
+
+template<typename CallbackT, typename AllocatorT>
+requires rclcpp::detail::deprecated_subscription_callback<CallbackT, rclcpp::SerializedMessage>
+std::shared_ptr<rclcpp::GenericSubscription>
+Node::create_generic_subscription(
+  const std::string & topic_name,
+  const std::string & topic_type,
+  const rclcpp::QoS & qos,
+  CallbackT && callback,
+  const rclcpp::SubscriptionOptionsWithAllocator<AllocatorT> & options)
+{
+  return rclcpp::detail::create_generic_subscription(
     node_topics_,
     extend_name_with_sub_namespace(topic_name, this->get_sub_namespace()),
     topic_type,

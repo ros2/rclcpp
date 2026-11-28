@@ -242,7 +242,7 @@ protected:
     // to be executed.
     {
       auto subscription = client_node->create_subscription<test_msgs::msg::Empty>(
-        "test_topic", 10, [](const test_msgs::msg::Empty::SharedPtr) {});
+        "test_topic", 10, [](const test_msgs::msg::Empty::ConstSharedPtr) {});
       subscription_content_filter_supported_ = subscription->is_cft_supported();
     }
   }
