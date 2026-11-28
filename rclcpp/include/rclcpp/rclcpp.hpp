@@ -148,10 +148,7 @@
  *   - rclcpp::GenericSubscription
  *   - rclcpp/generic_subscription.hpp
  * - Memory management tools:
- *   - rclcpp/memory_strategies.hpp
- *   - rclcpp/memory_strategy.hpp
  *   - rclcpp/message_memory_strategy.hpp
- *   - rclcpp/strategies/allocator_memory_strategy.hpp
  *   - rclcpp/strategies/message_pool_memory_strategy.hpp
  * - Context object which is shared amongst multiple Nodes:
  *   - rclcpp::Context
