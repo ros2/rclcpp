@@ -16,6 +16,7 @@
 #define RCLCPP__ANY_SERVICE_CALLBACK_HPP_
 
 #include <variant>
+#include <cstdlib>
 #include <functional>
 #include <memory>
 #include <stdexcept>
