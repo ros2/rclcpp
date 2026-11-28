@@ -16,6 +16,7 @@
 #define RCLCPP__ANY_SUBSCRIPTION_CALLBACK_HPP_
 
 #include <atomic>
+#include <cstdlib>
 #include <functional>
 #include <memory>
 #include <mutex>
