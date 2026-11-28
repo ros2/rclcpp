@@ -431,3 +431,17 @@ TEST_F(TestServiceIntrospection, service_introspection_enable_disable_event_cont
     }
   }
 }
+
+TEST_F(TestServiceIntrospection, introspection_keeps_clock_alive)
+{
+  // The introspection publisher uses the clock while the service/client are finalized, so the
+  // service/client must keep it alive even if the caller drops its reference first.
+  auto clock = std::make_shared<rclcpp::Clock>(RCL_STEADY_TIME);
+  client->configure_introspection(clock, rclcpp::ServicesQoS(), RCL_SERVICE_INTROSPECTION_METADATA);
+  service->configure_introspection(
+    clock, rclcpp::ServicesQoS(), RCL_SERVICE_INTROSPECTION_METADATA);
+  clock.reset();
+
+  client.reset();
+  service.reset();
+}

@@ -212,6 +212,10 @@ protected:
 
   std::shared_ptr<rcl_node_t> node_handle_;
 
+  // The introspection publisher keeps a raw pointer to this clock's rcl handle and uses it while
+  // finalizing the service. Keep the clock alive until service_handle_ (declared below) is finalized.
+  rclcpp::Clock::SharedPtr introspection_clock_;
+
   std::recursive_mutex callback_mutex_;
   // It is important to declare on_new_request_callback_ before
   // service_handle_, so on destruction the service is
@@ -475,6 +479,8 @@ public:
     if (RCL_RET_OK != ret) {
       rclcpp::exceptions::throw_from_rcl_error(ret, "failed to configure service introspection");
     }
+
+    introspection_clock_ = clock;
   }
 
 private:

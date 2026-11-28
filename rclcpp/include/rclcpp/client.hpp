@@ -325,6 +325,10 @@ protected:
   std::shared_ptr<rclcpp::Context> context_;
   rclcpp::Logger node_logger_;
 
+  // The introspection publisher keeps a raw pointer to this clock's rcl handle and uses it while
+  // finalizing the client. Keep the clock alive until client_handle_ (declared below) is finalized.
+  rclcpp::Clock::SharedPtr introspection_clock_;
+
   std::recursive_mutex callback_mutex_;
   // It is important to declare on_new_response_callback_ before
   // client_handle_, so on destruction the client is
@@ -759,6 +763,8 @@ public:
     if (RCL_RET_OK != ret) {
       rclcpp::exceptions::throw_from_rcl_error(ret, "failed to configure client introspection");
     }
+
+    introspection_clock_ = clock;
   }
 
 protected:
