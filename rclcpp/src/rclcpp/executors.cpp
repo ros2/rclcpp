@@ -13,27 +13,6 @@
 // limitations under the License.
 
 #include "rclcpp/executors.hpp"
-#include "rcpputils/compile_warnings.hpp"
-
-void
-rclcpp::spin_all(
-  const rclcpp::node_interfaces::NodeBaseInterface::SharedPtr & node_ptr,
-  std::chrono::nanoseconds max_duration)
-{
-  rclcpp::ExecutorOptions options;
-  options.context = node_ptr->get_context();
-  rclcpp::executors::SingleThreadedExecutor exec(options);
-  exec.spin_node_all(node_ptr, max_duration);
-}
-
-void
-rclcpp::spin_some(const rclcpp::node_interfaces::NodeBaseInterface::SharedPtr & node_ptr)
-{
-  rclcpp::ExecutorOptions options;
-  options.context = node_ptr->get_context();
-  rclcpp::executors::SingleThreadedExecutor exec(options);
-  exec.spin_node_some(node_ptr);
-}
 
 void
 rclcpp::spin(const rclcpp::node_interfaces::NodeBaseInterface::SharedPtr & node_ptr)
@@ -50,20 +29,4 @@ void
 rclcpp::spin(const rclcpp::Node::SharedPtr & node_ptr)
 {
   rclcpp::spin(node_ptr->get_node_base_interface());
-}
-
-void
-rclcpp::spin_all(const rclcpp::Node::SharedPtr & node_ptr, std::chrono::nanoseconds max_duration)
-{
-  RCPPUTILS_DEPRECATION_WARNING_OFF_START
-  rclcpp::spin_all(node_ptr->get_node_base_interface(), max_duration);
-  RCPPUTILS_DEPRECATION_WARNING_OFF_STOP
-}
-
-void
-rclcpp::spin_some(const rclcpp::Node::SharedPtr & node_ptr)
-{
-  RCPPUTILS_DEPRECATION_WARNING_OFF_START
-  rclcpp::spin_some(node_ptr->get_node_base_interface());
-  RCPPUTILS_DEPRECATION_WARNING_OFF_STOP
 }
