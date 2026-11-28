@@ -365,6 +365,11 @@ TEST_F(TestQosEvent, test_on_new_event_callback)
   auto offered_deadline = rclcpp::Duration(std::chrono::milliseconds(1));
   auto requested_deadline = rclcpp::Duration(std::chrono::milliseconds(2));
 
+  // The event callbacks keep firing on the middleware's thread until the publisher and subscription
+  // are destroyed, so the counters they capture must outlive both.
+  std::atomic<size_t> c1 {0};
+  std::atomic<size_t> c2 {0};
+
   rclcpp::QoS qos_profile_publisher(10);
   qos_profile_publisher.deadline(offered_deadline);
   rclcpp::PublisherOptions pub_options;
@@ -379,7 +384,6 @@ TEST_F(TestQosEvent, test_on_new_event_callback)
   auto subscription = node->create_subscription<test_msgs::msg::Empty>(
     topic_name, qos_profile_subscription, message_callback, sub_options);
 
-  std::atomic<size_t> c1 {0};
   auto increase_c1_cb = [&c1](size_t count_events) {c1 += count_events;};
   publisher->set_on_new_qos_event_callback(increase_c1_cb, RCL_PUBLISHER_OFFERED_DEADLINE_MISSED);
 
@@ -392,7 +396,6 @@ TEST_F(TestQosEvent, test_on_new_event_callback)
 
   EXPECT_GT(c1, 1u);
 
-  std::atomic<size_t> c2 {0};
   auto increase_c2_cb = [&c2](size_t count_events) {c2 += count_events;};
   subscription->set_on_new_qos_event_callback(
     increase_c2_cb,
