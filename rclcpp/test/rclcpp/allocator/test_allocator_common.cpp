@@ -16,116 +16,9 @@
 
 #include <memory>
 
-#include "rcpputils/compile_warnings.hpp"
-
-RCPPUTILS_DEPRECATION_WARNING_OFF_START
 #include "rclcpp/allocator/allocator_common.hpp"
-RCPPUTILS_DEPRECATION_WARNING_OFF_STOP
-
-// retyped_deallocate() and retyped_reallocate() free a single element, so only allocate one.
-TEST(TestAllocatorCommon, retyped_allocate)
-{
-  std::allocator<int> allocator;
-  void * untyped_allocator = &allocator;
-  RCPPUTILS_DEPRECATION_WARNING_OFF_START
-  void * allocated_mem =
-    rclcpp::allocator::retyped_allocate<std::allocator<int>>(1u, untyped_allocator);
-  // The more natural check here is ASSERT_NE(nullptr, ptr), but clang static
-  // analysis throws a false-positive memory leak warning.  Use ASSERT_TRUE instead.
-  ASSERT_TRUE(nullptr != allocated_mem);
-
-  auto code = [&untyped_allocator, allocated_mem]() {
-      rclcpp::allocator::retyped_deallocate<int, std::allocator<int>>(
-        allocated_mem, untyped_allocator);
-    };
-  EXPECT_NO_THROW(code());
-
-  allocated_mem = allocator.allocate(1);
-  // The more natural check here is ASSERT_NE(nullptr, ptr), but clang static
-  // analysis throws a false-positive memory leak warning.  Use ASSERT_TRUE instead.
-  ASSERT_TRUE(nullptr != allocated_mem);
-  void * reallocated_mem =
-    rclcpp::allocator::retyped_reallocate<int, std::allocator<int>>(
-    allocated_mem, 1u, untyped_allocator);
-  // The more natural check here is ASSERT_NE(nullptr, ptr), but clang static
-  // analysis throws a false-positive memory leak warning.  Use ASSERT_TRUE instead.
-  ASSERT_TRUE(nullptr != reallocated_mem);
-
-  auto code2 = [&untyped_allocator, reallocated_mem]() {
-      rclcpp::allocator::retyped_deallocate<int, std::allocator<int>>(
-        reallocated_mem, untyped_allocator);
-    };
-  EXPECT_NO_THROW(code2());
-
-  RCPPUTILS_DEPRECATION_WARNING_OFF_STOP
-}
-
-TEST(TestAllocatorCommon, retyped_zero_allocate_basic) {
-RCPPUTILS_DEPRECATION_WARNING_OFF_START
-  std::allocator<char> allocator;
-  void * untyped_allocator = &allocator;
-  void * allocated_mem =
-    rclcpp::allocator::retyped_zero_allocate<std::allocator<char>>(1u, 1u, untyped_allocator);
-  ASSERT_TRUE(nullptr != allocated_mem);
-
-  auto code = [&untyped_allocator, allocated_mem]() {
-      rclcpp::allocator::retyped_deallocate<char, std::allocator<char>>(
-        allocated_mem, untyped_allocator);
-    };
-  EXPECT_NO_THROW(code());
-RCPPUTILS_DEPRECATION_WARNING_OFF_STOP
-}
-
-TEST(TestAllocatorCommon, retyped_zero_allocate) {
-RCPPUTILS_DEPRECATION_WARNING_OFF_START
-  std::allocator<int> allocator;
-  void * untyped_allocator = &allocator;
-  void * allocated_mem =
-    rclcpp::allocator::retyped_zero_allocate<std::allocator<int>>(1u, 1u, untyped_allocator);
-  // The more natural check here is ASSERT_NE(nullptr, ptr), but clang static
-  // analysis throws a false-positive memory leak warning.  Use ASSERT_TRUE instead.
-  ASSERT_TRUE(nullptr != allocated_mem);
-
-  auto code = [&untyped_allocator, allocated_mem]() {
-      rclcpp::allocator::retyped_deallocate<int, std::allocator<int>>(
-        allocated_mem, untyped_allocator);
-    };
-  EXPECT_NO_THROW(code());
-
-  allocated_mem = allocator.allocate(1);
-  // The more natural check here is ASSERT_NE(nullptr, ptr), but clang static
-  // analysis throws a false-positive memory leak warning.  Use ASSERT_TRUE instead.
-  ASSERT_TRUE(nullptr != allocated_mem);
-  void * reallocated_mem =
-    rclcpp::allocator::retyped_reallocate<int, std::allocator<int>>(
-    allocated_mem, 1u, untyped_allocator);
-  // The more natural check here is ASSERT_NE(nullptr, ptr), but clang static
-  // analysis throws a false-positive memory leak warning.  Use ASSERT_TRUE instead.
-  ASSERT_TRUE(nullptr != reallocated_mem);
-
-  auto code2 = [&untyped_allocator, reallocated_mem]() {
-      rclcpp::allocator::retyped_deallocate<int, std::allocator<int>>(
-        reallocated_mem, untyped_allocator);
-    };
-  EXPECT_NO_THROW(code2());
-RCPPUTILS_DEPRECATION_WARNING_OFF_STOP
-}
-
-TEST(TestAllocatorCommon, get_rcl_allocator) {
-RCPPUTILS_DEPRECATION_WARNING_OFF_START
-  std::allocator<int> allocator;
-  auto rcl_allocator = rclcpp::allocator::get_rcl_allocator<int>(allocator);
-  EXPECT_NE(nullptr, rcl_allocator.allocate);
-  EXPECT_NE(nullptr, rcl_allocator.deallocate);
-  EXPECT_NE(nullptr, rcl_allocator.reallocate);
-  EXPECT_NE(nullptr, rcl_allocator.zero_allocate);
-  // Not testing state as that may or may not be null depending on platform
-RCPPUTILS_DEPRECATION_WARNING_OFF_STOP
-}
 
 TEST(TestAllocatorCommon, get_void_rcl_allocator) {
-RCPPUTILS_DEPRECATION_WARNING_OFF_START
-
   std::allocator<void> allocator;
   auto rcl_allocator =
     rclcpp::allocator::get_rcl_allocator<void, std::allocator<void>>(allocator);
@@ -134,5 +27,4 @@ RCPPUTILS_DEPRECATION_WARNING_OFF_START
   EXPECT_NE(nullptr, rcl_allocator.reallocate);
   EXPECT_NE(nullptr, rcl_allocator.zero_allocate);
   // Not testing state as that may or may not be null depending on platform
-RCPPUTILS_DEPRECATION_WARNING_OFF_STOP
 }

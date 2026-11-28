@@ -156,35 +156,23 @@ struct SubscriptionOptionsWithAllocator : public SubscriptionOptionsBase
   }
 
 private:
-  using PlainAllocator =
-    typename std::allocator_traits<Allocator>::template rebind_alloc<char>;
-
   rcl_allocator_t
   get_rcl_allocator() const
   {
     if constexpr (std::is_same_v<Allocator, std::allocator<void>>) {
       return rcl_get_default_allocator();
     } else {
-      if constexpr (rclcpp::allocator::has_get_rcl_allocator_v<Allocator>) {
-        return get_allocator()->get_rcl_allocator();
-      } else {
-        if (!plain_allocator_storage_) {
-          plain_allocator_storage_ =
-            std::make_shared<PlainAllocator>(*this->get_allocator());
-        }
-
-        return rclcpp::allocator::get_rcl_allocator<char>(*plain_allocator_storage_);
-      }
+      static_assert(
+        rclcpp::allocator::has_get_rcl_allocator_v<Allocator>,
+        "Allocators other than std::allocator<void> must define "
+        "'rcl_allocator_t get_rcl_allocator()'");
+      return get_allocator()->get_rcl_allocator();
     }
   }
 
   // This is a temporal workaround, to make sure that get_allocator()
   // always returns a copy of the same allocator.
   mutable std::shared_ptr<Allocator> allocator_storage_;
-
-  // This is a temporal workaround, to keep the plain allocator that backs
-  // up the rcl allocator returned in rcl_subscription_options_t alive.
-  mutable std::shared_ptr<PlainAllocator> plain_allocator_storage_;
 };
 
 using SubscriptionOptions = SubscriptionOptionsWithAllocator<std::allocator<void>>;
